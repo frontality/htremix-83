@@ -195,7 +195,7 @@ const Index = () => {
           </div>
           
           <div className="flex justify-center">
-            <div className="w-full max-w-2xl p-4 relative">
+            <div className="w-full max-w-md p-4 relative">
               
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
