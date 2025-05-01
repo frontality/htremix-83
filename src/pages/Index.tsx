@@ -195,10 +195,7 @@ const Index = () => {
           
           <div className="flex justify-center">
             <div className="w-full max-w-2xl p-4 relative">
-              <div className="absolute -top-3 -right-3 bg-black px-3 py-1 border-2 border-hottopic-red rounded-full z-10 text-white font-bold text-sm flex items-center gap-1">
-                <Star size={14} className="text-hottopic-red" fill="currentColor" />
-                <span>BEST SELLER</span>
-              </div>
+              
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
