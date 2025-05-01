@@ -7,8 +7,14 @@ import { toast } from "@/hooks/use-toast";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
+import { AlertCircle } from "lucide-react";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
+
+// Regex patterns for validation
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const PHONE_REGEX = /^(\+1|1)?[-. ]?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
 
 const Index = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -23,11 +29,69 @@ const Index = () => {
     state: "",
     zipCode: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case "firstName":
+      case "lastName":
+        return value.trim() === "" ? "This field is required" : "";
+      case "email":
+        return !EMAIL_REGEX.test(value) ? "Please enter a valid email address" : "";
+      case "phone":
+        return !PHONE_REGEX.test(value) ? "Please enter a valid US phone number" : "";
+      case "address":
+      case "city":
+      case "state":
+        return deliveryMethod === "physical" && value.trim() === "" ? "This field is required" : "";
+      case "zipCode":
+        return deliveryMethod === "physical" && !ZIP_REGEX.test(value) ? "Please enter a valid ZIP code" : "";
+      default:
+        return "";
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Validate field on change and update errors
+    const error = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (cleaned.length >= 10) {
+      return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+    } else if (cleaned.length >= 6) {
+      return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}${cleaned.length > 6 ? '-' + cleaned.substring(6) : ''}`;
+    } else if (cleaned.length >= 3) {
+      return `(${cleaned.substring(0, 3)})${cleaned.length > 3 ? ' ' + cleaned.substring(3) : ''}`;
+    }
+    return cleaned;
+  };
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormData(prev => ({
+      ...prev,
+      phone: formatted
+    }));
+    
+    // Validate phone number
+    const error = validateField("phone", formatted);
+    setErrors(prev => ({
+      ...prev,
+      phone: error
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,17 +106,31 @@ const Index = () => {
       return;
     }
     
-    // Validate required fields
-    const requiredFields = ["firstName", "lastName", "email", "phone"];
+    // Validate all required fields
+    const newErrors: Record<string, string> = {};
+    let hasErrors = false;
+    
+    // Fields to validate
+    const fieldNames = ["firstName", "lastName", "email", "phone"];
     if (deliveryMethod === "physical") {
-      requiredFields.push("address", "city", "state", "zipCode");
+      fieldNames.push("address", "city", "state", "zipCode");
     }
     
-    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
-    if (missingFields.length > 0) {
+    // Validate each field
+    fieldNames.forEach(fieldName => {
+      const error = validateField(fieldName, formData[fieldName as keyof typeof formData]);
+      if (error) {
+        newErrors[fieldName] = error;
+        hasErrors = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    
+    if (hasErrors) {
       toast({
-        title: "Missing information",
-        description: "Please fill out all required fields",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
       return;
@@ -66,7 +144,30 @@ const Index = () => {
         description: `Your $${selectedAmount} Hot Topic gift card will be ${deliveryMethod === "e-gift" ? "emailed to you shortly" : "shipped to your address"}`,
       });
       setIsSubmitting(false);
+      // Reset form after successful submission
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      });
+      setSelectedAmount(null);
     }, 1500);
+  };
+
+  const renderErrorMessage = (fieldName: string) => {
+    if (!errors[fieldName]) return null;
+    
+    return (
+      <div className="text-red-500 text-sm mt-1 flex items-center gap-1">
+        <AlertCircle className="h-4 w-4" />
+        <span>{errors[fieldName]}</span>
+      </div>
+    );
   };
 
   return (
@@ -158,9 +259,10 @@ const Index = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.firstName ? 'border-red-500' : ''}`}
                     placeholder="Enter first name"
                   />
+                  {renderErrorMessage("firstName")}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName" className="text-white">Last Name*</Label>
@@ -169,9 +271,10 @@ const Index = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.lastName ? 'border-red-500' : ''}`}
                     placeholder="Enter last name"
                   />
+                  {renderErrorMessage("lastName")}
                 </div>
               </div>
               
@@ -184,9 +287,10 @@ const Index = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
-                    placeholder="Enter email address"
+                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.email ? 'border-red-500' : ''}`}
+                    placeholder="example@email.com"
                   />
+                  {renderErrorMessage("email")}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-white">Phone Number*</Label>
@@ -194,10 +298,11 @@ const Index = () => {
                     id="phone"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
-                    placeholder="Enter phone number"
+                    onChange={handlePhoneInput}
+                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.phone ? 'border-red-500' : ''}`}
+                    placeholder="(123) 456-7890"
                   />
+                  {renderErrorMessage("phone")}
                 </div>
               </div>
               
@@ -213,9 +318,10 @@ const Index = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.address ? 'border-red-500' : ''}`}
                       placeholder="Enter street address"
                     />
+                    {renderErrorMessage("address")}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -226,9 +332,10 @@ const Index = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.city ? 'border-red-500' : ''}`}
                         placeholder="Enter city"
                       />
+                      {renderErrorMessage("city")}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state" className="text-white">State*</Label>
@@ -237,9 +344,10 @@ const Index = () => {
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.state ? 'border-red-500' : ''}`}
                         placeholder="Enter state"
                       />
+                      {renderErrorMessage("state")}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="zipCode" className="text-white">ZIP Code*</Label>
@@ -248,9 +356,10 @@ const Index = () => {
                         name="zipCode"
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.zipCode ? 'border-red-500' : ''}`}
                         placeholder="Enter ZIP code"
                       />
+                      {renderErrorMessage("zipCode")}
                     </div>
                   </div>
                 </div>
@@ -317,3 +426,4 @@ const Index = () => {
 };
 
 export default Index;
+
