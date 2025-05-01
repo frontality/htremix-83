@@ -36,11 +36,11 @@ const HotTopicHeader = () => {
           {/* Logo */}
           <div className="flex-1 lg:flex-none text-center lg:text-left">
             <a href="/" className="inline-block">
-              <div className="bg-hottopic-red h-10 px-4 flex items-center justify-center">
-                <h1 className="text-2xl font-bold tracking-widest text-white">
-                  HOT TOPIC
-                </h1>
-              </div>
+              <img 
+                src="https://i.imgur.com/XvAQJr0.png" 
+                alt="Hot Topic"
+                className="h-10" 
+              />
             </a>
           </div>
           
