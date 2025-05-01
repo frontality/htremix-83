@@ -425,24 +425,7 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Payment methods */}
-              <div className="mt-4 pt-4 border-t border-hottopic-gray/30">
-                <p className="text-gray-400 text-sm mb-2">We Accept:</p>
-                <div className="flex space-x-2">
-                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
-                    <span className="text-xs font-bold">VISA</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
-                    <span className="text-xs font-bold">MC</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
-                    <span className="text-xs font-bold">AMEX</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
-                    <span className="text-xs font-bold">DISC</span>
-                  </div>
-                </div>
-              </div>
+              {/* Payment methods section removed */}
             </div>
           )}
           

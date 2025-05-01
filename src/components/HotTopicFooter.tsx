@@ -88,34 +88,9 @@ const HotTopicFooter = () => {
         </div>
       </div>
       
-      {/* Footer bottom - payment methods and legal info */}
+      {/* Footer bottom - legal info only (payment methods removed) */}
       <div className="border-t border-hottopic-gray/30 py-6">
         <div className="container px-4">
-          {/* Payment methods */}
-          <div className="mb-6">
-            <h4 className="font-futura uppercase mb-3 text-sm">We Accept:</h4>
-            <div className="flex flex-wrap gap-2">
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">VISA</span>
-              </div>
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">MASTERCARD</span>
-              </div>
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">AMEX</span>
-              </div>
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">DISCOVER</span>
-              </div>
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">PAYPAL</span>
-              </div>
-              <div className="bg-white p-2 rounded-sm h-10 w-16 flex items-center justify-center">
-                <span className="text-black font-bold text-xs">APPLE PAY</span>
-              </div>
-            </div>
-          </div>
-          
           {/* Legal links */}
           <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4">
             <a href="#" className="text-gray-400 hover:text-white text-xs">Privacy Policy</a>
