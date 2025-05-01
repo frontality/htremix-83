@@ -65,20 +65,20 @@ const PurchaseAlerts = () => {
     setNextId(prev => prev + 1);
     setAlerts(prev => [...prev, newAlert]);
     
-    // Remove alert after 5 seconds
+    // Remove alert after 10 seconds (changed from 5 seconds)
     setTimeout(() => {
       setAlerts(prev => prev.filter(alert => alert.id !== newAlert.id));
-    }, 5000);
+    }, 10000);
   };
 
   useEffect(() => {
     // Generate initial alert
     generateRandomAlert();
     
-    // Set interval for new alerts (every 30 seconds)
+    // Set interval for new alerts (every 15 seconds) (changed from 30 seconds)
     const intervalId = setInterval(() => {
       generateRandomAlert();
-    }, 30000);
+    }, 15000);
     
     return () => clearInterval(intervalId);
   }, []);
