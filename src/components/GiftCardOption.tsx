@@ -39,7 +39,7 @@ const GiftCardOption = ({
       <div className="relative z-10">
         <div className="mb-3">
           <img 
-            src="https://i.imgur.com/KnxncmZ.png" 
+            src="https://i.imgur.com/adJEpil.png" 
             alt="Hot Topic Gift Card"
             className="w-full rounded-md shadow-sm"
           />

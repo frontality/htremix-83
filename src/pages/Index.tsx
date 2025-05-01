@@ -80,7 +80,7 @@ const Index = () => {
           <div className="flex flex-col items-center justify-center mb-4">
             <div className="relative w-full max-w-lg mb-6">
               <img 
-                src="https://i.imgur.com/KnxncmZ.png" 
+                src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
                 className="w-full h-auto rounded-lg shadow-lg"
               />
