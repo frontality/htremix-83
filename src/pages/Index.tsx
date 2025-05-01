@@ -30,7 +30,7 @@ const Index = () => {
     zipCode: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
