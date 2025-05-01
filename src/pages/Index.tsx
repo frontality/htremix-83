@@ -207,29 +207,7 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Trust indicators */}
-      <div className="bg-black border-y border-hottopic-gray/30">
-        <div className="container py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
-              <Gift size={24} className="text-hottopic-red mb-2" />
-              <p>Official Hot Topic Gift Cards</p>
-            </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
-              <CreditCard size={24} className="text-hottopic-red mb-2" />
-              <p>Secure Payment Processing</p>
-            </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
-              <Shield size={24} className="text-hottopic-red mb-2" />
-              <p>100% Safe & Authentic</p>
-            </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
-              <Users size={20} className="text-hottopic-red mb-2" />
-              <p>8M+ Satisfied Customers</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      
       
       {/* Main Content */}
       <div className="container py-8">
