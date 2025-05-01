@@ -1,7 +1,27 @@
 
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hot Topic font faces */
+@font-face {
+  font-family: 'Futura';
+  src: url('https://fonts.cdnfonts.com/css/futura-pt') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rockwell';
+  src: url('https://fonts.cdnfonts.com/css/rockwell-nova') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -52,8 +72,12 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-helvetica;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-futura font-bold tracking-tight;
   }
   
   .glow-text {
@@ -68,7 +92,7 @@
 /* Hot Topic specific styles */
 @layer components {
   .ht-button {
-    @apply bg-hottopic-red text-white font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
+    @apply bg-hottopic-red text-white font-futura font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
   }
   
   .ht-input {
@@ -80,7 +104,7 @@
   }
   
   .ht-heading {
-    @apply text-2xl font-bold text-white mb-4;
+    @apply text-2xl font-futura font-bold text-white mb-4;
   }
   
   /* New authentic Hot Topic styles */
@@ -102,6 +126,10 @@
   
   .ht-discount-tag {
     @apply bg-green-600 text-white text-xs px-2 py-1 rounded-sm font-semibold;
+  }
+  
+  .nav-link {
+    @apply font-futura font-bold tracking-wider uppercase;
   }
 }
 
@@ -139,4 +167,25 @@
 
 .ht-unskew {
   transform: skew(3deg);
+}
+
+/* Hot Topic specific typography */
+.hottopic-heading {
+  @apply font-futura font-bold uppercase tracking-wider;
+}
+
+.hottopic-subheading {
+  @apply font-rockwell font-bold;
+}
+
+.hottopic-text {
+  @apply font-helvetica;
+}
+
+.hottopic-price {
+  @apply font-futura font-bold;
+}
+
+.hottopic-discount {
+  @apply font-futura font-bold text-hottopic-red;
 }

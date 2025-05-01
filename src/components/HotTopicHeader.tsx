@@ -10,12 +10,12 @@ const HotTopicHeader = () => {
     <header className="bg-black sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-0">
         {/* Top banner */}
-        <div className="bg-hottopic-red text-white text-center py-2 px-4 text-sm font-bold">
+        <div className="bg-hottopic-red text-white text-center py-2 px-4 text-sm font-futura font-bold">
           <p>FREE SHIPPING ON ORDERS $60+ | FREE RETURNS IN STORE | JOIN HOTTOPIC+ FOR FREE SHIPPING!</p>
         </div>
         
         {/* Middle banner */}
-        <div className="bg-black text-white text-center py-1.5 px-4 text-xs flex justify-center items-center space-x-6 border-y border-hottopic-gray/20">
+        <div className="bg-black text-white text-center py-1.5 px-4 text-xs flex justify-center items-center space-x-6 border-y border-hottopic-gray/20 font-helvetica">
           <a href="#" className="hover:underline">FIND A STORE</a>
           <a href="#" className="hover:underline">TRACK ORDER</a>
           <a href="#" className="hover:underline">HELP</a>
@@ -50,7 +50,7 @@ const HotTopicHeader = () => {
               <input 
                 type="search" 
                 placeholder="Search..."
-                className="w-full bg-white text-black px-4 py-2 rounded-sm"
+                className="w-full bg-white text-black px-4 py-2 rounded-sm font-helvetica"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
                 <Search size={18} />
@@ -59,14 +59,14 @@ const HotTopicHeader = () => {
           </div>
           
           {/* Header actions */}
-          <div className="flex items-center space-x-4 text-white">
+          <div className="flex items-center space-x-4 text-white font-futura text-xs">
             <button className="hidden md:flex flex-col items-center hover:text-hottopic-red">
               <User size={20} />
-              <span className="text-xs mt-1">Sign In</span>
+              <span className="mt-1">Sign In</span>
             </button>
             <button className="hidden md:flex flex-col items-center hover:text-hottopic-red">
               <Heart size={20} />
-              <span className="text-xs mt-1">Favorites</span>
+              <span className="mt-1">Favorites</span>
             </button>
             <button className="flex flex-col items-center hover:text-hottopic-red">
               <div className="relative">
@@ -75,7 +75,7 @@ const HotTopicHeader = () => {
                   0
                 </span>
               </div>
-              <span className="text-xs mt-1">Bag</span>
+              <span className="mt-1">Bag</span>
             </button>
           </div>
         </div>
@@ -107,7 +107,7 @@ const HotTopicHeader = () => {
               <input 
                 type="search" 
                 placeholder="Search..."
-                className="w-full bg-white text-black px-4 py-2 rounded-sm"
+                className="w-full bg-white text-black px-4 py-2 rounded-sm font-helvetica"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
                 <Search size={18} />
@@ -127,7 +127,7 @@ const HotTopicHeader = () => {
               <MobileNavLink href="#" label="SALE" highlight />
             </nav>
             
-            <div className="mt-6 pt-4 border-t border-hottopic-gray/30 flex flex-col space-y-3">
+            <div className="mt-6 pt-4 border-t border-hottopic-gray/30 flex flex-col space-y-3 font-futura">
               <a href="#" className="text-white hover:text-hottopic-red text-sm font-medium">Sign In / Create Account</a>
               <a href="#" className="text-white hover:text-hottopic-red text-sm font-medium">Find a Store</a>
               <a href="#" className="text-white hover:text-hottopic-red text-sm font-medium">Track Order</a>
@@ -154,7 +154,7 @@ const NavLink = ({
   highlight?: boolean;
   hasDropdown?: boolean;
 }) => {
-  const classes = `font-bold text-sm py-3 px-5 hover:text-hottopic-red relative ${
+  const classes = `font-futura font-bold text-sm py-3 px-5 hover:text-hottopic-red relative ${
     isActive ? "text-hottopic-red" : "text-white"
   } ${highlight ? "text-hottopic-red" : ""}`;
   
@@ -181,7 +181,7 @@ const MobileNavLink = ({
   isActive?: boolean; 
   highlight?: boolean;
 }) => {
-  const classes = `font-bold text-sm tracking-wider py-2 flex justify-between items-center ${
+  const classes = `font-futura font-bold text-sm tracking-wider py-2 flex justify-between items-center ${
     isActive ? "text-hottopic-red" : "text-white"
   } ${highlight ? "text-hottopic-red" : ""}`;
   
