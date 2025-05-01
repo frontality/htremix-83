@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 // Data for generating random alerts
 const firstNames = [
@@ -65,7 +65,7 @@ const PurchaseAlerts = () => {
     setNextId(prev => prev + 1);
     setAlerts(prev => [...prev, newAlert]);
     
-    // Remove alert after 10 seconds (changed from 5 seconds)
+    // Remove alert after 10 seconds
     setTimeout(() => {
       setAlerts(prev => prev.filter(alert => alert.id !== newAlert.id));
     }, 10000);
@@ -75,7 +75,7 @@ const PurchaseAlerts = () => {
     // Generate initial alert
     generateRandomAlert();
     
-    // Set interval for new alerts (every 15 seconds) (changed from 30 seconds)
+    // Set interval for new alerts (every 15 seconds)
     const intervalId = setInterval(() => {
       generateRandomAlert();
     }, 15000);
@@ -88,9 +88,9 @@ const PurchaseAlerts = () => {
       {alerts.map(alert => (
         <Alert 
           key={alert.id}
-          className="bg-gradient-to-r from-green-600/90 to-green-800/90 text-white border-green-500/50 shadow-lg animate-fade-in"
+          className="bg-gradient-to-r from-hottopic-red/90 to-hottopic-red/80 text-white border border-hottopic-red/30 shadow-lg animate-in slide-in-from-left-5 duration-300"
         >
-          <Badge className="h-4 w-4 text-white mr-2" />
+          <CheckCircle className="h-4 w-4 text-white mr-2" />
           <AlertDescription className="text-sm font-medium">
             {alert.name} just purchased a ${alert.amount} gift card from {alert.state}!
           </AlertDescription>
