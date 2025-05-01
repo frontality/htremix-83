@@ -65,10 +65,11 @@ export default {
 				},
 				hottopic: {
 					red: '#d60a2d',
-					black: '#0a0a0a',
+					purple: '#8b5cf6',
+					black: '#000000',
 					dark: '#121212',
-					purple: '#9b30ff',
-					gray: '#2a2a2a'
+					gray: '#2a2a2a',
+					lightgray: '#f0f0f0'
 				}
 			},
 			borderRadius: {

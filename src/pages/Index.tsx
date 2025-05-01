@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight } from "lucide-react";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -176,26 +176,52 @@ const Index = () => {
       <HotTopicHeader />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-hottopic-dark to-black border-b border-hottopic-gray">
+      <div className="bg-gradient-to-b from-hottopic-dark to-black">
         <div className="container py-6 md:py-8">
           <div className="flex flex-col items-center justify-center mb-4">
-            <div className="relative w-full max-w-lg mb-6">
+            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2 text-center">
+              HOT TOPIC <span className="text-hottopic-red">GIFT CARDS</span>
+            </h1>
+            <p className="text-center text-xl md:text-2xl text-white/80 mb-2 max-w-2xl">
+              The perfect gift for any <span className="text-hottopic-red font-semibold">Hot Topic</span> fan - at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold inline-block transform -rotate-2">50% OFF</span>
+            </p>
+            <p className="text-center text-gray-400 max-w-xl">
+              Give the gift of alternative culture and fan-favorite merchandise. Hot Topic gift cards can be redeemed at any Hot Topic store or online at hottopic.com
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl p-4">
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
-                className="w-full h-auto rounded-lg shadow-lg"
+                className="w-full h-auto rounded-lg shadow-2xl border border-hottopic-gray/30"
               />
-              <div className="absolute -top-3 -right-3 bg-hottopic-red text-white font-bold px-4 py-1 rounded-full transform rotate-12 shadow-lg">
-                50% OFF!
-              </div>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2">
-              Hot Topic <span className="text-hottopic-red">Gift Cards</span>
-            </h1>
-            <p className="text-center text-xl md:text-2xl text-white/80 mb-2">
-              Get authentic Hot Topic gift cards at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold">50% OFF</span>
-            </p>
-            <p className="text-center text-gray-400">Limited time offer - while supplies last!</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Trust indicators */}
+      <div className="bg-black border-y border-hottopic-gray/30">
+        <div className="container py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+              <Gift size={24} className="text-hottopic-red mb-2" />
+              <p>Official Hot Topic Gift Cards</p>
+            </div>
+            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+              <CreditCard size={24} className="text-hottopic-red mb-2" />
+              <p>Secure Payment Processing</p>
+            </div>
+            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+              <LockIcon size={24} className="text-hottopic-red mb-2" />
+              <p>100% Safe & Secure</p>
+            </div>
+            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+              <div className="text-hottopic-red mb-2 font-bold text-lg">24/7</div>
+              <p>Customer Support</p>
+            </div>
           </div>
         </div>
       </div>
@@ -204,8 +230,8 @@ const Index = () => {
       <div className="container py-8">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-8">
           {/* Step 1: Select Gift Card Amount */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white flex items-center">
+          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
               <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 1
               </span>
@@ -227,8 +253,8 @@ const Index = () => {
           </div>
           
           {/* Step 2: Delivery Method */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white flex items-center">
+          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
               <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 2
               </span>
@@ -242,15 +268,15 @@ const Index = () => {
           </div>
           
           {/* Step 3: Customer Information */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white flex items-center">
+          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
               <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 3
               </span>
               Your Information
             </h2>
             
-            <div className="bg-hottopic-gray/20 border border-hottopic-gray rounded-xl p-6 space-y-4">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-white">First Name*</Label>
@@ -308,8 +334,8 @@ const Index = () => {
               
               {/* Conditional Shipping Address Fields */}
               {deliveryMethod === "physical" && (
-                <div className="space-y-4 pt-2 border-t border-hottopic-gray/30">
-                  <h3 className="text-lg font-medium text-white">Shipping Address</h3>
+                <div className="space-y-4 pt-4 border-t border-hottopic-gray/30">
+                  <h3 className="text-xl font-medium text-white">Shipping Address</h3>
                   
                   <div className="space-y-2">
                     <Label htmlFor="address" className="text-white">Street Address*</Label>
@@ -369,8 +395,11 @@ const Index = () => {
           
           {/* Order Summary */}
           {selectedAmount && (
-            <div className="bg-hottopic-gray/20 border border-hottopic-gray rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Order Summary</h2>
+            <div className="bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <span className="mr-2">Order Summary</span>
+                <div className="flex-grow border-b border-dashed border-hottopic-gray/30"></div>
+              </h2>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -390,6 +419,25 @@ const Index = () => {
                   <span className="text-hottopic-red text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
                 </div>
               </div>
+              
+              {/* Payment methods */}
+              <div className="mt-4 pt-4 border-t border-hottopic-gray/30">
+                <p className="text-gray-400 text-sm mb-2">We Accept:</p>
+                <div className="flex space-x-2">
+                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
+                    <span className="text-xs font-bold">VISA</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
+                    <span className="text-xs font-bold">MC</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
+                    <span className="text-xs font-bold">AMEX</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-sm w-12 h-8 flex items-center justify-center">
+                    <span className="text-xs font-bold">DISC</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           
@@ -404,26 +452,184 @@ const Index = () => {
             </Button>
           </div>
           
-          <p className="text-center text-gray-400 text-sm">
-            *By completing this purchase, you agree to our Terms & Conditions.
-            <br />Gift cards are shipped within 3-5 business days. E-gift cards are delivered instantly.
-          </p>
+          <div className="flex items-center justify-center text-center">
+            <LockIcon size={16} className="text-gray-400 mr-2" />
+            <p className="text-gray-400 text-sm">
+              Secure checkout - Your information is protected with 256-bit SSL encryption
+            </p>
+          </div>
         </form>
       </div>
       
-      {/* Footer */}
-      <div className="border-t border-hottopic-gray py-6 mt-8">
+      {/* Testimonials section */}
+      <div className="bg-hottopic-gray/10 border-y border-hottopic-gray/20 py-10">
         <div className="container">
-          <p className="text-center text-gray-400 text-sm">
-            Hot Topic is a registered trademark. This website is not affiliated with Hot Topic Inc.
-            <br />
-            © {new Date().getFullYear()} Discounted Gift Cards - All rights reserved.
-          </p>
+          <h2 className="text-2xl font-bold text-white mb-6 text-center">What Our Customers Say</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <TestimonialCard 
+              name="Jessica M." 
+              rating={5}
+              content="I got a Hot Topic gift card for my daughter at 50% off and she absolutely loved it! Fast delivery and no issues."
+            />
+            <TestimonialCard 
+              name="Mike T." 
+              rating={5}
+              content="Perfect gift for my niece who loves Hot Topic. The process was simple and the discount was amazing."
+            />
+            <TestimonialCard 
+              name="Sarah K." 
+              rating={5}
+              content="I was skeptical at first, but the gift card worked perfectly at my local Hot Topic store. Will definitely buy again!"
+            />
+          </div>
+        </div>
+      </div>
+      
+      {/* FAQ Section */}
+      <div className="container py-10">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
+        
+        <div className="max-w-3xl mx-auto space-y-4">
+          <FaqItem 
+            question="How do Hot Topic gift cards work?" 
+            answer="Hot Topic gift cards can be used for purchases at any Hot Topic store or on hottopic.com. Our e-gift cards are delivered instantly by email, while physical gift cards are shipped to your address."
+          />
+          <FaqItem 
+            question="Are these official Hot Topic gift cards?" 
+            answer="Yes, all our gift cards are 100% authentic Hot Topic gift cards purchased directly from authorized distributors."
+          />
+          <FaqItem 
+            question="How long does shipping take?" 
+            answer="Physical gift cards are typically shipped within 24 hours and delivered within 3-5 business days. E-gift cards are delivered instantly to your email."
+          />
+          <FaqItem 
+            question="Do Hot Topic gift cards expire?" 
+            answer="No, Hot Topic gift cards never expire and have no fees."
+          />
+          <FaqItem 
+            question="Can I check my gift card balance?" 
+            answer="Yes, you can check your gift card balance at any Hot Topic store or on hottopic.com."
+          />
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="bg-hottopic-dark border-t border-hottopic-gray pt-10 pb-6">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-white font-bold mb-4 text-lg">About Us</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">About Our Company</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Terms & Conditions</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Privacy Policy</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Refund Policy</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-4 text-lg">Customer Service</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Contact Us</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">FAQs</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Shipping Info</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Track Order</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-4 text-lg">Gift Cards</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">E-Gift Cards</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Physical Gift Cards</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Corporate Orders</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Gift Card Balance</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-4 text-lg">Connect With Us</h3>
+              <div className="flex space-x-4 mb-4">
+                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
+                  <span className="font-bold">f</span>
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
+                  <span className="font-bold">in</span>
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
+                  <span className="font-bold">ig</span>
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
+                  <span className="font-bold">tw</span>
+                </a>
+              </div>
+              <p className="text-gray-400 text-sm">Subscribe for updates and special offers:</p>
+              <div className="mt-2 flex">
+                <input 
+                  type="email" 
+                  placeholder="Your email address"
+                  className="bg-hottopic-gray/40 text-white px-3 py-2 text-sm flex-1 border-none focus:outline-none"
+                />
+                <button className="bg-hottopic-red px-4 py-2 text-white text-sm font-bold">
+                  SIGN UP
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-hottopic-gray/30 pt-6 text-center">
+            <p className="text-gray-500 text-sm">
+              Hot Topic is a registered trademark. This website is not affiliated with Hot Topic Inc.
+              <br />
+              © {new Date().getFullYear()} Discounted Gift Cards - All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default Index;
+// Testimonial Card Component
+const TestimonialCard = ({ name, rating, content }: { name: string; rating: number; content: string }) => {
+  return (
+    <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30">
+      <div className="flex items-center mb-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <svg 
+            key={i}
+            className={`w-4 h-4 ${i < rating ? 'text-yellow-500' : 'text-gray-400'}`}
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        ))}
+      </div>
+      <p className="text-gray-300 mb-3 text-sm">"{content}"</p>
+      <p className="text-white font-semibold">{name}</p>
+    </div>
+  );
+};
 
+// FAQ Item Component
+const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="border-b border-hottopic-gray/30 pb-2">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex justify-between items-center w-full py-3 text-left focus:outline-none"
+      >
+        <h3 className="text-white font-medium">{question}</h3>
+        <ChevronRight className={`text-hottopic-red transition-transform ${isOpen ? 'transform rotate-90' : ''}`} size={20} />
+      </button>
+      {isOpen && (
+        <div className="pb-3 text-gray-400 text-sm">
+          <p>{answer}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Index;

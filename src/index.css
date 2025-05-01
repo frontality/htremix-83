@@ -33,7 +33,7 @@
     --input: 0 0% 15%;
     --ring: 345 90% 44%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -63,4 +63,37 @@
   .card-glow {
     box-shadow: 0 0 15px rgba(214, 10, 45, 0.4);
   }
+}
+
+/* Hot Topic specific styles */
+@layer components {
+  .ht-button {
+    @apply bg-hottopic-red text-white font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
+  }
+  
+  .ht-input {
+    @apply bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red text-white;
+  }
+  
+  .ht-card {
+    @apply bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-lg p-6;
+  }
+  
+  .ht-heading {
+    @apply text-2xl font-bold text-white mb-4;
+  }
+}
+
+/* Custom animations */
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(214, 10, 45, 0.7);
+  }
+  50% {
+    border-color: rgba(214, 10, 45, 0.3);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s infinite;
 }
