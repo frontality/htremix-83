@@ -19,11 +19,11 @@ const firstNames = [
   "Patrick", "Janet", "Frank", "Rachel", "Raymond", "Carolyn", "Jack", "Emma",
   "Dennis", "Maria", "Jerry", "Heather", "Tyler", "Diane", "Aaron", "Julie",
   "Jose", "Joyce", "Adam", "Victoria", "Nathan", "Kelly", "Henry", "Christina",
-  "Zachary", "Lauren", "Douglas", "Joan", "Peter", "Evelyn", "Kyle", "Olivia",
-  "Noah", "Judith", "Walter", "Megan", "Ethan", "Cheryl", "Jeremy", "Martha",
-  "Harold", "Andrea", "Keith", "Frances", "Christian", "Hannah", "Roger", "Jacqueline",
-  "Terry", "Ann", "Gerald", "Gloria", "Sean", "Jean", "Austin", "Kathryn",
-  "Carl", "Alice", "Arthur", "Teresa", "Lawrence", "Sara", "Dylan", "Janice"
+  "Zachary", "Lauren", "Douglas", "Joan", "Peter", "Kyle", "Noah", "Judith",
+  "Walter", "Megan", "Ethan", "Cheryl", "Jeremy", "Martha", "Harold", "Andrea",
+  "Keith", "Frances", "Christian", "Hannah", "Roger", "Jacqueline", "Terry", "Ann",
+  "Gerald", "Gloria", "Sean", "Jean", "Austin", "Kathryn", "Carl", "Alice",
+  "Arthur", "Teresa", "Lawrence", "Sara", "Dylan", "Janice"
 ];
 
 const states = [
@@ -88,12 +88,16 @@ const PurchaseAlerts = () => {
       {alerts.map(alert => (
         <Alert 
           key={alert.id}
-          className="bg-gradient-to-r from-hottopic-red/90 to-hottopic-red/80 text-white border border-hottopic-red/30 shadow-lg animate-in slide-in-from-left-5 duration-300"
+          className="bg-gradient-to-r from-green-500/90 to-green-600/90 text-white border border-green-400/30 shadow-lg backdrop-blur-sm animate-in slide-in-from-left-5 duration-300"
         >
-          <CheckCircle className="h-4 w-4 text-white mr-2" />
-          <AlertDescription className="text-sm font-medium">
-            {alert.name} just purchased a ${alert.amount} gift card from {alert.state}!
-          </AlertDescription>
+          <div className="flex items-start">
+            <div className="bg-white/20 p-1.5 rounded-full mr-3">
+              <CheckCircle className="h-4 w-4 text-white" />
+            </div>
+            <AlertDescription className="text-sm font-medium">
+              <span className="font-bold">{alert.name}</span> just purchased a <span className="font-bold text-white">${alert.amount}</span> gift card from <span className="italic">{alert.state}!</span>
+            </AlertDescription>
+          </div>
         </Alert>
       ))}
     </div>
