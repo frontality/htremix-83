@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,8 @@ import { toast } from "@/hooks/use-toast";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
-import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight } from "lucide-react";
+import HotTopicPromo from "@/components/HotTopicPromo";
+import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -30,7 +30,7 @@ const Index = () => {
     zipCode: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting = useState(false);
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -175,15 +175,18 @@ const Index = () => {
       {/* Header */}
       <HotTopicHeader />
       
+      {/* Promotional Banner */}
+      <HotTopicPromo />
+      
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-hottopic-dark to-black">
+      <div className="ht-gradient-bg">
         <div className="container py-6 md:py-8">
           <div className="flex flex-col items-center justify-center mb-4">
             <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2 text-center">
-              HOT TOPIC <span className="text-hottopic-red">GIFT CARDS</span>
+              HOT TOPIC <span className="text-hottopic-red glow-text">GIFT CARDS</span>
             </h1>
             <p className="text-center text-xl md:text-2xl text-white/80 mb-2 max-w-2xl">
-              The perfect gift for any <span className="text-hottopic-red font-semibold">Hot Topic</span> fan - at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold inline-block transform -rotate-2">50% OFF</span>
+              The perfect gift for any <span className="text-hottopic-red font-semibold">Hot Topic</span> fan - at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold inline-block transform -rotate-2 animate-floating">50% OFF</span>
             </p>
             <p className="text-center text-gray-400 max-w-xl">
               Give the gift of alternative culture and fan-favorite merchandise. Hot Topic gift cards can be redeemed at any Hot Topic store or online at hottopic.com
@@ -191,11 +194,15 @@ const Index = () => {
           </div>
           
           <div className="flex justify-center">
-            <div className="w-full max-w-2xl p-4">
+            <div className="w-full max-w-2xl p-4 relative">
+              <div className="absolute -top-3 -right-3 bg-black px-3 py-1 border-2 border-hottopic-red rounded-full z-10 text-white font-bold text-sm flex items-center gap-1">
+                <Star size={14} className="text-hottopic-red" fill="currentColor" />
+                <span>BEST SELLER</span>
+              </div>
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
-                className="w-full h-auto rounded-lg shadow-2xl border border-hottopic-gray/30"
+                className="w-full h-auto rounded-lg shadow-2xl border border-hottopic-gray/30 ht-border-glow"
               />
             </div>
           </div>
@@ -206,21 +213,21 @@ const Index = () => {
       <div className="bg-black border-y border-hottopic-gray/30">
         <div className="container py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
               <Gift size={24} className="text-hottopic-red mb-2" />
               <p>Official Hot Topic Gift Cards</p>
             </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2">
+            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
               <CreditCard size={24} className="text-hottopic-red mb-2" />
               <p>Secure Payment Processing</p>
             </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2">
-              <LockIcon size={24} className="text-hottopic-red mb-2" />
-              <p>100% Safe & Secure</p>
+            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
+              <Shield size={24} className="text-hottopic-red mb-2" />
+              <p>100% Safe & Authentic</p>
             </div>
-            <div className="flex flex-col items-center text-white text-sm text-center px-2">
-              <div className="text-hottopic-red mb-2 font-bold text-lg">24/7</div>
-              <p>Customer Support</p>
+            <div className="flex flex-col items-center text-white text-sm text-center px-2 ht-hover-effect">
+              <Users size={20} className="text-hottopic-red mb-2" />
+              <p>8M+ Satisfied Customers</p>
             </div>
           </div>
         </div>
