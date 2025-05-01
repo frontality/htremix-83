@@ -7,6 +7,7 @@ import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
+import HotTopicFooter from "@/components/HotTopicFooter";
 import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
@@ -519,75 +520,7 @@ const Index = () => {
       </div>
       
       {/* Footer */}
-      <div className="bg-hottopic-dark border-t border-hottopic-gray pt-10 pb-6">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">About Us</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">About Our Company</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Terms & Conditions</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Refund Policy</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">Customer Service</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Contact Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">FAQs</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Shipping Info</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Track Order</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">Gift Cards</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">E-Gift Cards</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Physical Gift Cards</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Corporate Orders</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-hottopic-red">Gift Card Balance</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">Connect With Us</h3>
-              <div className="flex space-x-4 mb-4">
-                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
-                  <span className="font-bold">f</span>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
-                  <span className="font-bold">in</span>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
-                  <span className="font-bold">ig</span>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-hottopic-gray flex items-center justify-center text-white hover:bg-hottopic-red">
-                  <span className="font-bold">tw</span>
-                </a>
-              </div>
-              <p className="text-gray-400 text-sm">Subscribe for updates and special offers:</p>
-              <div className="mt-2 flex">
-                <input 
-                  type="email" 
-                  placeholder="Your email address"
-                  className="bg-hottopic-gray/40 text-white px-3 py-2 text-sm flex-1 border-none focus:outline-none"
-                />
-                <button className="bg-hottopic-red px-4 py-2 text-white text-sm font-bold">
-                  SIGN UP
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-hottopic-gray/30 pt-6 text-center">
-            <p className="text-gray-500 text-sm">
-              Hot Topic is a registered trademark. This website is not affiliated with Hot Topic Inc.
-              <br />
-              © {new Date().getFullYear()} Discounted Gift Cards - All rights reserved.
-            </p>
-          </div>
-        </div>
-      </div>
+      <HotTopicFooter />
     </div>
   );
 };
