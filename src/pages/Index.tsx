@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { Sparkles, CreditCard, Mail, Truck, Shield } from "lucide-react";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
@@ -70,42 +71,75 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen">
       {/* Header */}
       <HotTopicHeader />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-hottopic-dark to-black border-b border-hottopic-gray">
-        <div className="container py-6 md:py-8">
-          <div className="flex flex-col items-center justify-center mb-4">
-            <div className="relative w-full max-w-lg mb-6">
-              <img 
-                src="https://i.imgur.com/KnxncmZ.png" 
-                alt="Hot Topic Gift Card" 
-                className="w-full h-auto rounded-lg shadow-lg"
-              />
-              <div className="absolute -top-3 -right-3 bg-hottopic-red text-white font-bold px-4 py-1 rounded-full transform rotate-12 shadow-lg">
-                50% OFF!
+      <div className="bg-gradient-to-b from-black to-background border-b border-hottopic-teal/20 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,229,0.1)_0,transparent_70%)]"></div>
+        <div className="container py-10 md:py-16 relative">
+          <div className="flex flex-col items-center justify-center mb-8 relative">
+            <div className="relative w-full max-w-lg mb-8 group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-hottopic-teal via-hottopic-purple to-hottopic-pink rounded-lg opacity-70 blur-md group-hover:opacity-100 transition duration-500"></div>
+              <div className="relative bg-card rounded-lg p-1 overflow-hidden">
+                <img 
+                  src="https://i.imgur.com/KnxncmZ.png" 
+                  alt="Hot Topic Gift Card" 
+                  className="w-full h-auto rounded-lg shadow-lg transform group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute -top-3 -right-3 bg-hottopic-teal text-white font-bold px-4 py-1 rounded-full transform rotate-12 shadow-teal-glow animate-pulse">
+                  50% OFF!
+                </div>
               </div>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2">
-              Hot Topic <span className="text-hottopic-red">Gift Cards</span>
+            
+            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-2 relative">
+              <span className="relative inline-block">
+                Hot Topic <span className="text-hottopic-teal glow-text">Gift Cards</span>
+                <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-hottopic-teal to-transparent"></span>
+              </span>
             </h1>
-            <p className="text-center text-xl md:text-2xl text-white/80 mb-2">
-              Get authentic Hot Topic gift cards at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold">50% OFF</span>
+            
+            <p className="text-center text-xl md:text-2xl text-white/80 mb-4">
+              Get authentic Hot Topic gift cards at{" "}
+              <span className="bg-gradient-to-r from-hottopic-teal to-hottopic-purple px-2 py-1 rounded-md text-white font-bold shadow-teal-glow">
+                50% OFF
+              </span>
             </p>
-            <p className="text-center text-gray-400">Limited time offer - while supplies last!</p>
+            
+            <p className="text-center text-gray-400 flex items-center">
+              <Sparkles className="h-4 w-4 mr-2 text-hottopic-teal" />
+              Limited time offer - while supplies last!
+            </p>
+            
+            {/* Trust badges */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              <div className="flex items-center px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-hottopic-teal/20">
+                <Shield className="h-4 w-4 mr-2 text-hottopic-teal" />
+                <span className="text-sm">Secure Checkout</span>
+              </div>
+              <div className="flex items-center px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-hottopic-teal/20">
+                <CreditCard className="h-4 w-4 mr-2 text-hottopic-teal" />
+                <span className="text-sm">Authentic Cards</span>
+              </div>
+              <div className="flex items-center px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-hottopic-teal/20">
+                <Mail className="h-4 w-4 mr-2 text-hottopic-teal" />
+                <span className="text-sm">Instant E-Delivery</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
       {/* Main Content */}
-      <div className="container py-8">
+      <div className="container py-10">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-8">
           {/* Step 1: Select Gift Card Amount */}
-          <div className="space-y-4">
+          <div className="space-y-4 glass-panel p-6 relative">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-hottopic-teal/10 rounded-full blur-3xl -z-10"></div>
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-gradient-to-r from-hottopic-teal to-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white shadow-teal-glow">
                 1
               </span>
               Select Gift Card Amount
@@ -126,9 +160,10 @@ const Index = () => {
           </div>
           
           {/* Step 2: Delivery Method */}
-          <div className="space-y-4">
+          <div className="space-y-4 glass-panel p-6 relative">
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-hottopic-purple/10 rounded-full blur-3xl -z-10"></div>
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-gradient-to-r from-hottopic-teal to-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white shadow-teal-glow">
                 2
               </span>
               Choose Delivery Method
@@ -141,15 +176,16 @@ const Index = () => {
           </div>
           
           {/* Step 3: Customer Information */}
-          <div className="space-y-4">
+          <div className="space-y-4 glass-panel p-6 relative">
+            <div className="absolute top-10 right-10 w-40 h-40 bg-hottopic-pink/5 rounded-full blur-3xl -z-10"></div>
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-gradient-to-r from-hottopic-teal to-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white shadow-teal-glow">
                 3
               </span>
               Your Information
             </h2>
             
-            <div className="bg-hottopic-gray/20 border border-hottopic-gray rounded-xl p-6 space-y-4">
+            <div className="bg-card/40 backdrop-blur-sm border border-hottopic-teal/10 rounded-xl p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-white">First Name*</Label>
@@ -158,7 +194,7 @@ const Index = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                     placeholder="Enter first name"
                   />
                 </div>
@@ -169,7 +205,7 @@ const Index = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                     placeholder="Enter last name"
                   />
                 </div>
@@ -184,7 +220,7 @@ const Index = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                     placeholder="Enter email address"
                   />
                 </div>
@@ -195,7 +231,7 @@ const Index = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                    className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -203,8 +239,8 @@ const Index = () => {
               
               {/* Conditional Shipping Address Fields */}
               {deliveryMethod === "physical" && (
-                <div className="space-y-4 pt-2 border-t border-hottopic-gray/30">
-                  <h3 className="text-lg font-medium text-white">Shipping Address</h3>
+                <div className="space-y-4 pt-4 border-t border-hottopic-teal/10">
+                  <h3 className="text-lg font-medium text-hottopic-teal">Shipping Address</h3>
                   
                   <div className="space-y-2">
                     <Label htmlFor="address" className="text-white">Street Address*</Label>
@@ -213,7 +249,7 @@ const Index = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                      className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                       placeholder="Enter street address"
                     />
                   </div>
@@ -226,7 +262,7 @@ const Index = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                         placeholder="Enter city"
                       />
                     </div>
@@ -237,7 +273,7 @@ const Index = () => {
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                         placeholder="Enter state"
                       />
                     </div>
@@ -248,7 +284,7 @@ const Index = () => {
                         name="zipCode"
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
+                        className="bg-black/30 border-hottopic-teal/30 focus:border-hottopic-teal"
                         placeholder="Enter ZIP code"
                       />
                     </div>
@@ -260,8 +296,13 @@ const Index = () => {
           
           {/* Order Summary */}
           {selectedAmount && (
-            <div className="bg-hottopic-gray/20 border border-hottopic-gray rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Order Summary</h2>
+            <div className="bg-card/40 backdrop-blur-sm border border-hottopic-teal/20 rounded-xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-hottopic-teal/5 to-transparent -z-10"></div>
+              
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <span className="w-1 h-6 bg-hottopic-teal rounded mr-2"></span>
+                Order Summary
+              </h2>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -270,15 +311,17 @@ const Index = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Discount (50%)</span>
-                  <span className="text-hottopic-red">-${(selectedAmount * 0.5).toFixed(2)}</span>
+                  <span className="text-hottopic-teal">-${(selectedAmount * 0.5).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Delivery Method</span>
                   <span className="text-white capitalize">{deliveryMethod}</span>
                 </div>
-                <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
-                  <span className="text-white">Total</span>
-                  <span className="text-hottopic-red text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
+                <div className="border-t border-hottopic-teal/20 my-2 pt-2 flex justify-between items-center">
+                  <span className="text-white font-medium">Total</span>
+                  <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-hottopic-teal to-hottopic-purple glow-text">
+                    ${(selectedAmount * 0.5).toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -286,24 +329,28 @@ const Index = () => {
           
           {/* Submit Button */}
           <div className="flex justify-center">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !selectedAmount}
-              className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
-            >
-              {isSubmitting ? "Processing..." : "Complete Purchase"}
-            </Button>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-hottopic-teal to-hottopic-purple rounded-lg opacity-70 group-hover:opacity-100 blur group-hover:blur-md transition duration-500"></div>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !selectedAmount}
+                className="relative w-full md:w-auto px-8 py-6 bg-black text-white font-bold text-lg group-hover:bg-black/90 border-0"
+              >
+                {isSubmitting ? "Processing..." : "Complete Purchase"}
+              </Button>
+            </div>
           </div>
           
           <p className="text-center text-gray-400 text-sm">
             *By completing this purchase, you agree to our Terms & Conditions.
-            <br />Gift cards are shipped within 3-5 business days. E-gift cards are delivered instantly.
+            <br />
+            Gift cards are shipped within 3-5 business days. E-gift cards are delivered instantly.
           </p>
         </form>
       </div>
       
       {/* Footer */}
-      <div className="border-t border-hottopic-gray py-6 mt-8">
+      <div className="border-t border-hottopic-teal/20 py-6 mt-8 bg-black/50 backdrop-blur-md">
         <div className="container">
           <p className="text-center text-gray-400 text-sm">
             Hot Topic is a registered trademark. This website is not affiliated with Hot Topic Inc.

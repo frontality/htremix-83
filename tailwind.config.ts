@@ -68,8 +68,16 @@ export default {
 					black: '#0a0a0a',
 					dark: '#121212',
 					purple: '#9b30ff',
-					gray: '#2a2a2a'
-				}
+					gray: '#2a2a2a',
+					neon: '#39ff14',
+					teal: '#00ffe5',
+					pink: '#ff2a6d'
+				},
+			},
+			boxShadow: {
+				'neon': '0 0 5px theme("colors.hottopic.neon"), 0 0 20px theme("colors.hottopic.neon")',
+				'teal-glow': '0 0 5px theme("colors.hottopic.teal"), 0 0 15px theme("colors.hottopic.teal")',
+				'pink-glow': '0 0 5px theme("colors.hottopic.pink"), 0 0 15px theme("colors.hottopic.pink")'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -96,15 +104,27 @@ export default {
 				'pulse-slow': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'glow': {
+					'0%, 100%': { filter: 'brightness(1)' },
+					'50%': { filter: 'brightness(1.2)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s infinite'
+				'pulse-slow': 'pulse-slow 3s infinite',
+				'float': 'float 5s ease-in-out infinite',
+				'glow': 'glow 2s ease-in-out infinite'
 			},
 			backgroundImage: {
-				'gift-card-pattern': "url('/gift-card-pattern.svg')"
+				'gift-card-pattern': "url('/gift-card-pattern.svg')",
+				'cyber-grid': "linear-gradient(rgba(10, 10, 10, 0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(10, 10, 10, 0.8) 1px, transparent 1px)",
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 			}
 		}
 	},

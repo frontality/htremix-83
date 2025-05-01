@@ -88,14 +88,21 @@ const PurchaseAlerts = () => {
       {alerts.map(alert => (
         <Alert 
           key={alert.id}
-          className="bg-gradient-to-r from-green-500/90 to-green-600/90 text-white border border-green-400/30 shadow-lg backdrop-blur-sm animate-in slide-in-from-left-5 duration-300"
+          className="cyber-border before:bg-card/90 backdrop-blur-md shadow-teal-glow animate-in slide-in-from-left-5 duration-300 overflow-hidden"
         >
           <div className="flex items-start">
-            <div className="bg-white/20 p-1.5 rounded-full mr-3">
-              <CheckCircle className="h-4 w-4 text-white" />
+            <div className="bg-hottopic-teal/20 p-1.5 rounded-full mr-3 animate-pulse">
+              <CheckCircle className="h-4 w-4 text-hottopic-teal" />
             </div>
-            <AlertDescription className="text-sm font-medium">
-              <span className="font-bold">{alert.name}</span> just purchased a <span className="font-bold text-white">${alert.amount}</span> gift card from <span className="italic">{alert.state}!</span>
+            <AlertDescription className="text-sm">
+              <span className="font-bold text-hottopic-teal">{alert.name}</span> just purchased a{" "}
+              <span className="font-bold text-white bg-hottopic-teal/20 px-1.5 rounded-sm">
+                ${alert.amount}
+              </span>{" "}
+              gift card from{" "}
+              <span className="italic font-medium text-hottopic-teal">
+                {alert.state}!
+              </span>
             </AlertDescription>
           </div>
         </Alert>
