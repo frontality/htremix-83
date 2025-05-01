@@ -19,13 +19,13 @@ const DeliveryMethodSelector = ({
           "border-2 p-4 rounded-xl flex items-center gap-4 cursor-pointer",
           "transition-all duration-300",
           selectedMethod === "e-gift"
-            ? "border-hottopic-purple bg-hottopic-purple/10 card-glow"
-            : "border-hottopic-gray hover:border-hottopic-purple/50"
+            ? "border-hottopic-red bg-hottopic-red/10 card-glow"
+            : "border-hottopic-gray hover:border-hottopic-red/50"
         )}
       >
         <div className={cn(
           "w-12 h-12 rounded-full flex items-center justify-center",
-          selectedMethod === "e-gift" ? "bg-hottopic-purple" : "bg-hottopic-gray"
+          selectedMethod === "e-gift" ? "bg-hottopic-red" : "bg-hottopic-gray"
         )}>
           <Mail className="text-white" size={24} />
         </div>
@@ -41,13 +41,13 @@ const DeliveryMethodSelector = ({
           "border-2 p-4 rounded-xl flex items-center gap-4 cursor-pointer",
           "transition-all duration-300",
           selectedMethod === "physical"
-            ? "border-hottopic-purple bg-hottopic-purple/10 card-glow"
-            : "border-hottopic-gray hover:border-hottopic-purple/50"
+            ? "border-hottopic-red bg-hottopic-red/10 card-glow"
+            : "border-hottopic-gray hover:border-hottopic-red/50"
         )}
       >
         <div className={cn(
           "w-12 h-12 rounded-full flex items-center justify-center",
-          selectedMethod === "physical" ? "bg-hottopic-purple" : "bg-hottopic-gray"
+          selectedMethod === "physical" ? "bg-hottopic-red" : "bg-hottopic-gray"
         )}>
           <Package className="text-white" size={24} />
         </div>

@@ -24,22 +24,30 @@ const GiftCardOption = ({
         "relative cursor-pointer rounded-xl p-6 transition-all duration-300 overflow-hidden",
         "border-2 bg-gradient-to-br from-hottopic-dark to-black",
         isSelected
-          ? "border-hottopic-purple card-glow scale-105"
-          : "border-hottopic-gray hover:border-hottopic-purple/50"
+          ? "border-hottopic-red card-glow scale-105"
+          : "border-hottopic-gray hover:border-hottopic-red/50"
       )}
     >
       <div className="absolute top-0 left-0 w-full h-full bg-gift-card-pattern opacity-20"></div>
       
       {isSelected && (
-        <div className="absolute top-3 right-3 text-hottopic-purple">
+        <div className="absolute top-3 right-3 text-hottopic-red">
           <CheckCircle size={24} />
         </div>
       )}
       
       <div className="relative z-10">
+        <div className="mb-3">
+          <img 
+            src="https://i.imgur.com/KnxncmZ.png" 
+            alt="Hot Topic Gift Card"
+            className="w-full rounded-md shadow-sm"
+          />
+        </div>
+        
         <h3 className={cn(
           "text-3xl font-bold mb-2",
-          isSelected ? "text-hottopic-purple glow-text" : "text-white"
+          isSelected ? "text-hottopic-red glow-text" : "text-white"
         )}>
           ${value}
         </h3>

@@ -23,7 +23,7 @@
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 70%;
 
-    --accent: 270 100% 59%;
+    --accent: 345 90% 44%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,7 +31,7 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 15%;
-    --ring: 270 100% 59%;
+    --ring: 345 90% 44%;
 
     --radius: 0.75rem;
 
@@ -57,10 +57,10 @@
   }
   
   .glow-text {
-    text-shadow: 0 0 10px rgba(155, 48, 255, 0.7);
+    text-shadow: 0 0 10px rgba(214, 10, 45, 0.7);
   }
   
   .card-glow {
-    box-shadow: 0 0 15px rgba(155, 48, 255, 0.4);
+    box-shadow: 0 0 15px rgba(214, 10, 45, 0.4);
   }
 }

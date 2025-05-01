@@ -65,7 +65,7 @@ export default {
 				},
 				hottopic: {
 					red: '#d60a2d',
-					black: '#000000',
+					black: '#0a0a0a',
 					dark: '#121212',
 					purple: '#9b30ff',
 					gray: '#2a2a2a'

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
+import HotTopicHeader from "@/components/HotTopicHeader";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -69,19 +70,32 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-hottopic-black">
+    <div className="min-h-screen bg-black">
+      {/* Header */}
+      <HotTopicHeader />
+      
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-hottopic-dark to-black border-b border-hottopic-gray">
-        <div className="container py-6 md:py-12">
-          <div className="flex items-center justify-center mb-4">
-            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+        <div className="container py-6 md:py-8">
+          <div className="flex flex-col items-center justify-center mb-4">
+            <div className="relative w-full max-w-lg mb-6">
+              <img 
+                src="https://i.imgur.com/KnxncmZ.png" 
+                alt="Hot Topic Gift Card" 
+                className="w-full h-auto rounded-lg shadow-lg"
+              />
+              <div className="absolute -top-3 -right-3 bg-hottopic-red text-white font-bold px-4 py-1 rounded-full transform rotate-12 shadow-lg">
+                50% OFF!
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2">
               Hot Topic <span className="text-hottopic-red">Gift Cards</span>
             </h1>
+            <p className="text-center text-xl md:text-2xl text-white/80 mb-2">
+              Get authentic Hot Topic gift cards at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold">50% OFF</span>
+            </p>
+            <p className="text-center text-gray-400">Limited time offer - while supplies last!</p>
           </div>
-          <p className="text-center text-xl md:text-2xl text-white/80 mb-2">
-            Get official Hot Topic gift cards at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold">50% OFF</span>
-          </p>
-          <p className="text-center text-gray-400">Limited time offer - while supplies last!</p>
         </div>
       </div>
       
@@ -91,7 +105,7 @@ const Index = () => {
           {/* Step 1: Select Gift Card Amount */}
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 1
               </span>
               Select Gift Card Amount
@@ -114,7 +128,7 @@ const Index = () => {
           {/* Step 2: Delivery Method */}
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 2
               </span>
               Choose Delivery Method
@@ -129,7 +143,7 @@ const Index = () => {
           {/* Step 3: Customer Information */}
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-white flex items-center">
-              <span className="bg-hottopic-purple w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                 3
               </span>
               Your Information
@@ -144,7 +158,7 @@ const Index = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                     placeholder="Enter first name"
                   />
                 </div>
@@ -155,7 +169,7 @@ const Index = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                     placeholder="Enter last name"
                   />
                 </div>
@@ -170,7 +184,7 @@ const Index = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                     placeholder="Enter email address"
                   />
                 </div>
@@ -181,7 +195,7 @@ const Index = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -199,7 +213,7 @@ const Index = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                      className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                       placeholder="Enter street address"
                     />
                   </div>
@@ -212,7 +226,7 @@ const Index = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                         placeholder="Enter city"
                       />
                     </div>
@@ -223,7 +237,7 @@ const Index = () => {
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                         placeholder="Enter state"
                       />
                     </div>
@@ -234,7 +248,7 @@ const Index = () => {
                         name="zipCode"
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-purple"
+                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red"
                         placeholder="Enter ZIP code"
                       />
                     </div>
@@ -264,7 +278,7 @@ const Index = () => {
                 </div>
                 <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                   <span className="text-white">Total</span>
-                  <span className="text-hottopic-purple text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
+                  <span className="text-hottopic-red text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -275,7 +289,7 @@ const Index = () => {
             <Button 
               type="submit" 
               disabled={isSubmitting || !selectedAmount}
-              className="w-full md:w-auto px-8 py-6 bg-hottopic-purple hover:bg-hottopic-purple/90 text-white font-bold text-lg"
+              className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
             >
               {isSubmitting ? "Processing..." : "Complete Purchase"}
             </Button>
