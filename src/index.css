@@ -1,8 +1,6 @@
+
 /* Import fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -74,12 +72,12 @@
   }
 
   body {
-    @apply bg-background text-foreground font-lato;
+    @apply bg-background text-foreground font-helvetica;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bebas font-bold tracking-tight;
+    @apply font-futura font-bold tracking-tight;
   }
   
   .glow-text {
@@ -94,7 +92,7 @@
 /* Hot Topic specific styles */
 @layer components {
   .ht-button {
-    @apply bg-hottopic-red text-white font-bebas font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
+    @apply bg-hottopic-red text-white font-futura font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
   }
   
   .ht-input {
@@ -106,7 +104,7 @@
   }
   
   .ht-heading {
-    @apply text-2xl font-bebas font-bold text-white mb-4 uppercase;
+    @apply text-2xl font-futura font-bold text-white mb-4;
   }
   
   /* New authentic Hot Topic styles */
@@ -131,7 +129,7 @@
   }
   
   .nav-link {
-    @apply font-oswald font-bold tracking-wider uppercase;
+    @apply font-futura font-bold tracking-wider uppercase;
   }
 }
 
@@ -173,21 +171,21 @@
 
 /* Hot Topic specific typography */
 .hottopic-heading {
-  @apply font-bebas font-bold uppercase tracking-wider;
+  @apply font-futura font-bold uppercase tracking-wider;
 }
 
 .hottopic-subheading {
-  @apply font-oswald font-bold;
+  @apply font-rockwell font-bold;
 }
 
 .hottopic-text {
-  @apply font-lato;
+  @apply font-helvetica;
 }
 
 .hottopic-price {
-  @apply font-bebas font-bold;
+  @apply font-futura font-bold;
 }
 
 .hottopic-discount {
-  @apply font-bebas font-bold text-hottopic-red;
+  @apply font-futura font-bold text-hottopic-red;
 }

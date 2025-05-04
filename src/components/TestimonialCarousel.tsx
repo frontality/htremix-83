@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Star } from "lucide-react";
@@ -37,11 +36,9 @@ const TESTIMONIALS = [{
   rating: 5,
   content: "As a college student on a budget, these discounted gift cards are a lifesaver. I can get all my favorite Hot Topic merch without breaking the bank!"
 }];
-
 const TestimonialCarousel: React.FC = () => {
   const [visibleItems, setVisibleItems] = useState<number[]>([0, 1, 2]);
   const [autoplay, setAutoplay] = useState(true);
-
   useEffect(() => {
     // Set up autoplay timer
     let timer: NodeJS.Timeout;
@@ -71,64 +68,37 @@ const TestimonialCarousel: React.FC = () => {
       }
     };
   }, [autoplay]);
-
   const goToNext = () => {
     setVisibleItems(prev => prev.map(index => (index + 1) % TESTIMONIALS.length));
   };
-
   const goToPrev = () => {
     setVisibleItems(prev => prev.map(index => (index - 1 + TESTIMONIALS.length) % TESTIMONIALS.length));
   };
-
-  return (
-    <div id="testimonial-carousel" className="relative overflow-hidden max-w-7xl mx-auto px-4">
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true
-        }}
-        className="w-full"
-        orientation="horizontal"
-      >
+  return <div id="testimonial-carousel" className="relative overflow-hidden max-w-7xl mx-auto px-4">
+      <Carousel opts={{
+      align: "start",
+      loop: true
+    }} className="w-full" orientation="horizontal">
+        
+        
         <CarouselContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {visibleItems.map(itemIndex => (
-            <CarouselItem
-              key={itemIndex}
-              className="transition-opacity duration-1000 opacity-100 relative basis-full md:basis-1/3 pl-0 md:pl-4"
-            >
-              <TestimonialCard
-                name={TESTIMONIALS[itemIndex].name}
-                rating={TESTIMONIALS[itemIndex].rating}
-                content={TESTIMONIALS[itemIndex].content}
-              />
-            </CarouselItem>
-          ))}
+          {visibleItems.map(itemIndex => <CarouselItem key={itemIndex} className="transition-opacity duration-1000 opacity-100 relative basis-full md:basis-1/3 pl-0 md:pl-4">
+              <TestimonialCard name={TESTIMONIALS[itemIndex].name} rating={TESTIMONIALS[itemIndex].rating} content={TESTIMONIALS[itemIndex].content} />
+            </CarouselItem>)}
         </CarouselContent>
       </Carousel>
       
       {/* Progress indicators */}
       <div className="flex justify-center mt-4 gap-2">
-        {Array.from({ length: Math.min(8, TESTIMONIALS.length) }).map((_, index) => (
-          <button
-            key={index}
-            className={`h-2 rounded-full transition-all ${
-              visibleItems.includes(index) ? "w-6 bg-hottopic-red" : "w-2 bg-gray-600"
-            }`}
-            onClick={() => {
-              // Calculate the set of testimonials to show starting from this index
-              const newVisibleItems = [
-                index,
-                (index + 1) % TESTIMONIALS.length,
-                (index + 2) % TESTIMONIALS.length
-              ];
-              setVisibleItems(newVisibleItems);
-            }}
-            aria-label={`Go to testimonial set ${index + 1}`}
-          />
-        ))}
+        {Array.from({
+        length: Math.min(8, TESTIMONIALS.length)
+      }).map((_, index) => <button key={index} className={`h-2 rounded-full transition-all ${visibleItems.includes(index) ? "w-6 bg-hottopic-red" : "w-2 bg-gray-600"}`} onClick={() => {
+        // Calculate the set of testimonials to show starting from this index
+        const newVisibleItems = [index, (index + 1) % TESTIMONIALS.length, (index + 2) % TESTIMONIALS.length];
+        setVisibleItems(newVisibleItems);
+      }} aria-label={`Go to testimonial set ${index + 1}`} />)}
       </div>
-    </div>
-  );
+    </div>;
 };
 
 // Testimonial Card Component
@@ -141,25 +111,19 @@ const TestimonialCard = ({
   rating: number;
   content: string;
 }) => {
-  return (
-    <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30 w-full transition-all duration-500 hover:border-hottopic-red/50 h-full">
+  return <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30 w-full transition-all duration-500 hover:border-hottopic-red/50 h-full">
       <div className="flex items-center mb-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`w-4 h-4 fill-current ${i < rating ? 'text-yellow-500' : 'text-gray-400'}`}
-          />
-        ))}
+        {Array.from({
+        length: 5
+      }).map((_, i) => <Star key={i} className={`w-4 h-4 fill-current ${i < rating ? 'text-yellow-500' : 'text-gray-400'}`} />)}
       </div>
-      <p className="font-lato text-gray-300 mb-4 text-sm md:text-base italic">"{content}"</p>
+      <p className="text-gray-300 mb-4 text-sm md:text-base italic">"{content}"</p>
       <div className="flex items-center">
-        <div className="w-8 h-8 bg-hottopic-gray/50 rounded-full flex items-center justify-center text-white font-oswald text-sm">
+        <div className="w-8 h-8 bg-hottopic-gray/50 rounded-full flex items-center justify-center text-white font-bold text-sm">
           {name.charAt(0)}
         </div>
-        <p className="text-white font-oswald font-semibold ml-2">{name}</p>
+        <p className="text-white font-semibold ml-2">{name}</p>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TestimonialCarousel;
