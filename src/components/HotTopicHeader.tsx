@@ -10,7 +10,7 @@ const HotTopicHeader = () => {
     <header className="bg-black sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-0">
         {/* Top banner */}
-        <div className="bg-hottopic-red text-white text-center py-2 px-4 text-sm font-futura font-bold">
+        <div className="bg-hottopic-red text-white text-center py-2 px-4 text-xs font-futura font-bold">
           <p>FREE SHIPPING ON ORDERS $60+ | FREE RETURNS IN STORE | JOIN HOTTOPIC+ FOR FREE SHIPPING!</p>
         </div>
         
