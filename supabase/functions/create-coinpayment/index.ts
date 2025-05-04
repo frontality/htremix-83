@@ -52,37 +52,55 @@ serve(async (req) => {
 
     console.log("Creating CoinPayments transaction with amount:", amount);
 
-    // Format payload for CoinPayments API
-    const formData = new FormData();
-    formData.append('version', '1');
-    formData.append('key', COINPAYMENTS_API_KEY);
-    formData.append('cmd', 'create_transaction');
-    formData.append('amount', amount.toString());
-    formData.append('currency1', 'USD');
-    formData.append('currency2', 'BTC');
-    formData.append('buyer_email', customerEmail);
-    formData.append('buyer_name', customerName || customerEmail);
-    formData.append('item_name', itemName);
+    // Create URLSearchParams object for form data
+    const params = new URLSearchParams();
+    params.append('version', '1');
+    params.append('key', COINPAYMENTS_API_KEY);
+    params.append('cmd', 'create_transaction');
+    params.append('amount', amount.toString());
+    params.append('currency1', 'USD');
+    params.append('currency2', 'BTC');
+    params.append('buyer_email', customerEmail);
+    params.append('buyer_name', customerName || customerEmail);
+    params.append('item_name', itemName);
     
     const success_url = `${req.headers.get('origin') || ''}/payment-success`;
     const cancel_url = `${req.headers.get('origin') || ''}/payment-cancelled`;
-    formData.append('success_url', success_url);
-    formData.append('cancel_url', cancel_url);
+    params.append('success_url', success_url);
+    params.append('cancel_url', cancel_url);
 
-    // Generate HMAC signature
-    const hmacDigest = await generateHmac(formData, COINPAYMENTS_API_SECRET);
+    // Generate HMAC signature for the request
+    const hmacSignature = await generateHmac(params.toString(), COINPAYMENTS_API_SECRET);
+    
+    console.log("Sending request to CoinPayments with params:", params.toString());
 
-    // Call CoinPayments API
+    // Call CoinPayments API with proper content type
     const response = await fetch('https://www.coinpayments.net/api.php', {
       method: 'POST',
       headers: {
-        'HMAC': hmacDigest,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'HMAC': hmacSignature,
       },
-      body: formData,
+      body: params.toString(),
     });
 
-    const paymentData = await response.json();
-    console.log("CoinPayments API response:", JSON.stringify(paymentData));
+    const responseText = await response.text();
+    console.log("CoinPayments API raw response:", responseText);
+    
+    let paymentData;
+    try {
+      paymentData = JSON.parse(responseText);
+      console.log("CoinPayments API parsed response:", JSON.stringify(paymentData));
+    } catch (e) {
+      console.error("Failed to parse CoinPayments API response:", e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid response from payment gateway' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     if (!paymentData.error && paymentData.result) {
       // Return the payment checkout URL
@@ -121,18 +139,7 @@ serve(async (req) => {
 });
 
 // Function to generate HMAC signature for CoinPayments API
-async function generateHmac(formData: FormData, secret: string): Promise<string> {
-  // Convert FormData to a string with parameters in alphabetical order
-  const params = new URLSearchParams();
-  for (const [key, value] of formData.entries()) {
-    params.append(key, value);
-  }
-  
-  // Sort parameters alphabetically
-  const sortedParams = new URLSearchParams([...params.entries()].sort());
-  const paramString = sortedParams.toString();
-  
-  // Create HMAC signature
+async function generateHmac(paramString: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw', 
