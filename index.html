@@ -16,46 +16,6 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <!-- Bot detection -->
-    <script>
-      // Simple bot detection script
-      (function() {
-        // Check for common bot indicators
-        function detectBot() {
-          // Check for WebDriver
-          const hasWebDriver = navigator.webdriver;
-          
-          // Check for DevTools variables
-          const hasDevTools = 
-            /PhantomJS/.test(navigator.userAgent) || 
-            window.callPhantom || 
-            window._phantom || 
-            window.phantom;
-          
-          // Check for headless Chrome
-          const hasHeadlessChrome = 
-            navigator.userAgent.indexOf('HeadlessChrome') !== -1;
-          
-          // Check for automation frameworks
-          const hasAutomation = 
-            window.domAutomation || 
-            window.domAutomationController;
-            
-          // If any bot indicators found, redirect or show message
-          if (hasWebDriver || hasDevTools || hasHeadlessChrome || hasAutomation) {
-            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#fff;font-family:sans-serif;padding:20px;text-align:center;"><div><h1>Access Denied</h1><p>This site is for humans only. Automated access is not permitted.</p></div></div>';
-            return true;
-          }
-          return false;
-        }
-        
-        // Run detection on load
-        window.addEventListener('DOMContentLoaded', function() {
-          detectBot();
-        });
-      })();
-    </script>
   </head>
 
   <body>
