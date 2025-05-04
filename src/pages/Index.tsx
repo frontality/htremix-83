@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,10 @@ import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { createCoinPaymentTransaction } from "@/integrations/coinpayments/client";
 import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // This is Google's test key, replace with your actual key
 
 // Regex patterns for validation
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -33,6 +35,8 @@ const Index = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -96,6 +100,10 @@ const Index = () => {
     }));
   };
 
+  const handleCaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -103,6 +111,16 @@ const Index = () => {
       toast({
         title: "Error",
         description: "Please select a gift card amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if CAPTCHA is completed
+    if (!recaptchaToken) {
+      toast({
+        title: "Human Verification Required",
+        description: "Please complete the CAPTCHA to verify you're human",
         variant: "destructive",
       });
       return;
@@ -160,6 +178,9 @@ const Index = () => {
         });
         console.error("Payment creation failed:", paymentResult.error);
         setIsSubmitting(false);
+        // Reset reCAPTCHA on failure
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
         return;
       }
       
@@ -186,6 +207,9 @@ const Index = () => {
         variant: "destructive",
       });
       setIsSubmitting(false);
+      // Reset reCAPTCHA on failure
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -405,6 +429,30 @@ const Index = () => {
             </div>
           </div>
           
+          {/* Human Verification */}
+          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
+              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                4
+              </span>
+              Human Verification
+            </h2>
+            <div className="flex justify-center">
+              <div className="bg-white p-2 rounded-md">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={RECAPTCHA_SITE_KEY}
+                  onChange={handleCaptchaChange}
+                  theme="light"
+                />
+              </div>
+            </div>
+            <p className="text-gray-400 text-sm text-center">
+              <Shield size={16} className="inline mr-1" />
+              We want to ensure our discounted gift cards are only available to real humans, not bots.
+            </p>
+          </div>
+          
           {/* Order Summary */}
           {selectedAmount && (
             <div className="bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-xl p-6">
@@ -440,7 +488,7 @@ const Index = () => {
           <div className="flex justify-center">
             <Button 
               type="submit" 
-              disabled={isSubmitting || !selectedAmount}
+              disabled={isSubmitting || !selectedAmount || !recaptchaToken}
               className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
             >
               {isSubmitting ? "Processing..." : "Complete Purchase"}
