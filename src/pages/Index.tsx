@@ -8,6 +8,7 @@ import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
+import TestimonialCarousel from "@/components/TestimonialCarousel";
 import { createCoinPaymentTransaction } from "@/integrations/coinpayments/client";
 import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
 
@@ -225,7 +226,6 @@ const Index = () => {
           
           <div className="flex justify-center">
             <div className="w-full max-w-md p-4 relative">
-              
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
@@ -235,8 +235,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-      
-      
       
       {/* Main Content */}
       <div className="container py-8">
@@ -456,28 +454,13 @@ const Index = () => {
         </form>
       </div>
       
-      {/* Testimonials section */}
+      {/* Testimonials section - Updated with the new carousel */}
       <div className="bg-hottopic-gray/10 border-y border-hottopic-gray/20 py-10">
         <div className="container">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">What Our Customers Say</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <TestimonialCard 
-              name="Jessica M." 
-              rating={5}
-              content="I got a Hot Topic gift card for my daughter at 50% off and she absolutely loved it! Fast delivery and no issues."
-            />
-            <TestimonialCard 
-              name="Mike T." 
-              rating={5}
-              content="Perfect gift for my niece who loves Hot Topic. The process was simple and the discount was amazing."
-            />
-            <TestimonialCard 
-              name="Sarah K." 
-              rating={5}
-              content="I was skeptical at first, but the gift card worked perfectly at my local Hot Topic store. Will definitely buy again!"
-            />
-          </div>
+          {/* Replace static testimonials with the new carousel component */}
+          <TestimonialCarousel />
         </div>
       </div>
       
@@ -515,29 +498,7 @@ const Index = () => {
   );
 };
 
-// Testimonial Card Component
-const TestimonialCard = ({ name, rating, content }: { name: string; rating: number; content: string }) => {
-  return (
-    <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30">
-      <div className="flex items-center mb-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <svg 
-            key={i}
-            className={`w-4 h-4 ${i < rating ? 'text-yellow-500' : 'text-gray-400'}`}
-            fill="currentColor" 
-            viewBox="0 0 20 20"
-          >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
-        ))}
-      </div>
-      <p className="text-gray-300 mb-3 text-sm">"{content}"</p>
-      <p className="text-white font-semibold">{name}</p>
-    </div>
-  );
-};
-
-// FAQ Item Component
+// The FaqItem component definition remains unchanged
 const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   
