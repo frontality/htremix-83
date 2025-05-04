@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Star } from "lucide-react";
 
 // Testimonial data with compelling 5-star reviews
@@ -48,7 +48,7 @@ const TESTIMONIALS = [
 ];
 
 const TestimonialCarousel: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [visibleItems, setVisibleItems] = useState<number[]>([0, 1, 2]);
   const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
@@ -57,7 +57,11 @@ const TestimonialCarousel: React.FC = () => {
     
     if (autoplay) {
       timer = setInterval(() => {
-        setActiveIndex((current) => (current + 1) % TESTIMONIALS.length);
+        setVisibleItems(prev => {
+          // Calculate the next set of visible items with wrap-around
+          const nextItems = prev.map(index => (index + 1) % TESTIMONIALS.length);
+          return nextItems;
+        });
       }, 10000); // Change every 10 seconds
     }
     
@@ -80,8 +84,16 @@ const TestimonialCarousel: React.FC = () => {
     };
   }, [autoplay]);
 
+  const goToNext = () => {
+    setVisibleItems(prev => prev.map(index => (index + 1) % TESTIMONIALS.length));
+  };
+
+  const goToPrev = () => {
+    setVisibleItems(prev => prev.map(index => (index - 1 + TESTIMONIALS.length) % TESTIMONIALS.length));
+  };
+
   return (
-    <div id="testimonial-carousel" className="relative overflow-hidden max-w-5xl mx-auto">
+    <div id="testimonial-carousel" className="relative overflow-hidden max-w-7xl mx-auto px-4">
       <Carousel 
         opts={{ 
           align: "start",
@@ -90,18 +102,24 @@ const TestimonialCarousel: React.FC = () => {
         className="w-full"
         orientation="horizontal"
       >
-        <CarouselContent>
-          {TESTIMONIALS.map((testimonial, index) => (
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">What Our Customers Say</h2>
+          <div className="flex gap-2">
+            <CarouselPrevious onClick={goToPrev} className="relative static translate-y-0 left-0" />
+            <CarouselNext onClick={goToNext} className="relative static translate-y-0 right-0" />
+          </div>
+        </div>
+        
+        <CarouselContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {visibleItems.map((itemIndex) => (
             <CarouselItem 
-              key={index}
-              className={`transition-opacity duration-1000 ${
-                index === activeIndex ? "opacity-100" : "opacity-0 absolute"
-              }`}
+              key={itemIndex}
+              className="transition-opacity duration-1000 opacity-100 relative basis-full md:basis-1/3 pl-0 md:pl-4"
             >
               <TestimonialCard 
-                name={testimonial.name} 
-                rating={testimonial.rating}
-                content={testimonial.content}
+                name={TESTIMONIALS[itemIndex].name} 
+                rating={TESTIMONIALS[itemIndex].rating}
+                content={TESTIMONIALS[itemIndex].content}
               />
             </CarouselItem>
           ))}
@@ -110,14 +128,22 @@ const TestimonialCarousel: React.FC = () => {
       
       {/* Progress indicators */}
       <div className="flex justify-center mt-4 gap-2">
-        {TESTIMONIALS.map((_, index) => (
+        {Array.from({ length: Math.min(8, TESTIMONIALS.length) }).map((_, index) => (
           <button 
             key={index}
             className={`h-2 rounded-full transition-all ${
-              index === activeIndex ? "w-6 bg-hottopic-red" : "w-2 bg-gray-600"
+              visibleItems.includes(index) ? "w-6 bg-hottopic-red" : "w-2 bg-gray-600"
             }`}
-            onClick={() => setActiveIndex(index)}
-            aria-label={`Go to testimonial ${index + 1}`}
+            onClick={() => {
+              // Calculate the set of testimonials to show starting from this index
+              const newVisibleItems = [
+                index,
+                (index + 1) % TESTIMONIALS.length,
+                (index + 2) % TESTIMONIALS.length
+              ];
+              setVisibleItems(newVisibleItems);
+            }}
+            aria-label={`Go to testimonial set ${index + 1}`}
           />
         ))}
       </div>
@@ -128,7 +154,7 @@ const TestimonialCarousel: React.FC = () => {
 // Testimonial Card Component
 const TestimonialCard = ({ name, rating, content }: { name: string; rating: number; content: string }) => {
   return (
-    <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30 w-full md:max-w-2xl mx-auto transition-all duration-500 hover:border-hottopic-red/50 h-full">
+    <div className="bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/30 w-full transition-all duration-500 hover:border-hottopic-red/50 h-full">
       <div className="flex items-center mb-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star 
