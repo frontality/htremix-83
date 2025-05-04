@@ -466,7 +466,7 @@ const Index = () => {
       
       {/* FAQ Section */}
       <div className="container py-10">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
+        <h2 className="faq-heading text-center mb-8">Frequently Asked Questions</h2>
         
         <div className="max-w-3xl mx-auto space-y-4">
           <FaqItem 
@@ -498,7 +498,7 @@ const Index = () => {
   );
 };
 
-// The FaqItem component definition remains unchanged
+// Updated FaqItem component with new font classes
 const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -508,11 +508,11 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
         onClick={() => setIsOpen(!isOpen)}
         className="flex justify-between items-center w-full py-3 text-left focus:outline-none"
       >
-        <h3 className="text-white font-medium">{question}</h3>
+        <h3 className="faq-question font-medium">{question}</h3>
         <ChevronRight className={`text-hottopic-red transition-transform ${isOpen ? 'transform rotate-90' : ''}`} size={20} />
       </button>
       {isOpen && (
-        <div className="pb-3 text-gray-400 text-sm">
+        <div className="pb-3 faq-answer">
           <p>{answer}</p>
         </div>
       )}

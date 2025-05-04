@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -22,7 +21,10 @@ export default {
 			fontFamily: {
 				'futura': ['Futura', 'Trebuchet MS', 'Arial', 'sans-serif'],
 				'rockwell': ['Rockwell', 'Courier Bold', 'Georgia', 'serif'],
-				'helvetica': ['Helvetica Neue', 'Arial', 'sans-serif']
+				'helvetica': ['Helvetica Neue', 'Arial', 'sans-serif'],
+				'bebas': ['Bebas Neue', 'Impact', 'sans-serif'],
+				'oswald': ['Oswald', 'sans-serif'],
+				'lato': ['Lato', 'Helvetica', 'Arial', 'sans-serif']
 			},
 			colors: {
 				border: 'hsl(var(--border))',
