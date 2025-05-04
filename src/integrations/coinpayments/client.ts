@@ -54,20 +54,20 @@ export const createCoinPaymentTransaction = async (
     });
 
     if (error) {
-      console.error("Error creating CoinPayment transaction:", error);
+      console.error("Error calling Edge Function:", error);
       return { 
         success: false, 
         error: "Unable to create payment transaction. Please try again." 
       };
     }
 
-    console.log("CoinPayments response:", data);
+    console.log("CoinPayments response data:", data);
     
     if (!data || !data.checkout_url) {
-      console.error("Invalid CoinPayment response:", data);
+      console.error("Invalid response format:", data);
       return { 
         success: false, 
-        error: "Invalid payment response. Please try again." 
+        error: "Invalid payment response format. Please try again." 
       };
     }
 

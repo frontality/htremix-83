@@ -105,7 +105,8 @@ serve(async (req) => {
       );
     }
     
-    if (!paymentData.error && paymentData.result) {
+    // CoinPayments uses "error":"ok" to indicate success
+    if (paymentData.error === "ok" && paymentData.result) {
       // Return the payment checkout URL
       return new Response(
         JSON.stringify({
