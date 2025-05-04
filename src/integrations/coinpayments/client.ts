@@ -1,6 +1,7 @@
 
 // CoinPayments API client for cryptocurrency payments
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface CoinPaymentTransaction {
   txn_id: string;
@@ -32,6 +33,13 @@ export const createCoinPaymentTransaction = async (
   error?: string;
 }> => {
   try {
+    console.log("Creating CoinPayment transaction with details:", {
+      amount: paymentDetails.amount,
+      customerName: paymentDetails.customerName,
+      email: paymentDetails.customerEmail,
+      giftCardValue: paymentDetails.giftCardValue
+    });
+    
     // Call Supabase Edge Function to create a CoinPayments transaction
     // This isolates the API key and prevents exposing it in the frontend
     const { data, error } = await supabase.functions.invoke("create-coinpayment", {
@@ -51,7 +59,10 @@ export const createCoinPaymentTransaction = async (
       };
     }
 
-    if (!data.checkout_url) {
+    console.log("CoinPayments response:", data);
+    
+    if (!data || !data.checkout_url) {
+      console.error("Invalid CoinPayment response:", data);
       return { 
         success: false, 
         error: "Invalid payment response. Please try again." 

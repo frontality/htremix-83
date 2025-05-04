@@ -22,23 +22,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') || ''
     );
 
-    // Validate the user is authenticated (optional, depends on your requirements)
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (userError || !user) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { 
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-    }
-
     // Extract payment details from the request
     const { amount, customerName, customerEmail, itemName } = await req.json();
 
@@ -57,6 +40,7 @@ serve(async (req) => {
     const COINPAYMENTS_API_SECRET = Deno.env.get('COINPAYMENTS_API_SECRET');
     
     if (!COINPAYMENTS_API_KEY || !COINPAYMENTS_API_SECRET) {
+      console.error("Missing CoinPayments API credentials");
       return new Response(
         JSON.stringify({ error: 'Payment service configuration error' }),
         { 
@@ -66,58 +50,39 @@ serve(async (req) => {
       );
     }
 
-    // Create HMAC signature for CoinPayments API
-    const createHmacSignature = async (payload: string, secret: string): Promise<string> => {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        'raw', 
-        encoder.encode(secret),
-        { name: 'HMAC', hash: 'SHA-512' },
-        false,
-        ['sign']
-      );
-      
-      const signature = await crypto.subtle.sign(
-        'HMAC',
-        key,
-        encoder.encode(payload)
-      );
-      
-      return Array.from(new Uint8Array(signature))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-    };
+    console.log("Creating CoinPayments transaction with amount:", amount);
 
-    // Prepare request to CoinPayments API
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const payload = JSON.stringify({
-      version: 1,
-      key: COINPAYMENTS_API_KEY,
-      cmd: 'create_transaction',
-      amount: amount.toString(),
-      currency1: 'USD',
-      currency2: 'BTC',  // Default to Bitcoin, but can be changed
-      buyer_email: customerEmail,
-      buyer_name: customerName || customerEmail,
-      item_name: itemName,
-      ipn_url: `${Deno.env.get('SUPABASE_URL') || ''}/functions/v1/coinpayments-webhook`,
-      success_url: `${req.headers.get('origin') || ''}/payment-success`,
-      cancel_url: `${req.headers.get('origin') || ''}/payment-cancelled`,
-    });
+    // Format payload for CoinPayments API
+    const formData = new FormData();
+    formData.append('version', '1');
+    formData.append('key', COINPAYMENTS_API_KEY);
+    formData.append('cmd', 'create_transaction');
+    formData.append('amount', amount.toString());
+    formData.append('currency1', 'USD');
+    formData.append('currency2', 'BTC');
+    formData.append('buyer_email', customerEmail);
+    formData.append('buyer_name', customerName || customerEmail);
+    formData.append('item_name', itemName);
+    
+    const success_url = `${req.headers.get('origin') || ''}/payment-success`;
+    const cancel_url = `${req.headers.get('origin') || ''}/payment-cancelled`;
+    formData.append('success_url', success_url);
+    formData.append('cancel_url', cancel_url);
 
-    const signature = await createHmacSignature(payload, COINPAYMENTS_API_SECRET);
+    // Generate HMAC signature
+    const hmacDigest = await generateHmac(formData, COINPAYMENTS_API_SECRET);
 
     // Call CoinPayments API
     const response = await fetch('https://www.coinpayments.net/api.php', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'HMAC': signature,
+        'HMAC': hmacDigest,
       },
-      body: payload,
+      body: formData,
     });
 
     const paymentData = await response.json();
+    console.log("CoinPayments API response:", JSON.stringify(paymentData));
     
     if (!paymentData.error && paymentData.result) {
       // Return the payment checkout URL
@@ -133,6 +98,7 @@ serve(async (req) => {
         }
       );
     } else {
+      console.error("CoinPayments API error:", paymentData.error);
       return new Response(
         JSON.stringify({ error: paymentData.error || 'Payment creation failed' }),
         { 
@@ -143,6 +109,7 @@ serve(async (req) => {
     }
     
   } catch (error) {
+    console.error("Edge function error:", error);
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { 
@@ -152,3 +119,36 @@ serve(async (req) => {
     );
   }
 });
+
+// Function to generate HMAC signature for CoinPayments API
+async function generateHmac(formData: FormData, secret: string): Promise<string> {
+  // Convert FormData to a string with parameters in alphabetical order
+  const params = new URLSearchParams();
+  for (const [key, value] of formData.entries()) {
+    params.append(key, value);
+  }
+  
+  // Sort parameters alphabetically
+  const sortedParams = new URLSearchParams([...params.entries()].sort());
+  const paramString = sortedParams.toString();
+  
+  // Create HMAC signature
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', 
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-512' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(paramString)
+  );
+  
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
