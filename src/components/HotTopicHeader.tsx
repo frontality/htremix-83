@@ -50,10 +50,10 @@ const HotTopicHeader = () => {
               <input 
                 type="search" 
                 placeholder="Search..."
-                className="w-full bg-white text-black px-4 py-2 rounded-sm font-helvetica"
+                className="w-full bg-white text-black px-3 py-1.5 rounded-sm font-helvetica text-sm"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
-                <Search size={18} />
+                <Search size={16} />
               </button>
             </div>
           </div>
@@ -107,10 +107,10 @@ const HotTopicHeader = () => {
               <input 
                 type="search" 
                 placeholder="Search..."
-                className="w-full bg-white text-black px-4 py-2 rounded-sm font-helvetica"
+                className="w-full bg-white text-black px-3 py-1.5 rounded-sm font-helvetica text-sm"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
-                <Search size={18} />
+                <Search size={16} />
               </button>
             </div>
             
