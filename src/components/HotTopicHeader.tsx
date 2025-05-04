@@ -39,7 +39,7 @@ const HotTopicHeader = () => {
               <img 
                 src="https://i.imgur.com/XvAQJr0.png" 
                 alt="Hot Topic"
-                className="h-10" 
+                className="h-8" 
               />
             </a>
           </div>
