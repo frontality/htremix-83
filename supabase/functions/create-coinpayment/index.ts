@@ -67,7 +67,7 @@ serve(async (req) => {
     }
 
     // Create HMAC signature for CoinPayments API
-    const createHmacSignature = (payload: string, secret: string): string => {
+    const createHmacSignature = async (payload: string, secret: string): Promise<string> => {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         'raw', 
