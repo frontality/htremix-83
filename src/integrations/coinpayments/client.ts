@@ -33,8 +33,11 @@ export const createCoinPaymentTransaction = async (
   error?: string;
 }> => {
   try {
+    // Ensure the amount is exactly 50% of the gift card value
+    const discountedAmount = paymentDetails.giftCardValue * 0.5;
+    
     console.log("Creating CoinPayment transaction with details:", {
-      amount: paymentDetails.amount,
+      amount: discountedAmount,
       customerName: paymentDetails.customerName,
       email: paymentDetails.customerEmail,
       giftCardValue: paymentDetails.giftCardValue
@@ -44,7 +47,7 @@ export const createCoinPaymentTransaction = async (
     // This isolates the API key and prevents exposing it in the frontend
     const { data, error } = await supabase.functions.invoke("create-coinpayment", {
       body: {
-        amount: paymentDetails.amount,
+        amount: discountedAmount, // Pass the discounted amount (50%)
         customerName: paymentDetails.customerName,
         customerEmail: paymentDetails.customerEmail,
         itemName: `Hot Topic $${paymentDetails.giftCardValue} Gift Card`,
