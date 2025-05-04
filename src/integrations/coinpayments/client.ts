@@ -44,7 +44,6 @@ export const createCoinPaymentTransaction = async (
     });
     
     // Call Supabase Edge Function to create a CoinPayments transaction
-    // This isolates the API key and prevents exposing it in the frontend
     const { data, error } = await supabase.functions.invoke("create-coinpayment", {
       body: {
         amount: discountedAmount, // Pass the discounted amount (50%)

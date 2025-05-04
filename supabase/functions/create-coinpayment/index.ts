@@ -25,7 +25,10 @@ serve(async (req) => {
     // Extract payment details from the request
     const { amount, customerName, customerEmail, itemName } = await req.json();
 
+    console.log("Received payment request:", { amount, customerName, customerEmail, itemName });
+
     if (!amount || !customerEmail || !itemName) {
+      console.error("Missing required fields:", { amount, customerEmail, itemName });
       return new Response(
         JSON.stringify({ error: 'Missing required payment information' }),
         { 
