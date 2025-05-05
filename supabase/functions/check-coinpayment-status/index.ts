@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,28 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') || '',
-      Deno.env.get('SUPABASE_ANON_KEY') || ''
-    );
-
-    // Extract payment details from the request
-    const { amount, customerName, customerEmail, itemName, cryptoCurrency } = await req.json();
-
-    console.log("Received payment request:", { amount, customerName, customerEmail, itemName, cryptoCurrency });
-
-    if (!amount || !customerEmail || !itemName) {
-      console.error("Missing required fields:", { amount, customerEmail, itemName });
-      return new Response(
-        JSON.stringify({ error: 'Missing required payment information' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // CoinPayments API credentials
     const COINPAYMENTS_API_KEY = Deno.env.get('COINPAYMENTS_API_KEY');
     const COINPAYMENTS_API_SECRET = Deno.env.get('COINPAYMENTS_API_SECRET');
     
@@ -52,34 +29,32 @@ serve(async (req) => {
         }
       );
     }
-
-    // Use the provided cryptocurrency or default to BTC
-    const currency2 = cryptoCurrency || 'BTC';
-    console.log(`Creating CoinPayments transaction with amount: ${amount} in ${currency2}`);
+    
+    // Extract transaction ID from the request
+    const { txn_id } = await req.json();
+    
+    if (!txn_id) {
+      return new Response(
+        JSON.stringify({ error: 'Missing transaction ID' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Create URLSearchParams object for form data
     const params = new URLSearchParams();
     params.append('version', '1');
     params.append('key', COINPAYMENTS_API_KEY);
-    params.append('cmd', 'create_transaction');
-    params.append('amount', amount.toString());
-    params.append('currency1', 'USD');
-    params.append('currency2', currency2); // Use selected cryptocurrency
-    params.append('buyer_email', customerEmail);
-    params.append('buyer_name', customerName || customerEmail);
-    params.append('item_name', itemName);
+    params.append('cmd', 'get_tx_info');
+    params.append('txid', txn_id);
+    params.append('full', '1');
     
-    // Generate success and cancel URLs
-    const origin = req.headers.get('origin') || '';
-    const success_url = `${origin}/payment-success`;
-    const cancel_url = `${origin}/payment-cancelled`;
-    params.append('success_url', success_url);
-    params.append('cancel_url', cancel_url);
-
     // Generate HMAC signature for the request
     const hmacSignature = await generateHmac(params.toString(), COINPAYMENTS_API_SECRET);
     
-    console.log("Sending request to CoinPayments with params:", params.toString());
+    console.log("Checking status for transaction:", txn_id);
 
     // Call CoinPayments API with proper content type
     const response = await fetch('https://www.coinpayments.net/api.php', {
@@ -92,12 +67,12 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log("CoinPayments API raw response:", responseText);
+    console.log("CoinPayments status API raw response:", responseText);
     
-    let paymentData;
+    let statusData;
     try {
-      paymentData = JSON.parse(responseText);
-      console.log("CoinPayments API parsed response:", JSON.stringify(paymentData));
+      statusData = JSON.parse(responseText);
+      console.log("CoinPayments status API parsed response:", JSON.stringify(statusData));
     } catch (e) {
       console.error("Failed to parse CoinPayments API response:", e);
       return new Response(
@@ -110,19 +85,20 @@ serve(async (req) => {
     }
     
     // CoinPayments uses "error":"ok" to indicate success
-    if (paymentData.error === "ok" && paymentData.result) {
-      // Return all transaction details
+    if (statusData.error === "ok" && statusData.result) {
+      // Map status number to text
+      const statusText = getStatusText(statusData.result.status);
+      
+      // Return the payment status
       return new Response(
         JSON.stringify({
-          txn_id: paymentData.result.txn_id,
-          status_url: paymentData.result.status_url,
-          checkout_url: paymentData.result.checkout_url,
-          address: paymentData.result.address,
-          amount: paymentData.result.amount,
-          confirms_needed: paymentData.result.confirms_needed,
-          timeout: paymentData.result.timeout,
-          qrcode_url: paymentData.result.qrcode_url,
-          status: 0, // Initial status is "waiting for payment"
+          status: statusData.result.status,
+          statusText: statusText,
+          received_amount: statusData.result.received_amount,
+          received_confirms: statusData.result.received_confirms,
+          time_created: statusData.result.time_created,
+          time_expires: statusData.result.time_expires,
+          payment_address: statusData.result.payment_address,
         }),
         { 
           status: 200, 
@@ -130,9 +106,9 @@ serve(async (req) => {
         }
       );
     } else {
-      console.error("CoinPayments API error:", paymentData.error);
+      console.error("CoinPayments API error:", statusData.error);
       return new Response(
-        JSON.stringify({ error: paymentData.error || 'Payment creation failed' }),
+        JSON.stringify({ error: statusData.error || 'Payment status check failed' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -172,4 +148,20 @@ async function generateHmac(paramString: string, secret: string): Promise<string
   return Array.from(new Uint8Array(signature))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+// Function to convert status code to text
+function getStatusText(statusCode: number): string {
+  switch (statusCode) {
+    case 0:
+      return "Waiting for Payment";
+    case 1:
+      return "Payment Received (Confirming)";
+    case 2:
+      return "Payment Confirmed";
+    case -1:
+      return "Payment Cancelled/Timed Out";
+    default:
+      return "Unknown Status";
+  }
 }

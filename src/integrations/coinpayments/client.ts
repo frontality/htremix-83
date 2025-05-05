@@ -3,11 +3,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface CoinPaymentTransaction {
+export interface CoinPaymentTransaction {
   txn_id: string;
   status_url: string;
   checkout_url: string;
   status: number;
+  address: string;
+  amount: string;
+  confirms_needed: string;
+  timeout: number;
+  qrcode_url: string;
 }
 
 interface CoinPaymentRequest {
@@ -26,11 +31,11 @@ export const createCoinPaymentTransaction = async (
     customerName: string;
     customerEmail: string;
     giftCardValue: number;
-    cryptoCurrency: string; // Added cryptocurrency parameter
+    cryptoCurrency: string;
   }
 ): Promise<{
   success: boolean;
-  checkoutUrl?: string;
+  transactionDetails?: CoinPaymentTransaction;
   error?: string;
 }> => {
   try {
@@ -42,17 +47,17 @@ export const createCoinPaymentTransaction = async (
       customerName: paymentDetails.customerName,
       email: paymentDetails.customerEmail,
       giftCardValue: paymentDetails.giftCardValue,
-      cryptoCurrency: paymentDetails.cryptoCurrency // Log the selected cryptocurrency
+      cryptoCurrency: paymentDetails.cryptoCurrency
     });
     
     // Call Supabase Edge Function to create a CoinPayments transaction
     const { data, error } = await supabase.functions.invoke("create-coinpayment", {
       body: {
-        amount: discountedAmount, // Pass the discounted amount (50%)
+        amount: discountedAmount,
         customerName: paymentDetails.customerName,
         customerEmail: paymentDetails.customerEmail,
         itemName: `Hot Topic $${paymentDetails.giftCardValue} Gift Card`,
-        cryptoCurrency: paymentDetails.cryptoCurrency // Pass the selected cryptocurrency
+        cryptoCurrency: paymentDetails.cryptoCurrency
       },
     });
 
@@ -66,7 +71,7 @@ export const createCoinPaymentTransaction = async (
 
     console.log("CoinPayments response data:", data);
     
-    if (!data || !data.checkout_url) {
+    if (!data || !data.txn_id) {
       console.error("Invalid response format:", data);
       return { 
         success: false, 
@@ -76,13 +81,56 @@ export const createCoinPaymentTransaction = async (
 
     return {
       success: true,
-      checkoutUrl: data.checkout_url,
+      transactionDetails: data as CoinPaymentTransaction,
     };
   } catch (err) {
     console.error("CoinPayments transaction error:", err);
     return { 
       success: false, 
       error: "Payment service is currently unavailable. Please try again later." 
+    };
+  }
+};
+
+// Get transaction status from CoinPayments
+export const getCoinPaymentStatus = async (
+  txnId: string
+): Promise<{
+  success: boolean;
+  status?: string;
+  statusCode?: number;
+  error?: string;
+}> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("check-coinpayment-status", {
+      body: { txn_id: txnId }
+    });
+
+    if (error) {
+      console.error("Error checking payment status:", error);
+      return { 
+        success: false, 
+        error: "Unable to check payment status. Please try again." 
+      };
+    }
+
+    if (!data || !data.status) {
+      return { 
+        success: false, 
+        error: "Invalid status response format." 
+      };
+    }
+
+    return {
+      success: true,
+      status: data.statusText,
+      statusCode: data.status
+    };
+  } catch (err) {
+    console.error("Payment status check error:", err);
+    return { 
+      success: false, 
+      error: "Unable to check payment status. Please try again." 
     };
   }
 };
@@ -101,3 +149,10 @@ export const SUPPORTED_CRYPTOCURRENCIES = [
   { code: "DOT", name: "Polkadot" }
 ];
 
+// Payment status codes from CoinPayments
+export const PAYMENT_STATUS = {
+  WAITING: 0, // Waiting for funds
+  CONFIRMED: 1, // 1+ confirmation but below needed confirms
+  COMPLETE: 2, // Complete with all needed confirms
+  EXPIRED: -1, // Expired or cancelled
+};

