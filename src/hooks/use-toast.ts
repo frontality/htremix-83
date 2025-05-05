@@ -1,3 +1,5 @@
+
+// This ensures we're importing React properly
 import * as React from "react"
 
 import type {
