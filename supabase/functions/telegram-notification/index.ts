@@ -111,22 +111,39 @@ async function sendTelegramMessage(message: string): Promise<any> {
   
   const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   
-  const response = await fetch(telegramApiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHANNEL_ID,
-      text: message,
-      parse_mode: "Markdown",
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Telegram API error: ${JSON.stringify(errorData)}`);
+  try {
+    console.log(`Sending message to Telegram: ${telegramApiUrl}`);
+
+    const response = await fetch(telegramApiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHANNEL_ID,
+        text: message,
+        parse_mode: "Markdown",
+      }),
+    });
+    
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.error(`Telegram API error status: ${response.status}`);
+      console.error(`Telegram API error response: ${responseText}`);
+      throw new Error(`Telegram API error: ${response.status} - ${responseText}`);
+    }
+    
+    // Properly handle JSON response
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      const text = await response.text();
+      console.log("Non-JSON response from Telegram API:", text);
+      return { success: true, rawResponse: text };
+    }
+  } catch (error) {
+    console.error("Error in sendTelegramMessage:", error);
+    throw error;
   }
-  
-  return await response.json();
 }

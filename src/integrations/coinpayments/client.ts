@@ -90,6 +90,8 @@ export const createCoinPaymentTransaction = async ({
 // Add a new function to send Telegram notifications
 export const sendTelegramNotification = async (customerData: any): Promise<{ success: boolean; error?: string }> => {
   try {
+    console.log('Sending notification to Telegram with data:', customerData);
+    
     const response = await fetch('/functions/v1/telegram-notification', {
       method: 'POST',
       headers: {
@@ -100,21 +102,30 @@ export const sendTelegramNotification = async (customerData: any): Promise<{ suc
       }),
     });
 
+    // Log the complete response information for debugging
+    console.log('Telegram notification response status:', response.status);
+    console.log('Telegram notification response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Error sending Telegram notification:', error);
-      return { success: false, error: 'Failed to send notification' };
+      const errorText = await response.text();
+      console.error('Error sending Telegram notification. Status:', response.status, 'Body:', errorText);
+      return { success: false, error: `Failed to send notification: ${response.status} - ${errorText}` };
     }
 
-    const data = await response.json();
-    return {
-      success: true,
-    };
+    try {
+      const data = await response.json();
+      console.log('Telegram notification successful, response:', data);
+      return { success: true };
+    } catch (jsonError) {
+      const textResponse = await response.text();
+      console.error('Error parsing JSON response from Telegram notification:', jsonError, 'Raw response:', textResponse);
+      return { success: false, error: 'Invalid JSON response from notification service' };
+    }
   } catch (error) {
     console.error('Error sending Telegram notification:', error);
     return {
       success: false,
-      error: error.message || 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
     };
   }
 };
