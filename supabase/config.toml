@@ -62,3 +62,6 @@ verify_jwt = true
 
 [edge_functions.check-coinpayment-status]
 verify_jwt = true
+
+[edge_functions.telegram-notification]
+verify_jwt = true
