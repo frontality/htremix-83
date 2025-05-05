@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,19 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    const { txn_id } = await req.json();
-
-    if (!txn_id) {
-      return new Response(
-        JSON.stringify({ error: 'Transaction ID is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // CoinPayments API credentials
     const COINPAYMENTS_API_KEY = Deno.env.get('COINPAYMENTS_API_KEY');
     const COINPAYMENTS_API_SECRET = Deno.env.get('COINPAYMENTS_API_SECRET');
     
@@ -43,6 +29,19 @@ serve(async (req) => {
         }
       );
     }
+    
+    // Extract transaction ID from the request
+    const { txn_id } = await req.json();
+    
+    if (!txn_id) {
+      return new Response(
+        JSON.stringify({ error: 'Missing transaction ID' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Create URLSearchParams object for form data
     const params = new URLSearchParams();
@@ -50,6 +49,7 @@ serve(async (req) => {
     params.append('key', COINPAYMENTS_API_KEY);
     params.append('cmd', 'get_tx_info');
     params.append('txid', txn_id);
+    params.append('full', '1');
     
     // Generate HMAC signature for the request
     const hmacSignature = await generateHmac(params.toString(), COINPAYMENTS_API_SECRET);
@@ -67,12 +67,12 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log("CoinPayments API raw response:", responseText);
+    console.log("CoinPayments status API raw response:", responseText);
     
     let statusData;
     try {
       statusData = JSON.parse(responseText);
-      console.log("CoinPayments API parsed response:", JSON.stringify(statusData));
+      console.log("CoinPayments status API parsed response:", JSON.stringify(statusData));
     } catch (e) {
       console.error("Failed to parse CoinPayments API response:", e);
       return new Response(
@@ -86,14 +86,19 @@ serve(async (req) => {
     
     // CoinPayments uses "error":"ok" to indicate success
     if (statusData.error === "ok" && statusData.result) {
-      const statusCode = parseInt(statusData.result.status);
+      // Map status number to text
+      const statusText = getStatusText(statusData.result.status);
       
+      // Return the payment status
       return new Response(
         JSON.stringify({
-          success: true,
-          statusCode: statusCode,
-          status: getStatusLabel(statusCode),
-          details: statusData.result,
+          status: statusData.result.status,
+          statusText: statusText,
+          received_amount: statusData.result.received_amount,
+          received_confirms: statusData.result.received_confirms,
+          time_created: statusData.result.time_created,
+          time_expires: statusData.result.time_expires,
+          payment_address: statusData.result.payment_address,
         }),
         { 
           status: 200, 
@@ -103,7 +108,7 @@ serve(async (req) => {
     } else {
       console.error("CoinPayments API error:", statusData.error);
       return new Response(
-        JSON.stringify({ error: statusData.error || 'Status check failed' }),
+        JSON.stringify({ error: statusData.error || 'Payment status check failed' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -145,18 +150,18 @@ async function generateHmac(paramString: string, secret: string): Promise<string
     .join('');
 }
 
-// Function to convert status code to human-readable label
-function getStatusLabel(statusCode: number): string {
+// Function to convert status code to text
+function getStatusText(statusCode: number): string {
   switch (statusCode) {
-    case -1:
-      return "Expired";
     case 0:
-      return "Pending";
-    case 1: 
-      return "Confirmed";
-    case 100:
-      return "Complete";
+      return "Waiting for Payment";
+    case 1:
+      return "Payment Received (Confirming)";
+    case 2:
+      return "Payment Confirmed";
+    case -1:
+      return "Payment Cancelled/Timed Out";
     default:
-      return "Unknown";
+      return "Unknown Status";
   }
 }
