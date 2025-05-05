@@ -1,4 +1,3 @@
-
 // CoinPayments API client for cryptocurrency payments
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -168,7 +167,6 @@ function getStatusText(statusCode: number): string {
 export const SUPPORTED_CRYPTOCURRENCIES = [
   { code: "BTC", name: "Bitcoin", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
   { code: "ETH", name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
-  { code: "BNB", name: "Binance Coin", logo: "https://cryptologos.cc/logos/bnb-bnb-logo.png" },
   { code: "LTC", name: "Litecoin", logo: "https://cryptologos.cc/logos/litecoin-ltc-logo.png" },
   { code: "SOL", name: "Solana", logo: "https://cryptologos.cc/logos/solana-sol-logo.png" },
   { code: "TRX", name: "TRON", logo: "https://cryptologos.cc/logos/tron-trx-logo.png" },
