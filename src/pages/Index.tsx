@@ -271,7 +271,7 @@ const Index = () => {
               <img 
                 src="https://i.imgur.com/adJEpil.png" 
                 alt="Hot Topic Gift Card" 
-                className="w-full h-auto rounded-lg shadow-2xl border border-hottopic-gray/30 ht-border-glow"
+                className="w-[90%] mx-auto h-auto rounded-lg shadow-2xl border border-hottopic-gray/30 ht-border-glow"
               />
             </div>
           </div>
