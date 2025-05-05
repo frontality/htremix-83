@@ -102,6 +102,8 @@ export const getCoinPaymentStatus = async (
   error?: string;
 }> => {
   try {
+    console.log("Checking status for transaction:", txnId);
+    
     const { data, error } = await supabase.functions.invoke("check-coinpayment-status", {
       body: { txn_id: txnId }
     });
@@ -114,7 +116,18 @@ export const getCoinPaymentStatus = async (
       };
     }
 
-    if (!data || !data.status) {
+    console.log("Status check response:", data);
+
+    // More robust data validation
+    if (!data) {
+      return { 
+        success: false, 
+        error: "No response from payment gateway." 
+      };
+    }
+
+    // Check if the status field exists
+    if (data.status === undefined || data.status === null) {
       return { 
         success: false, 
         error: "Invalid status response format." 
@@ -123,7 +136,7 @@ export const getCoinPaymentStatus = async (
 
     return {
       success: true,
-      status: data.statusText,
+      status: data.statusText || getStatusText(data.status),
       statusCode: data.status
     };
   } catch (err) {
@@ -135,18 +148,34 @@ export const getCoinPaymentStatus = async (
   }
 };
 
+// Helper function to get status text from status code
+function getStatusText(statusCode: number): string {
+  switch (statusCode) {
+    case 0:
+      return "Waiting for Payment";
+    case 1:
+      return "Payment Received (Confirming)";
+    case 2:
+      return "Payment Confirmed";
+    case -1:
+      return "Payment Cancelled/Timed Out";
+    default:
+      return "Unknown Status";
+  }
+}
+
 // List of supported cryptocurrencies
 export const SUPPORTED_CRYPTOCURRENCIES = [
-  { code: "BTC", name: "Bitcoin" },
-  { code: "ETH", name: "Ethereum" },
-  { code: "LTC", name: "Litecoin" },
-  { code: "DOGE", name: "Dogecoin" },
-  { code: "USDT", name: "Tether (ERC20)" },
-  { code: "USDC", name: "USD Coin" },
-  { code: "XRP", name: "XRP" },
-  { code: "SOL", name: "Solana" },
-  { code: "ADA", name: "Cardano" },
-  { code: "DOT", name: "Polkadot" }
+  { code: "BTC", name: "Bitcoin", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
+  { code: "ETH", name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+  { code: "LTC", name: "Litecoin", logo: "https://cryptologos.cc/logos/litecoin-ltc-logo.png" },
+  { code: "DOGE", name: "Dogecoin", logo: "https://cryptologos.cc/logos/dogecoin-doge-logo.png" },
+  { code: "USDT", name: "Tether (ERC20)", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
+  { code: "USDC", name: "USD Coin", logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png" },
+  { code: "XRP", name: "XRP", logo: "https://cryptologos.cc/logos/xrp-xrp-logo.png" },
+  { code: "SOL", name: "Solana", logo: "https://cryptologos.cc/logos/solana-sol-logo.png" },
+  { code: "ADA", name: "Cardano", logo: "https://cryptologos.cc/logos/cardano-ada-logo.png" },
+  { code: "DOT", name: "Polkadot", logo: "https://cryptologos.cc/logos/polkadot-new-dot-logo.png" }
 ];
 
 // Payment status codes from CoinPayments

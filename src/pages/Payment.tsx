@@ -82,46 +82,56 @@ const Payment = () => {
     
     setLoading(true);
     
-    const result = await getCoinPaymentStatus(transaction.txn_id);
-    
-    if (result.success && result.statusCode !== undefined) {
-      setPaymentStatus({
-        statusCode: result.statusCode,
-        statusText: result.status || "Unknown",
-      });
+    try {
+      const result = await getCoinPaymentStatus(transaction.txn_id);
       
-      // If payment is confirmed or completed, redirect to success page
-      if (
-        result.statusCode === PAYMENT_STATUS.CONFIRMED || 
-        result.statusCode === PAYMENT_STATUS.COMPLETE
-      ) {
-        if (statusCheckInterval) window.clearInterval(statusCheckInterval);
-        toast({
-          title: "Payment Successful",
-          description: "Your payment has been received and confirmed!",
+      if (result.success && result.statusCode !== undefined) {
+        setPaymentStatus({
+          statusCode: result.statusCode,
+          statusText: result.status || "Unknown",
         });
-        navigate("/payment-success", { state: { txnId: transaction.txn_id } });
-      }
-      
-      // If payment is expired or cancelled, redirect to cancelled page
-      if (result.statusCode === PAYMENT_STATUS.EXPIRED) {
-        if (statusCheckInterval) window.clearInterval(statusCheckInterval);
+        
+        // If payment is confirmed or completed, redirect to success page
+        if (
+          result.statusCode === PAYMENT_STATUS.CONFIRMED || 
+          result.statusCode === PAYMENT_STATUS.COMPLETE
+        ) {
+          if (statusCheckInterval) window.clearInterval(statusCheckInterval);
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been received and confirmed!",
+          });
+          navigate("/payment-success", { state: { txnId: transaction.txn_id } });
+        }
+        
+        // If payment is expired or cancelled, redirect to cancelled page
+        if (result.statusCode === PAYMENT_STATUS.EXPIRED) {
+          if (statusCheckInterval) window.clearInterval(statusCheckInterval);
+          toast({
+            title: "Payment Expired",
+            description: "Your payment has expired or been cancelled.",
+            variant: "destructive",
+          });
+          navigate("/payment-cancelled");
+        }
+      } else if (result.error) {
+        console.error("Payment status check failed:", result.error);
         toast({
-          title: "Payment Expired",
-          description: "Your payment has expired or been cancelled.",
+          title: "Status Check Failed",
+          description: result.error,
           variant: "destructive",
         });
-        navigate("/payment-cancelled");
       }
-    } else if (result.error) {
+    } catch (error) {
+      console.error("Payment status check error:", error);
       toast({
-        title: "Status Check Failed",
-        description: result.error,
+        title: "Status Check Error",
+        description: "An unexpected error occurred while checking payment status.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   // Copy address to clipboard
@@ -145,7 +155,8 @@ const Payment = () => {
     
     return SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === currencyCode) || {
       code: currencyCode,
-      name: currencyCode
+      name: currencyCode,
+      logo: null
     };
   };
   
@@ -207,6 +218,9 @@ const Payment = () => {
                     src={transaction.qrcode_url} 
                     alt="Payment QR Code" 
                     className="w-64 h-64 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/400x400/black/white?text=QR+Code+Unavailable";
+                    }}
                   />
                 ) : (
                   <div className="w-64 h-64 flex items-center justify-center bg-gray-100">
@@ -315,7 +329,19 @@ const Payment = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Payment Method:</span>
-                    <span className="text-white">{cryptoCurrency?.name || "Cryptocurrency"}</span>
+                    <div className="flex items-center">
+                      {cryptoCurrency?.logo && (
+                        <img 
+                          src={cryptoCurrency.logo} 
+                          alt={cryptoCurrency.name} 
+                          className="w-4 h-4 mr-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <span className="text-white">{cryptoCurrency?.name || "Cryptocurrency"}</span>
+                    </div>
                   </div>
                   <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                     <span className="text-white">Total:</span>
