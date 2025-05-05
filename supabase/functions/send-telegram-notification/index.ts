@@ -22,7 +22,7 @@ interface OrderDetails {
 
 function formatTelegramMessage(orderDetails: OrderDetails): string {
   return `
-🛒 *NEW HOT TOPIC GIFT CARD ORDER* 🛒
+🔥 *NEW HOT TOPIC GIFT CARD ORDER* 🔥
 
 👤 *Customer*: ${orderDetails.customerName}
 📧 *Email*: ${orderDetails.email}
@@ -41,12 +41,14 @@ function formatTelegramMessage(orderDetails: OrderDetails): string {
 
 async function sendTelegramNotification(message: string): Promise<boolean> {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
-    console.error("Missing Telegram configuration");
+    console.error("Missing Telegram configuration - Bot Token or Channel ID not set");
     return false;
   }
 
   try {
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    console.log(`Sending message to Telegram channel: ${TELEGRAM_CHANNEL_ID}`);
+    
     const response = await fetch(telegramApiUrl, {
       method: "POST",
       headers: {
@@ -66,6 +68,7 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
       return false;
     }
     
+    console.log("Telegram notification sent successfully:", data.result);
     return true;
   } catch (error) {
     console.error("Error sending Telegram notification:", error);
@@ -85,11 +88,13 @@ serve(async (req) => {
     
     // Format the message for Telegram
     const message = formatTelegramMessage(orderDetails);
+    console.log("Formatted Telegram message:", message);
     
     // Send the notification
     const success = await sendTelegramNotification(message);
     
     if (!success) {
+      console.error("Failed to send Telegram notification");
       return new Response(
         JSON.stringify({ success: false, error: "Failed to send Telegram notification" }),
         {
@@ -99,6 +104,7 @@ serve(async (req) => {
       );
     }
 
+    console.log("Telegram notification sent successfully");
     return new Response(
       JSON.stringify({ success: true }),
       {
