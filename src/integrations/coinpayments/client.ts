@@ -51,7 +51,9 @@ export const createCoinPaymentTransaction = async ({
   cryptoCurrency: string;
 }): Promise<CreatePaymentResponse> => {
   try {
-    const response = await fetch('/functions/v1/create-coinpayment', {
+    console.log(`Creating CoinPayment transaction with: ${amount} ${cryptoCurrency}`);
+    
+    const response = await fetch('/api/create-coinpayment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +84,7 @@ export const createCoinPaymentTransaction = async ({
     console.error('Error creating CoinPayments transaction:', error);
     return {
       success: false,
-      error: error.message || 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
     };
   }
 };
@@ -92,7 +94,7 @@ export const sendTelegramNotification = async (customerData: any): Promise<{ suc
   try {
     console.log('Sending notification to Telegram with data:', customerData);
     
-    const response = await fetch('/functions/v1/telegram-notification', {
+    const response = await fetch('/api/telegram-notification', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +134,7 @@ export const sendTelegramNotification = async (customerData: any): Promise<{ suc
 
 export const getCoinPaymentStatus = async (txn_id: string) => {
   try {
-    const response = await fetch('/functions/v1/check-coinpayment-status', {
+    const response = await fetch('/api/check-coinpayment-status', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +158,7 @@ export const getCoinPaymentStatus = async (txn_id: string) => {
     console.error('Error checking CoinPayments status:', error);
     return {
       success: false,
-      error: error.message || 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
     };
   }
 };
