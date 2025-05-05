@@ -1,4 +1,4 @@
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+
 import { useQuery } from "@tanstack/react-query";
 
 const COINPAYMENTS_API_URL =
@@ -12,6 +12,13 @@ export const SUPPORTED_CRYPTOCURRENCIES = [
   { name: "Bitcoin Cash", code: "BCH" },
   { name: "Tether (USDT)", code: "USDT" },
 ];
+
+export const PAYMENT_STATUS = {
+  PENDING: 0,
+  CONFIRMED: 1,
+  COMPLETE: 100,
+  EXPIRED: -1
+};
 
 export interface TransactionDetails {
   amount: string;
@@ -112,25 +119,48 @@ export const sendTelegramNotification = async (customerData: any): Promise<{ suc
   }
 };
 
-export const useCoinPaymentStatus = (txn_id: string) => {
-  const supabase = useSupabaseClient();
+export const getCoinPaymentStatus = async (txn_id: string) => {
+  try {
+    const response = await fetch('/functions/v1/check-coinpayment-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ txn_id }),
+    });
 
-  return useQuery(
-    ["coinpayment-status", txn_id],
-    async () => {
-      const response = await supabase.functions.invoke("check-coinpayment-status", {
-        body: JSON.stringify({ txn_id }),
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      return response.data;
-    },
-    {
-      enabled: !!txn_id, // Only run the query if txn_id is not null
-      refetchInterval: 5000, // Poll every 5 seconds
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Error checking transaction status:', error);
+      return { success: false, error: 'Failed to check payment status' };
     }
-  );
+
+    const data = await response.json();
+    return {
+      success: true,
+      statusCode: data.statusCode,
+      status: data.status,
+    };
+  } catch (error) {
+    console.error('Error checking CoinPayments status:', error);
+    return {
+      success: false,
+      error: error.message || 'An unexpected error occurred',
+    };
+  }
+};
+
+export const useCoinPaymentStatus = (txn_id: string) => {
+  return useQuery({
+    queryKey: ["coinpayment-status", txn_id],
+    queryFn: async () => {
+      const result = await getCoinPaymentStatus(txn_id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result;
+    },
+    enabled: !!txn_id, // Only run the query if txn_id is not null
+    refetchInterval: 5000, // Poll every 5 seconds
+  });
 };

@@ -6,13 +6,13 @@ import { toast } from "@/hooks/use-toast";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CoinPaymentTransaction, getCoinPaymentStatus, PAYMENT_STATUS, SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
+import { getCoinPaymentStatus, PAYMENT_STATUS, SUPPORTED_CRYPTOCURRENCIES, TransactionDetails } from "@/integrations/coinpayments/client";
 import { AlertCircle, Copy, QrCode, Wallet } from "lucide-react";
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [transaction, setTransaction] = useState<CoinPaymentTransaction | null>(null);
+  const [transaction, setTransaction] = useState<TransactionDetails | null>(null);
   const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
