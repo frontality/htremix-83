@@ -485,7 +485,7 @@ const Index = () => {
             <div className="space-y-2">
               <Label htmlFor="cryptoCurrency" className="text-white">Choose Cryptocurrency</Label>
               
-              {/* Enhanced Cryptocurrency Selector */}
+              {/* Enhanced Cryptocurrency Selector with Logos */}
               <div className="relative">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -498,8 +498,24 @@ const Index = () => {
                         {(() => {
                           const selectedCrypto = SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === selectedCryptoCurrency);
                           if (selectedCrypto) {
-                            if (selectedCrypto.code === "BTC") return <Bitcoin className="h-5 w-5 mr-2 text-hottopic-red" />;
-                            return <Coins className="h-5 w-5 mr-2 text-hottopic-red" />;
+                            return (
+                              <img 
+                                src={`https://cryptologos.cc/logos/${selectedCrypto.icon}-logo.svg`} 
+                                alt={selectedCrypto.name}
+                                className="h-5 w-5 mr-2"
+                                onError={(e) => {
+                                  // Fallback to text icon if image fails to load
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  const parent = (e.target as HTMLImageElement).parentNode as HTMLElement;
+                                  if (parent) {
+                                    const fallback = document.createElement('span');
+                                    fallback.className = 'h-5 w-5 mr-2 bg-hottopic-red rounded-full flex items-center justify-center text-white text-xs font-bold';
+                                    fallback.textContent = selectedCrypto.code.substring(0, 1);
+                                    parent.prepend(fallback);
+                                  }
+                                }}
+                              />
+                            );
                           }
                           return <Coins className="h-5 w-5 mr-2 text-hottopic-red" />;
                         })()}
@@ -537,13 +553,21 @@ const Index = () => {
                             }}
                           >
                             <div className="flex items-center flex-1">
-                              {crypto.code === "BTC" ? (
-                                <Bitcoin className="h-5 w-5 mr-2 text-hottopic-red" />
-                              ) : crypto.icon === "dollar-sign" ? (
-                                <CreditCard className="h-5 w-5 mr-2 text-hottopic-red" />
-                              ) : (
-                                <Coins className="h-5 w-5 mr-2 text-hottopic-red" />
-                              )}
+                              <img 
+                                src={`https://cryptologos.cc/logos/${crypto.icon}-logo.svg`} 
+                                alt={crypto.name}
+                                className="h-5 w-5 mr-2"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  const parent = (e.target as HTMLImageElement).parentNode as HTMLElement;
+                                  if (parent) {
+                                    const fallback = document.createElement('span');
+                                    fallback.className = 'h-5 w-5 mr-2 bg-hottopic-red rounded-full flex items-center justify-center text-white text-xs font-bold';
+                                    fallback.textContent = crypto.code.substring(0, 1);
+                                    parent.prepend(fallback);
+                                  }
+                                }}
+                              />
                               <span className="text-white">{crypto.name}</span>
                               <span className="text-gray-400 ml-2">({crypto.code})</span>
                             </div>

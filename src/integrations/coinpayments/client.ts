@@ -4,26 +4,26 @@ const COINPAYMENTS_API_URL =
   "https://api.coinpayments.net/api.php";
 
 export const SUPPORTED_CRYPTOCURRENCIES = [
-  { name: "Bitcoin", code: "BTC", icon: "bitcoin" },
-  { name: "Ethereum", code: "ETH", icon: "currency" },
-  { name: "Litecoin", code: "LTC", icon: "coins" },
-  { name: "Dogecoin", code: "DOGE", icon: "coins" },
-  { name: "Bitcoin Cash", code: "BCH", icon: "bitcoin" },
-  { name: "Tether (USDT)", code: "USDT", icon: "dollar-sign" },
-  { name: "Ripple", code: "XRP", icon: "coins" },
-  { name: "Cardano", code: "ADA", icon: "coins" },
-  { name: "Polkadot", code: "DOT", icon: "coins" },
-  { name: "Solana", code: "SOL", icon: "coins" },
-  { name: "Binance Coin", code: "BNB", icon: "currency" },
-  { name: "Avalanche", code: "AVAX", icon: "coins" },
-  { name: "Chainlink", code: "LINK", icon: "coins" },
-  { name: "Polygon", code: "MATIC", icon: "coins" },
-  { name: "Monero", code: "XMR", icon: "coins" },
-  { name: "Stellar Lumens", code: "XLM", icon: "coins" },
-  { name: "Uniswap", code: "UNI", icon: "currency" },
-  { name: "Cosmos", code: "ATOM", icon: "coins" },
-  { name: "Tron", code: "TRX", icon: "coins" },
-  { name: "Dai", code: "DAI", icon: "dollar-sign" }
+  { name: "Bitcoin", code: "BTC", icon: "btc" },
+  { name: "Ethereum", code: "ETH", icon: "eth" },
+  { name: "Litecoin", code: "LTC", icon: "ltc" },
+  { name: "Dogecoin", code: "DOGE", icon: "doge" },
+  { name: "Bitcoin Cash", code: "BCH", icon: "bch" },
+  { name: "Tether (USDT)", code: "USDT", icon: "usdt" },
+  { name: "Ripple", code: "XRP", icon: "xrp" },
+  { name: "Cardano", code: "ADA", icon: "ada" },
+  { name: "Polkadot", code: "DOT", icon: "dot" },
+  { name: "Solana", code: "SOL", icon: "sol" },
+  { name: "Binance Coin", code: "BNB", icon: "bnb" },
+  { name: "Avalanche", code: "AVAX", icon: "avax" },
+  { name: "Chainlink", code: "LINK", icon: "link" },
+  { name: "Polygon", code: "MATIC", icon: "matic" },
+  { name: "Monero", code: "XMR", icon: "xmr" },
+  { name: "Stellar Lumens", code: "XLM", icon: "xlm" },
+  { name: "Uniswap", code: "UNI", icon: "uni" },
+  { name: "Cosmos", code: "ATOM", icon: "atom" },
+  { name: "Tron", code: "TRX", icon: "trx" },
+  { name: "Dai", code: "DAI", icon: "dai" }
 ];
 
 export const PAYMENT_STATUS = {
