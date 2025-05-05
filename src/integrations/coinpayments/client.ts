@@ -168,14 +168,14 @@ function getStatusText(statusCode: number): string {
 export const SUPPORTED_CRYPTOCURRENCIES = [
   { code: "BTC", name: "Bitcoin", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
   { code: "ETH", name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+  { code: "BNB", name: "Binance Coin", logo: "https://cryptologos.cc/logos/bnb-bnb-logo.png" },
   { code: "LTC", name: "Litecoin", logo: "https://cryptologos.cc/logos/litecoin-ltc-logo.png" },
-  { code: "DOGE", name: "Dogecoin", logo: "https://cryptologos.cc/logos/dogecoin-doge-logo.png" },
-  { code: "USDT", name: "Tether (ERC20)", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
-  { code: "USDC", name: "USD Coin", logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png" },
-  { code: "XRP", name: "XRP", logo: "https://cryptologos.cc/logos/xrp-xrp-logo.png" },
   { code: "SOL", name: "Solana", logo: "https://cryptologos.cc/logos/solana-sol-logo.png" },
-  { code: "ADA", name: "Cardano", logo: "https://cryptologos.cc/logos/cardano-ada-logo.png" },
-  { code: "DOT", name: "Polkadot", logo: "https://cryptologos.cc/logos/polkadot-new-dot-logo.png" }
+  { code: "TRX", name: "TRON", logo: "https://cryptologos.cc/logos/tron-trx-logo.png" },
+  { code: "USDT.ERC20", name: "USDT ERC20", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
+  { code: "USDT.TRC20", name: "USDT TRC20", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
+  { code: "XMR", name: "Monero", logo: "https://cryptologos.cc/logos/monero-xmr-logo.png" },
+  { code: "DOGE", name: "Dogecoin", logo: "https://cryptologos.cc/logos/dogecoin-doge-logo.png" }
 ];
 
 // Payment status codes from CoinPayments
