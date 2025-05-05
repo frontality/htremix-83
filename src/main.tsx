@@ -4,11 +4,16 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Use React.StrictMode to help catch common bugs during development
+// Get the root element
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-createRoot(rootElement).render(<App />);
+// Create root and render app - ensure React.StrictMode is properly used
+createRoot(rootElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

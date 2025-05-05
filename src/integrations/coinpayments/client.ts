@@ -1,29 +1,30 @@
+
 import { useQuery } from "@tanstack/react-query";
 
 const COINPAYMENTS_API_URL =
   "https://api.coinpayments.net/api.php";
 
 export const SUPPORTED_CRYPTOCURRENCIES = [
-  { name: "Bitcoin", code: "BTC", icon: "btc" },
-  { name: "Ethereum", code: "ETH", icon: "eth" },
-  { name: "Litecoin", code: "LTC", icon: "ltc" },
-  { name: "Dogecoin", code: "DOGE", icon: "doge" },
-  { name: "Bitcoin Cash", code: "BCH", icon: "bch" },
-  { name: "Tether (USDT)", code: "USDT", icon: "usdt" },
+  { name: "Bitcoin", code: "BTC", icon: "bitcoin" },
+  { name: "Ethereum", code: "ETH", icon: "ethereum" },
+  { name: "Litecoin", code: "LTC", icon: "litecoin" },
+  { name: "Dogecoin", code: "DOGE", icon: "dogecoin" },
+  { name: "Bitcoin Cash", code: "BCH", icon: "bitcoin-cash" },
+  { name: "Tether (USDT)", code: "USDT", icon: "tether" },
   { name: "Ripple", code: "XRP", icon: "xrp" },
-  { name: "Cardano", code: "ADA", icon: "ada" },
-  { name: "Polkadot", code: "DOT", icon: "dot" },
-  { name: "Solana", code: "SOL", icon: "sol" },
-  { name: "Binance Coin", code: "BNB", icon: "bnb" },
-  { name: "Avalanche", code: "AVAX", icon: "avax" },
-  { name: "Chainlink", code: "LINK", icon: "link" },
-  { name: "Polygon", code: "MATIC", icon: "matic" },
-  { name: "Monero", code: "XMR", icon: "xmr" },
-  { name: "Stellar Lumens", code: "XLM", icon: "xlm" },
-  { name: "Uniswap", code: "UNI", icon: "uni" },
-  { name: "Cosmos", code: "ATOM", icon: "atom" },
-  { name: "Tron", code: "TRX", icon: "trx" },
-  { name: "Dai", code: "DAI", icon: "dai" }
+  { name: "Cardano", code: "ADA", icon: "cardano" },
+  { name: "Polkadot", code: "DOT", icon: "polkadot-new" },
+  { name: "Solana", code: "SOL", icon: "solana" },
+  { name: "Binance Coin", code: "BNB", icon: "binance-coin" },
+  { name: "Avalanche", code: "AVAX", icon: "avalanche" },
+  { name: "Chainlink", code: "LINK", icon: "chainlink" },
+  { name: "Polygon", code: "MATIC", icon: "polygon" },
+  { name: "Monero", code: "XMR", icon: "monero" },
+  { name: "Stellar Lumens", code: "XLM", icon: "stellar" },
+  { name: "Uniswap", code: "UNI", icon: "uniswap" },
+  { name: "Cosmos", code: "ATOM", icon: "cosmos" },
+  { name: "Tron", code: "TRX", icon: "tron" },
+  { name: "Dai", code: "DAI", icon: "multi-collateral-dai" }
 ];
 
 export const PAYMENT_STATUS = {
