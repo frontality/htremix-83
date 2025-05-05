@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +10,11 @@ import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
-import { createCoinPaymentTransaction } from "@/integrations/coinpayments/client";
-import { AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users } from "lucide-react";
+import { createCoinPaymentTransaction, SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
+import { 
+  AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users, Bitcoin 
+} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
@@ -22,6 +26,7 @@ const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
 const Index = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"e-gift" | "physical">("e-gift");
+  const [selectedCryptoCurrency, setSelectedCryptoCurrency] = useState<string>("BTC");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -143,14 +148,15 @@ const Index = () => {
     setIsSubmitting(true);
     
     try {
-      console.log(`Starting payment process for $${selectedAmount} gift card (50% off)`);
+      console.log(`Starting payment process for $${selectedAmount} gift card (50% off) using ${selectedCryptoCurrency}`);
       
-      // Create CoinPayment transaction with 50% of the selected gift card value
+      // Create CoinPayment transaction with 50% of the selected gift card value and selected cryptocurrency
       const paymentResult = await createCoinPaymentTransaction({
         amount: selectedAmount * 0.5,
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
         giftCardValue: selectedAmount,
+        cryptoCurrency: selectedCryptoCurrency,
       });
       
       if (!paymentResult.success) {
@@ -174,6 +180,7 @@ const Index = () => {
         giftCardValue: selectedAmount,
         paymentAmount: selectedAmount * 0.5,
         deliveryMethod: deliveryMethod,
+        cryptoCurrency: selectedCryptoCurrency,
         orderDate: new Date().toISOString(),
       }));
       
@@ -403,6 +410,48 @@ const Index = () => {
             </div>
           </div>
           
+          {/* Step 4: Select Cryptocurrency */}
+          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
+              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                4
+              </span>
+              Select Payment Currency
+            </h2>
+            
+            <div className="space-y-2">
+              <Label htmlFor="cryptoCurrency" className="text-white">Choose Cryptocurrency</Label>
+              <div className="flex items-center gap-2">
+                <Bitcoin className="h-5 w-5 text-hottopic-red" />
+                <Select
+                  value={selectedCryptoCurrency}
+                  onValueChange={(value) => setSelectedCryptoCurrency(value)}
+                >
+                  <SelectTrigger 
+                    className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red w-full sm:w-auto"
+                    id="cryptoCurrency"
+                  >
+                    <SelectValue placeholder="Select cryptocurrency" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-hottopic-dark border-hottopic-gray">
+                    {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
+                      <SelectItem 
+                        key={crypto.code} 
+                        value={crypto.code}
+                        className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
+                      >
+                        {crypto.name} ({crypto.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-gray-400 text-sm mt-1">
+                Select which cryptocurrency you would like to use for payment
+              </p>
+            </div>
+          </div>
+          
           {/* Order Summary */}
           {selectedAmount && (
             <div className="bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-xl p-6">
@@ -424,13 +473,17 @@ const Index = () => {
                   <span className="text-gray-400">Delivery Method</span>
                   <span className="text-white capitalize">{deliveryMethod}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Payment Currency</span>
+                  <span className="text-white">
+                    {SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === selectedCryptoCurrency)?.name || selectedCryptoCurrency}
+                  </span>
+                </div>
                 <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                   <span className="text-white">Total</span>
                   <span className="text-hottopic-red text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
                 </div>
               </div>
-              
-              {/* Payment methods section removed */}
             </div>
           )}
           
@@ -454,12 +507,11 @@ const Index = () => {
         </form>
       </div>
       
-      {/* Testimonials section - Updated with the new carousel */}
+      {/* Testimonials section */}
       <div className="bg-hottopic-gray/10 border-y border-hottopic-gray/20 py-10">
         <div className="container">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">What Our Customers Say</h2>
           
-          {/* Replace static testimonials with the new carousel component */}
           <TestimonialCarousel />
         </div>
       </div>

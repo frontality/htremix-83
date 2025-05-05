@@ -23,9 +23,9 @@ serve(async (req) => {
     );
 
     // Extract payment details from the request
-    const { amount, customerName, customerEmail, itemName } = await req.json();
+    const { amount, customerName, customerEmail, itemName, cryptoCurrency } = await req.json();
 
-    console.log("Received payment request:", { amount, customerName, customerEmail, itemName });
+    console.log("Received payment request:", { amount, customerName, customerEmail, itemName, cryptoCurrency });
 
     if (!amount || !customerEmail || !itemName) {
       console.error("Missing required fields:", { amount, customerEmail, itemName });
@@ -53,7 +53,9 @@ serve(async (req) => {
       );
     }
 
-    console.log("Creating CoinPayments transaction with amount:", amount);
+    // Use the provided cryptocurrency or default to BTC
+    const currency2 = cryptoCurrency || 'BTC';
+    console.log(`Creating CoinPayments transaction with amount: ${amount} in ${currency2}`);
 
     // Create URLSearchParams object for form data
     const params = new URLSearchParams();
@@ -62,7 +64,7 @@ serve(async (req) => {
     params.append('cmd', 'create_transaction');
     params.append('amount', amount.toString());
     params.append('currency1', 'USD');
-    params.append('currency2', 'BTC');
+    params.append('currency2', currency2); // Use selected cryptocurrency
     params.append('buyer_email', customerEmail);
     params.append('buyer_name', customerName || customerEmail);
     params.append('item_name', itemName);

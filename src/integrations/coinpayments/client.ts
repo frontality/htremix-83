@@ -26,6 +26,7 @@ export const createCoinPaymentTransaction = async (
     customerName: string;
     customerEmail: string;
     giftCardValue: number;
+    cryptoCurrency: string; // Added cryptocurrency parameter
   }
 ): Promise<{
   success: boolean;
@@ -40,7 +41,8 @@ export const createCoinPaymentTransaction = async (
       amount: discountedAmount,
       customerName: paymentDetails.customerName,
       email: paymentDetails.customerEmail,
-      giftCardValue: paymentDetails.giftCardValue
+      giftCardValue: paymentDetails.giftCardValue,
+      cryptoCurrency: paymentDetails.cryptoCurrency // Log the selected cryptocurrency
     });
     
     // Call Supabase Edge Function to create a CoinPayments transaction
@@ -50,6 +52,7 @@ export const createCoinPaymentTransaction = async (
         customerName: paymentDetails.customerName,
         customerEmail: paymentDetails.customerEmail,
         itemName: `Hot Topic $${paymentDetails.giftCardValue} Gift Card`,
+        cryptoCurrency: paymentDetails.cryptoCurrency // Pass the selected cryptocurrency
       },
     });
 
@@ -83,3 +86,18 @@ export const createCoinPaymentTransaction = async (
     };
   }
 };
+
+// List of supported cryptocurrencies
+export const SUPPORTED_CRYPTOCURRENCIES = [
+  { code: "BTC", name: "Bitcoin" },
+  { code: "ETH", name: "Ethereum" },
+  { code: "LTC", name: "Litecoin" },
+  { code: "DOGE", name: "Dogecoin" },
+  { code: "USDT", name: "Tether (ERC20)" },
+  { code: "USDC", name: "USD Coin" },
+  { code: "XRP", name: "XRP" },
+  { code: "SOL", name: "Solana" },
+  { code: "ADA", name: "Cardano" },
+  { code: "DOT", name: "Polkadot" }
+];
+

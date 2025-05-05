@@ -12,6 +12,7 @@ interface OrderDetails {
   giftCardValue: number;
   paymentAmount: number;
   deliveryMethod: string;
+  cryptoCurrency?: string; // Added cryptocurrency field
   orderDate: string;
 }
 
@@ -61,6 +62,12 @@ const PaymentSuccess = () => {
                       <span className="text-gray-400">Delivery Method</span>
                       <span className="text-white capitalize">{orderDetails.deliveryMethod}</span>
                     </div>
+                    {orderDetails.cryptoCurrency && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Payment Currency</span>
+                        <span className="text-white">{orderDetails.cryptoCurrency}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-400">Order Date</span>
                       <span className="text-white">{new Date(orderDetails.orderDate).toLocaleDateString()}</span>
