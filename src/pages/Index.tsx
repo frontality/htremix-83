@@ -195,16 +195,16 @@ const Index = () => {
       
       // Send order notification to Telegram
       try {
-        console.log("Sending order notification to Telegram");
-        const { error: telegramError } = await supabase.functions.invoke("send-telegram-notification", {
+        console.log("Sending order notification to Telegram with details:", orderDetails);
+        const telegramResponse = await supabase.functions.invoke("send-telegram-notification", {
           body: orderDetails
         });
         
-        if (telegramError) {
-          console.error("Failed to send Telegram notification:", telegramError);
+        if (telegramResponse.error) {
+          console.error("Failed to send Telegram notification:", telegramResponse.error);
           // Continue with the payment process even if the Telegram notification fails
         } else {
-          console.log("Telegram notification sent successfully");
+          console.log("Telegram notification sent successfully:", telegramResponse.data);
         }
       } catch (telegramErr) {
         console.error("Error sending Telegram notification:", telegramErr);
