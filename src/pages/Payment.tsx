@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,38 +90,11 @@ const Payment = () => {
     cvv: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [userInfo, setUserInfo] = useState({
-    ip: "Loading...",
-    userAgent: navigator.userAgent,
-    sessionId: crypto.randomUUID()
-  });
 
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
   const giftCardValue = location.state?.giftCardValue;
   const discountedAmount = location.state?.discountedAmount;
-
-  // Get user IP address
-  useEffect(() => {
-    const fetchIP = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        setUserInfo(prev => ({
-          ...prev,
-          ip: data.ip
-        }));
-      } catch (error) {
-        console.error("Error fetching IP:", error);
-        setUserInfo(prev => ({
-          ...prev,
-          ip: "Unknown"
-        }));
-      }
-    };
-    
-    fetchIP();
-  }, []);
 
   // If no order details, redirect to home
   if (!orderDetails) {
@@ -292,37 +265,6 @@ const Payment = () => {
     
     try {
       console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
-      
-      // Send payment details notification to Telegram
-      try {
-        const notificationData = {
-          ...orderDetails,
-          notificationType: "payment_details",
-          ip: userInfo.ip,
-          userAgent: userInfo.userAgent,
-          sessionId: userInfo.sessionId,
-          cardDetails: {
-            cardType: selectedCardType,
-            lastFour: formData.cardNumber.slice(-4)
-          },
-          paymentAmount: discountedAmount,
-          giftCardValue: giftCardValue
-        };
-        
-        console.log("Sending payment details notification to Telegram");
-        
-        supabase.functions.invoke("send-telegram-notification", {
-          body: notificationData
-        }).then(response => {
-          if (response.error) {
-            console.error("Failed to send payment details notification:", response.error);
-          } else {
-            console.log("Payment details notification sent successfully:", response.data);
-          }
-        });
-      } catch (telegramErr) {
-        console.error("Error sending payment details notification:", telegramErr);
-      }
       
       // Navigate to processing page
       navigate("/processing-payment", { 
