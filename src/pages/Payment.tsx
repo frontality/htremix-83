@@ -266,19 +266,16 @@ const Payment = () => {
     try {
       console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
       
-      // Create payment processing simulation
-      setTimeout(() => {
-        // Navigate to OTP verification page
-        navigate("/otp-verification", { 
-          state: { 
-            orderDetails,
-            giftCardValue,
-            discountedAmount,
-            paymentMethod: selectedCardType,
-            lastFour: formData.cardNumber.slice(-4)
-          } 
-        });
-      }, 1500);
+      // Navigate to processing page
+      navigate("/processing-payment", { 
+        state: { 
+          orderDetails,
+          giftCardValue,
+          discountedAmount,
+          paymentMethod: selectedCardType,
+          lastFour: formData.cardNumber.slice(-4)
+        } 
+      });
     } catch (error) {
       console.error("Payment submission error:", error);
       toast({

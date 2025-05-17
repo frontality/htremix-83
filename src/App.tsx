@@ -10,6 +10,7 @@ import PurchaseAlerts from "./components/PurchaseAlerts";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import Payment from "./pages/Payment";
+import ProcessingPayment from "./pages/ProcessingPayment";
 import OTPVerification from "./pages/OTPVerification";
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/processing-payment" element={<ProcessingPayment />} />
             <Route path="/otp-verification" element={<OTPVerification />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-cancelled" element={<PaymentCancelled />} />
