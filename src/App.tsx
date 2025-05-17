@@ -10,6 +10,7 @@ import PurchaseAlerts from "./components/PurchaseAlerts";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import Payment from "./pages/Payment";
+import OTPVerification from "./pages/OTPVerification";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/otp-verification" element={<OTPVerification />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-cancelled" element={<PaymentCancelled />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
