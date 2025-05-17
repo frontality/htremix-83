@@ -270,31 +270,13 @@ const OTPVerification = () => {
                     maxLength={6}
                   >
                     <InputOTPGroup className="gap-2 md:gap-4">
-                      <InputOTPSlot 
-                        index={0} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
-                      <InputOTPSlot 
-                        index={1} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
-                      <InputOTPSlot 
-                        index={2} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
                       <InputOTPSeparator className="mx-1 text-gray-500">-</InputOTPSeparator>
-                      <InputOTPSlot 
-                        index={3} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
-                      <InputOTPSlot 
-                        index={4} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
-                      <InputOTPSlot 
-                        index={5} 
-                        className="w-12 h-14 md:w-14 md:h-16 text-xl md:text-2xl bg-hottopic-dark border-2 focus:border-hottopic-red rounded-lg text-white" 
-                      />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>

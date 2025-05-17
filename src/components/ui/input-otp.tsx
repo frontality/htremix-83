@@ -40,7 +40,7 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex h-10 w-10 items-center justify-center border-2 border-hottopic-gray/40 text-sm shadow-sm transition-all first:rounded-md last:rounded-md focus-within:z-10 bg-hottopic-dark text-white",
+        "relative flex h-12 w-12 md:h-16 md:w-16 items-center justify-center border-2 border-hottopic-gray/40 text-xl md:text-2xl font-bold shadow-sm transition-all rounded-lg focus-within:z-10 bg-hottopic-dark text-white",
         isActive && "z-10 ring-2 ring-hottopic-red border-hottopic-red",
         className
       )}
@@ -49,7 +49,7 @@ const InputOTPSlot = React.forwardRef<
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-5 w-0.5 animate-caret-blink bg-hottopic-red duration-700" />
+          <div className="h-6 w-0.5 animate-caret-blink bg-hottopic-red duration-700" />
         </div>
       )}
     </div>
@@ -62,7 +62,7 @@ const InputOTPSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
   <div ref={ref} role="separator" {...props}>
-    <Dot />
+    <Dot className="h-4 w-4 text-gray-500" />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"
