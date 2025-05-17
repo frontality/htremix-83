@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -192,6 +191,8 @@ ${attemptHeader}
     if (attempts < 2) {
       setError("Invalid verification code. Please try again.");
       setAttempts(prev => prev + 1);
+      
+      // Clear OTP input field after failed attempt
       setOtp("");
       
       // Different messaging for first vs second attempt
