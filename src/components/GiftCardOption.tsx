@@ -63,7 +63,7 @@ const GiftCardOption = ({
           "text-2xl font-bold mb-2 text-center transition-colors duration-300",
           isSelected ? "text-hottopic-red glow-text" : "text-white group-hover:text-hottopic-red"
         )}>
-          ${value}
+          ${value.toFixed(2)}
         </h3>
         
         {/* Pricing */}
