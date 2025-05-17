@@ -10,7 +10,7 @@ import TestimonialCarousel from "@/components/TestimonialCarousel";
 import HotTopicPromo from "@/components/HotTopicPromo";
 import GiftCardOption from "@/components/GiftCardOption";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,7 +35,7 @@ const validateName = (name: string) => {
 const Index = () => {
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState<string>("email");
+  const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState<"e-gift" | "physical">("e-gift");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -84,7 +84,7 @@ const Index = () => {
     setDiscountedPrice(calculateDiscountedPrice(amount));
   };
 
-  const handleDeliveryMethodSelect = (method: string) => {
+  const handleDeliveryMethodSelect = (method: "e-gift" | "physical") => {
     setSelectedDeliveryMethod(method);
   };
 
@@ -197,7 +197,7 @@ const Index = () => {
     }
   };
 
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   return (
     <div className="bg-black min-h-screen">
@@ -222,7 +222,8 @@ const Index = () => {
               {giftCardAmounts.map((amount) => (
                 <GiftCardOption
                   key={amount}
-                  amount={amount}
+                  value={amount}
+                  originalPrice={amount}
                   discountedPrice={calculateDiscountedPrice(amount)}
                   isSelected={selectedAmount === amount}
                   onClick={() => handleGiftCardSelect(amount)}
@@ -236,7 +237,7 @@ const Index = () => {
             <h2 className="text-2xl font-semibold text-white">Select Delivery Method</h2>
             <DeliveryMethodSelector
               selectedMethod={selectedDeliveryMethod}
-              onSelectMethod={handleDeliveryMethodSelect}
+              onSelect={handleDeliveryMethodSelect}
             />
           </div>
 
