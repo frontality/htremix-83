@@ -17,7 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
-const GIFT_CARD_VALUES = [99.99, 499.99, 999.99, 4999.99];
+const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 
 // Regex patterns for validation
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -150,7 +150,7 @@ const Index = () => {
     setIsSubmitting(true);
     
     try {
-      console.log(`Starting payment process for $${selectedAmount.toFixed(2)} gift card (70% off) using ${selectedCryptoCurrency}`);
+      console.log(`Starting payment process for $${selectedAmount} gift card (70% off) using ${selectedCryptoCurrency}`);
       
       // Calculate the discounted amount (70% off)
       const discountedAmount = selectedAmount * 0.3;

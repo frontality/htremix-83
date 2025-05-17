@@ -17,15 +17,6 @@ const GiftCardOption = ({
   discountedPrice,
   onClick,
 }: GiftCardOptionProps) => {
-  // Format the price for display - show clean values for whole dollars
-  const formatPriceForDisplay = (price: number): string => {
-    const wholeNumber = Math.floor(price);
-    if (price === wholeNumber) {
-      return `$${wholeNumber}`;
-    }
-    return `$${price.toFixed(2)}`;
-  };
-
   return (
     <div
       onClick={onClick}
@@ -72,7 +63,7 @@ const GiftCardOption = ({
           "text-2xl font-bold mb-2 text-center transition-colors duration-300",
           isSelected ? "text-hottopic-red glow-text" : "text-white group-hover:text-hottopic-red"
         )}>
-          ${Math.floor(value)}
+          ${value}
         </h3>
         
         {/* Pricing */}
