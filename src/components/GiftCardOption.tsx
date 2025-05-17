@@ -44,7 +44,7 @@ const GiftCardOption = ({
         {/* Card image */}
         <div className="mb-3 relative">
           <div className="absolute -top-1 -right-1 bg-hottopic-red text-white text-xs font-bold px-2 py-0.5 rotate-3 z-10 animate-floating">
-            50% OFF
+            70% OFF
           </div>
           <img 
             src="https://i.imgur.com/adJEpil.png" 
@@ -76,7 +76,7 @@ const GiftCardOption = ({
           </p>
           <div className="mt-2">
             <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-sm font-semibold ht-skew">
-              <span className="ht-unskew inline-block">SAVE 50%</span>
+              <span className="ht-unskew inline-block">SAVE 70%</span>
             </span>
           </div>
         </div>

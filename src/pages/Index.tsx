@@ -150,10 +150,10 @@ const Index = () => {
     setIsSubmitting(true);
     
     try {
-      console.log(`Starting payment process for $${selectedAmount} gift card (50% off) using ${selectedCryptoCurrency}`);
+      console.log(`Starting payment process for $${selectedAmount} gift card (70% off) using ${selectedCryptoCurrency}`);
       
-      // Calculate the discounted amount (50% off)
-      const discountedAmount = selectedAmount * 0.5;
+      // Calculate the discounted amount (70% off)
+      const discountedAmount = selectedAmount * 0.3;
       
       // Create CoinPayment transaction
       const paymentResult = await createCoinPaymentTransaction({
@@ -259,7 +259,7 @@ const Index = () => {
               HOT TOPIC <span className="text-hottopic-red glow-text">GIFT CARDS</span>
             </h1>
             <p className="text-center text-xl md:text-2xl text-white/80 mb-2 max-w-2xl">
-              The perfect gift for any <span className="text-hottopic-red font-semibold">Hot Topic</span> fan - at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold inline-block transform -rotate-2 animate-floating">50% OFF</span>
+              The perfect gift for any <span className="text-hottopic-red font-semibold">Hot Topic</span> fan - at <span className="bg-hottopic-red px-2 py-1 rounded-md text-white font-bold inline-block transform -rotate-2 animate-floating">70% OFF</span>
             </p>
             <p className="text-center text-gray-400 max-w-xl">
               Give the gift of alternative culture and fan-favorite merchandise. Hot Topic gift cards can be redeemed at any Hot Topic store or online at hottopic.com
@@ -297,7 +297,7 @@ const Index = () => {
                   value={value}
                   isSelected={selectedAmount === value}
                   originalPrice={value}
-                  discountedPrice={value * 0.5}
+                  discountedPrice={value * 0.3}
                   onClick={() => setSelectedAmount(value)}
                 />
               ))}
@@ -501,8 +501,8 @@ const Index = () => {
                   <span className="text-white">${selectedAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Discount (50%)</span>
-                  <span className="text-hottopic-red">-${(selectedAmount * 0.5).toFixed(2)}</span>
+                  <span className="text-gray-400">Discount (70%)</span>
+                  <span className="text-hottopic-red">-${(selectedAmount * 0.7).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Delivery Method</span>
@@ -516,7 +516,7 @@ const Index = () => {
                 </div>
                 <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                   <span className="text-white">Total</span>
-                  <span className="text-hottopic-red text-xl">${(selectedAmount * 0.5).toFixed(2)}</span>
+                  <span className="text-hottopic-red text-xl">${(selectedAmount * 0.3).toFixed(2)}</span>
                 </div>
               </div>
             </div>

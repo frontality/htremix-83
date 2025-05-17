@@ -59,7 +59,7 @@ const HotTopicPromo = () => {
           </div>
           
           <div className="text-white font-bold md:ml-4">
-            USE CODE: <span className="text-hottopic-red bg-white px-2 py-0.5 mx-1">HOTTOPICSAVE50</span>
+            USE CODE: <span className="text-hottopic-red bg-white px-2 py-0.5 mx-1">HOTTOPICSAVE70</span>
           </div>
         </div>
       </div>
