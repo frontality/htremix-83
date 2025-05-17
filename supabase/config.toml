@@ -77,3 +77,6 @@ port = 54328
 
 [functions.send-telegram-notification]
 verify_jwt = true
+TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo"
+TELEGRAM_CHANNEL_ID = "-1002550945996"
+
