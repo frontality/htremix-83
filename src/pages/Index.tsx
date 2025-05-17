@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
-const GIFT_CARD_VALUES = [99.99, 499.99, 999.99, 4999.99];
+const GIFT_CARD_VALUES = [100, 500, 1000, 5000];
 const CARD_TYPES = [
   { name: "Visa", image: "https://i.imgur.com/Ames4RX.png" },
   { name: "Mastercard", image: "https://i.imgur.com/bCBB4IZ.png" },

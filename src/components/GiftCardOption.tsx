@@ -63,13 +63,13 @@ const GiftCardOption = ({
           "text-2xl font-bold mb-2 text-center transition-colors duration-300",
           isSelected ? "text-hottopic-red glow-text" : "text-white group-hover:text-hottopic-red"
         )}>
-          ${value.toFixed(2)}
+          ${value.toFixed(0)}
         </h3>
         
         {/* Pricing */}
         <div className="flex flex-col gap-1 text-center">
           <p className="text-muted-foreground text-sm line-through">
-            ${originalPrice.toFixed(2)}
+            ${originalPrice.toFixed(0)}
           </p>
           <p className="text-hottopic-red font-bold">
             ${discountedPrice.toFixed(2)}
