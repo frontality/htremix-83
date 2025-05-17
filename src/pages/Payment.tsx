@@ -10,49 +10,46 @@ import HotTopicFooter from "@/components/HotTopicFooter";
 import { AlertCircle, CreditCard, LockIcon, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Updated card types with improved SVG content
+// Updated card types with PNG images
 const CARD_TYPES = [
   { 
     name: "Visa", 
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 146 95">
-        <rect width="146" height="95" rx="7" fill="#0055B7" />
-        <path fill="#FFF" d="M60.1 30.4l-12.2 28.7h-8l-6-23c-.4-1.4-1-1.8-2.3-2.3-2.3-1-6.2-2-9.6-2.6l.2-.9h16.5c2.1 0 4 1.4 4.4 3.8l4.1 21.5 10-25.3h8.9zm35.4 19.3c0-9.9-13.7-10.4-13.6-14.8 0-1.3 1.3-2.8 4.2-3.1 1.4-.2 5.3-.4 9.8 1.8l1.7-8c-2.4-.9-5.5-1.7-9.4-1.7-9.9 0-16.8 5.2-16.9 12.8-.1 5.6 5 8.7 8.7 10.5 3.9 1.9 5.2 3.1 5.2 4.8 0 2.6-3.1 3.7-6 3.8-5 .1-7.9-1.4-10.3-2.4l-1.8 8.4c2.3 1.1 6.6 2 11.1 2 10.5 0 17.3-5.2 17.3-13.1M112.5 59h7.8l-6.8-28.7h-7.2c-1.6 0-3 1-3.6 2.3l-12.7 26.3h8.9l1.8-4.9h10.9l.9 5zm-9.3-12.5l4.5-12.4 2.6 12.4h-7.1zm-43.4-16.2l-7 28.7h-8.5l7-28.7h8.5z" />
-      </svg>
+      <img 
+        src="https://i.imgur.com/k2VBEzO.png" 
+        alt="Visa" 
+        className="h-8 object-contain"
+      />
     )
   },
   { 
     name: "Mastercard", 
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 146 95">
-        <rect width="146" height="95" rx="7" fill="#0A2882" />
-        <circle fill="#EB001B" cx="52.3" cy="47.5" r="24.1" />
-        <circle fill="#F79E1B" cx="93.7" cy="47.5" r="24.1" />
-        <path fill="#FF5F00" d="M73 31.9c-5.8 4.7-9.6 11.9-9.6 19.9 0 8 3.7 15.2 9.6 19.9 5.8-4.7 9.6-11.9 9.6-19.9 0-8-3.7-15.2-9.6-19.9z" />
-        <path d="M125.6 66.4V65h.6v-.3h-1.5v.3h.6v1.4h.3zm2.8 0v-1.7h-.5l-.5 1.1-.5-1.1h-.4v1.7h.3v-1.3l.5 1.1h.3l.5-1.1v1.3h.3z" fill="#F79E1B" />
-      </svg>
+      <img 
+        src="https://i.imgur.com/TTURFkf.png" 
+        alt="Mastercard" 
+        className="h-8 object-contain"
+      />
     )
   },
   { 
     name: "American Express", 
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 146 95">
-        <rect width="146" height="95" rx="7" fill="#006FCF" />
-        <path fill="#FFF" d="M19.6 56.7h7.4v-18h-7.4v18zm52.5 0h10.4l1.6-2 1.5 2h36.5v-15c0 0-1.6 0-3 .8-1.4.8-2.2 1.9-2.2 1.9v-2.7h-8.1l-1.4 3.1-1.3-3.1h-12.9v2.7c0 0-1.3-2.7-5-2.7s-12.6 0-12.6 0l-.8 1.9-.7-1.9h-8.9v2.7c0 0-1.1-2.7-4.6-2.7h-6.8L60 45.7l-2.5-7h-8.2v18h7.1v-6.8l2 6.8h4.8l2-6.8v6.8h7V44.5h1.5c3.8 0 3 5.8 3 5.8v6.4h7.1v-1l1.6 1h.7zm-30.4-18v15.6c0 0 1.3 2.4 4.5 2.4h6.3l1.9-3.7v3.7h8.2l1.6-2.2 1.5 2.2h8.8v-3.7h-.6c3.8 0 6.1-2.4 6.1-5.6h.7c5.6 0 4.5 5.6 4.5 5.6h-2.3v3.7h7.1v-3.7h3.8V45.6h3.8v-3.3h-3.8v-3.7h-7.1v3c0 0-1.1-3-4.8-3h-10.7v3c0 0-1.1-3-5.2-3h-12.9l-2.9 6.7-3-6.7h-7zm26.5 14.2h-3.3v-10.5h3.3c3.5 0 3.8 5.3 0 5.3l3.8 5.2zm31.7 0l-3.9-5.2c3.8 0 3.4-5.3 0-5.3h-3.3v10.5h3.3v-5.2l3.9 5.2zm-72.3-7.5h-3.8v-3.6h3.8v3.6zm0 7.5h-3.8V49h3.8v3.9zm63.6-7.5h-3.8v-3.6h3.8v3.6zm0 7.5h-3.8V49h3.8v3.9zm11.3 0h-3.8V45.6h3.8v11.1z" />
-      </svg>
+      <img 
+        src="https://i.imgur.com/GuC4cCk.png" 
+        alt="American Express" 
+        className="h-8 object-contain"
+      />
     )
   },
   { 
     name: "Discover", 
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 146 95">
-        <rect width="146" height="95" rx="7" fill="#4D4D4D" />
-        <path fill="none" d="M0 0h146v95H0z" />
-        <path d="M13.3 47.5c0-10.8 8.7-19.5 19.5-19.5h79.2c10.8 0 19.5 8.7 19.5 19.5 0 10.8-8.7 19.5-19.5 19.5H32.8c-10.8 0-19.5-8.7-19.5-19.5z" fill="none" />
-        <path fill="#FF7900" d="M115 62.5c7.6-7.3 7.6-19.3 0-26.6-3.8-3.6-8.8-5.4-14-5.4h-5.2c-10.9 0-18.7 5.8-18.7 19s7.8 19 18.7 19h5.2c5.2 0 10.2-1.9 14-6" />
-        <path d="M62.5 53.2c1.2-1.5 1.8-3.2 1.8-5.4 0-2.1-.6-3.9-1.8-5.3-1.2-1.4-2.9-2-5.2-2H53v14.8h4.3c2.3 0 4-.7 5.2-2.1m-4.1-1.6c-.6.7-1.4 1-2.5 1H55V42.1h.8c1.1 0 1.9.3 2.5 1 .6.7.9 1.6.9 2.8 0 1.2-.3 2.2-.8 2.7m5.7 8.1h-1.3l5.7-19.3h1.3l5.8 19.3h-1.3L73 55.3h-7.4l-1.5 4.4zm2.8-5.8h6.3l-3.2-10.2-3.1 10.2zm16.9 5.8V40.6h5.2c2.9 0 4.6 1.9 4.6 4.7 0 2.4-1.2 3.9-3.6 4.5L94 59.7h-1.5L88 50h-3.2v9.7h-1zm1-10.9h3.6c2.3 0 3.7-1.2 3.7-3.6 0-2.1-1.3-3.4-3.3-3.4h-4v7zm12.3 10.9V40.6h6.9c2.1 0 3.7 1.5 3.7 3.7 0 1.7-1 3-2.5 3.4 1.9.3 3.3 2 3.3 3.9 0 2.3-1.7 3.9-4.5 3.9l-6.9.2zm1-11v4.8h4.7c2.2 0 3.6-1 3.6-2.9 0-1.5-1.1-2.6-2.6-2.6l-2.4.1h-3.3v.6zm0 5.9v4h5.9c1.8 0 3.1-1 3.1-2.6 0-1.5-1.1-2.5-2.8-2.5l-1.3.1-4.9 1z" fill="#FFF" />
-        <path fill="#FFF" d="M25.2 59.7V40.6H38v1.1H26.2v7.6h11.5v1.1H26.2V59h11.9v.7z" />
-      </svg>
+      <img 
+        src="https://i.imgur.com/LJWfn5T.png" 
+        alt="Discover" 
+        className="h-8 object-contain"
+      />
     )
   }
 ];
@@ -342,7 +339,9 @@ const Payment = () => {
                       >
                         <SelectValue placeholder="Select card type">
                           <div className="flex items-center gap-2">
-                            {selectedCardIcon}
+                            <div className="w-10 flex items-center">
+                              {selectedCardIcon}
+                            </div>
                             <span>{selectedCardType}</span>
                           </div>
                         </SelectValue>
@@ -355,7 +354,9 @@ const Payment = () => {
                             className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
                           >
                             <div className="flex items-center gap-2">
-                              {card.icon}
+                              <div className="w-10 flex items-center">
+                                {card.icon}
+                              </div>
                               {card.name}
                             </div>
                           </SelectItem>
@@ -390,7 +391,9 @@ const Payment = () => {
                       />
                       <div className="absolute left-3 top-2.5 h-4 w-4 text-gray-400">
                         {selectedCardIcon ? (
-                          <div className="scale-[0.6] -ml-1 -mt-1">{selectedCardIcon}</div>
+                          <div className="scale-75 -ml-2.5 -mt-2">
+                            {selectedCardIcon}
+                          </div>
                         ) : (
                           <CreditCard className="h-4 w-4" />
                         )}
