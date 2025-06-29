@@ -4,14 +4,16 @@ import { Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ImageUploadProps {
   currentImage?: string | null;
   onImageUpload: (imageUrl: string) => void;
   className?: string;
+  bucket?: string;
 }
 
-const ImageUpload = ({ currentImage, onImageUpload, className = "" }: ImageUploadProps) => {
+const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "avatars" }: ImageUploadProps) => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -43,18 +45,48 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "" }: ImageUploa
     setUploading(true);
     
     try {
-      // Create a simple base64 URL for now (in a real app, you'd upload to Supabase storage)
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onImageUpload(result);
-        toast({
-          title: "Image uploaded!",
-          description: "Your profile picture has been updated",
-        });
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      console.log('Uploading file to:', bucket, filePath);
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        // If bucket doesn't exist, create it and try again
+        if (uploadError.message.includes('not found')) {
+          const { error: bucketError } = await supabase.storage
+            .createBucket(bucket, { public: true });
+          
+          if (!bucketError) {
+            const { error: retryError } = await supabase.storage
+              .from(bucket)
+              .upload(filePath, file);
+            
+            if (retryError) throw retryError;
+          } else {
+            throw uploadError;
+          }
+        } else {
+          throw uploadError;
+        }
+      }
+
+      const { data } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
+
+      console.log('Image uploaded successfully:', data.publicUrl);
+      onImageUpload(data.publicUrl);
+      
+      toast({
+        title: "Image uploaded!",
+        description: "Your image has been uploaded successfully",
+      });
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -62,6 +94,7 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "" }: ImageUploa
         description: "Failed to upload image. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setUploading(false);
     }
   };
@@ -70,7 +103,7 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "" }: ImageUploa
     <div className={`relative group ${className}`}>
       <img
         src={currentImage || "/placeholder.svg"}
-        alt="Profile"
+        alt="Upload preview"
         className="w-24 h-24 rounded-full object-cover border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105"
       />
       

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Upload, DollarSign, Package, Camera } from "lucide-react";
+import { Upload, DollarSign, Package, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
+import ImageUpload from "@/components/ImageUpload";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES = [
   "Electronics",
@@ -25,6 +27,7 @@ const CATEGORIES = [
 
 const SellItems = () => {
   const { currentTheme } = useTheme();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -37,11 +40,37 @@ const SellItems = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Item listing data:", formData);
-    // Here you would typically send the data to your backend
+    toast({
+      title: "Item Listed!",
+      description: "Your item has been successfully listed for sale.",
+    });
+    // Reset form
+    setFormData({
+      title: "",
+      description: "",
+      price: "",
+      category: "",
+      condition: "",
+      images: []
+    });
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, imageUrl]
+    }));
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -72,25 +101,41 @@ const SellItems = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Item Images */}
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <Label className={currentTheme.text}>Item Images</Label>
-                  <div className={`border-2 border-dashed ${currentTheme.border} rounded-lg p-8 text-center`}>
-                    <Camera className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                    <p className={`${currentTheme.muted} mb-2`}>
-                      Click to upload images or drag and drop
-                    </p>
-                    <p className={`text-sm ${currentTheme.muted}`}>
-                      PNG, JPG up to 10MB each (max 5 images)
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={`mt-4 ${currentTheme.secondary} ${currentTheme.text} border-0`}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Choose Images
-                    </Button>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img 
+                          src={image} 
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border-2 border-purple-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {formData.images.length < 5 && (
+                      <div className="w-full h-32">
+                        <ImageUpload
+                          onImageUpload={handleImageUpload}
+                          bucket="product-images"
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
                   </div>
+                  
+                  <p className={`text-sm ${currentTheme.muted}`}>
+                    Upload up to 5 images (PNG, JPG up to 5MB each)
+                  </p>
                 </div>
 
                 {/* Item Title */}
@@ -148,6 +193,7 @@ const SellItems = () => {
                     <Input
                       id="price"
                       type="number"
+                      step="0.01"
                       placeholder="0.00"
                       value={formData.price}
                       onChange={(e) => handleInputChange("price", e.target.value)}

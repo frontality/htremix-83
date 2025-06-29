@@ -1,28 +1,36 @@
 
-import { useState } from "react";
 import { Settings as SettingsIcon, Bell, Shield, Palette, Globe, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/hooks/useSettings";
 import ThemeSelector from "@/components/ThemeSelector";
+import { useState } from "react";
+
+const LANGUAGES = {
+  en: { name: 'English', flag: '🇺🇸' },
+  es: { name: 'Español', flag: '🇪🇸' },
+  fr: { name: 'Français', flag: '🇫🇷' },
+  de: { name: 'Deutsch', flag: '🇩🇪' },
+  ja: { name: '日本語', flag: '🇯🇵' },
+  zh: { name: '中文', flag: '🇨🇳' }
+};
+
+const CURRENCIES = {
+  usd: { name: 'USD ($)', symbol: '$' },
+  eur: { name: 'EUR (€)', symbol: '€' },
+  gbp: { name: 'GBP (£)', symbol: '£' },
+  btc: { name: 'BTC (₿)', symbol: '₿' },
+  eth: { name: 'ETH (Ξ)', symbol: 'Ξ' }
+};
 
 const Settings = () => {
   const { currentTheme } = useTheme();
-  const { toast } = useToast();
-  const [settings, setSettings] = useState({
-    notifications: true,
-    twoFactor: false,
-    autoSave: true,
-    soundEffects: true,
-  });
+  const { settings, loading, updateSettings } = useSettings();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
 
   const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
-    });
+    updateSettings(settings);
   };
 
   const SettingCard = ({ icon: Icon, title, children }: any) => (
@@ -34,6 +42,17 @@ const Settings = () => {
       {children}
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
+        <div className="text-center">
+          <SettingsIcon className="h-12 w-12 text-indigo-400 mx-auto mb-4 animate-pulse" />
+          <p className={`${currentTheme.text} text-lg`}>Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${currentTheme.bg}`}>
@@ -52,7 +71,7 @@ const Settings = () => {
                   <Switch
                     checked={settings.notifications}
                     onCheckedChange={(checked) =>
-                      setSettings({ ...settings, notifications: checked })
+                      updateSettings({ notifications: checked })
                     }
                   />
                 </div>
@@ -61,7 +80,7 @@ const Settings = () => {
                   <Switch
                     checked={settings.soundEffects}
                     onCheckedChange={(checked) =>
-                      setSettings({ ...settings, soundEffects: checked })
+                      updateSettings({ soundEffects: checked })
                     }
                   />
                 </div>
@@ -75,7 +94,7 @@ const Settings = () => {
                   <Switch
                     checked={settings.twoFactor}
                     onCheckedChange={(checked) =>
-                      setSettings({ ...settings, twoFactor: checked })
+                      updateSettings({ twoFactor: checked })
                     }
                   />
                 </div>
@@ -84,7 +103,7 @@ const Settings = () => {
                   <Switch
                     checked={settings.autoSave}
                     onCheckedChange={(checked) =>
-                      setSettings({ ...settings, autoSave: checked })
+                      updateSettings({ autoSave: checked })
                     }
                   />
                 </div>
@@ -115,20 +134,30 @@ const Settings = () => {
               <div className="space-y-4">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${currentTheme.text}`}>Language</label>
-                  <select className={`w-full p-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} border-0`}>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
+                  <select 
+                    value={settings.language}
+                    onChange={(e) => updateSettings({ language: e.target.value })}
+                    className={`w-full p-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} border-0`}
+                  >
+                    {Object.entries(LANGUAGES).map(([code, lang]) => (
+                      <option key={code} value={code}>
+                        {lang.flag} {lang.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${currentTheme.text}`}>Currency</label>
-                  <select className={`w-full p-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} border-0`}>
-                    <option value="usd">USD ($)</option>
-                    <option value="eur">EUR (€)</option>
-                    <option value="gbp">GBP (£)</option>
-                    <option value="btc">BTC (₿)</option>
+                  <select 
+                    value={settings.currency}
+                    onChange={(e) => updateSettings({ currency: e.target.value })}
+                    className={`w-full p-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} border-0`}
+                  >
+                    {Object.entries(CURRENCIES).map(([code, currency]) => (
+                      <option key={code} value={code}>
+                        {currency.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

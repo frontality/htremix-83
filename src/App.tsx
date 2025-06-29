@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Marketplace from "./pages/Marketplace";
+import ProductDetail from "./pages/ProductDetail";
 import SellItems from "./pages/SellItems";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
@@ -51,6 +52,7 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/sell" element={<SellItems />} />
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/processing-payment" element={<ProcessingPayment />} />

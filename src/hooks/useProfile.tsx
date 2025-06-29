@@ -28,7 +28,7 @@ export const useProfile = () => {
     
     try {
       console.log('Fetching profile for user:', user.id);
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -59,7 +59,7 @@ export const useProfile = () => {
           two_factor_enabled: false
         };
 
-        const { data: insertedProfile, error: insertError } = await (supabase as any)
+        const { data: insertedProfile, error: insertError } = await supabase
           .from('profiles')
           .insert([newProfile])
           .select()
@@ -87,7 +87,7 @@ export const useProfile = () => {
 
     try {
       console.log('Updating profile with:', updates);
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id)
@@ -105,7 +105,6 @@ export const useProfile = () => {
       }
 
       console.log('Profile updated successfully:', data);
-      // Update the local state with the returned data
       setProfile(data);
       toast({
         title: "Success",
