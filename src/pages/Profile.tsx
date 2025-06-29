@@ -1,21 +1,20 @@
-
 import { useState } from "react";
 import { Camera, Edit, Mail, MessageCircle, User, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Profile = () => {
   const { currentTheme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    username: "CryptoTrader123",
+    username: "SkidTrader123",
     email: "trader@example.com",
-    bio: "Crypto enthusiast and gift card collector. Always looking for good deals!",
+    bio: "Marketplace enthusiast and collector. Always looking for good deals!",
     avatar: "/placeholder.svg",
     walletAddress: "0x1234...5678",
     joinDate: "January 2024"
@@ -28,7 +27,7 @@ const Profile = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg}`}>
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-8">
         <div className="max-w-4xl mx-auto">
@@ -179,7 +178,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };

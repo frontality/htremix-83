@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { MessageCircle, Search, Send, User, Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Message {
@@ -106,7 +105,7 @@ const Messages = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg}`}>
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-4">
         <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} overflow-hidden`} style={{ height: 'calc(100vh - 200px)' }}>
@@ -244,7 +243,7 @@ const Messages = () => {
         </div>
       </div>
 
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };

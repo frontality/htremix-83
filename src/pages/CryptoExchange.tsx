@@ -4,10 +4,16 @@ import { ArrowUpDown, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { SUPPORTED_CRYPTOCURRENCIES } from "@/integrations/coinpayments/client";
+
+const SUPPORTED_CRYPTOCURRENCIES = [
+  { code: "BTC", name: "Bitcoin", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
+  { code: "ETH", name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+  { code: "USDT", name: "Tether", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
+  { code: "ADA", name: "Cardano", logo: "https://cryptologos.cc/logos/cardano-ada-logo.png" }
+];
 
 const CryptoExchange = () => {
   const { currentTheme } = useTheme();
@@ -26,7 +32,7 @@ const CryptoExchange = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg}`}>
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-8">
         <div className="max-w-2xl mx-auto">
@@ -142,7 +148,7 @@ const CryptoExchange = () => {
         </div>
       </div>
 
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };

