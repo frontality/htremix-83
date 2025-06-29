@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface Profile {
@@ -20,6 +19,8 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const getStorageKey = (userId: string) => `profile_${userId}`;
+
   const fetchProfile = async () => {
     if (!user) {
       setLoading(false);
@@ -28,28 +29,18 @@ export const useProfile = () => {
     
     try {
       console.log('Fetching profile for user:', user.id);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data) {
-        console.log('Profile found:', data);
-        setProfile(data);
+      
+      // Try to load from localStorage first
+      const storageKey = getStorageKey(user.id);
+      const savedProfile = localStorage.getItem(storageKey);
+      
+      if (savedProfile) {
+        const parsedProfile = JSON.parse(savedProfile);
+        console.log('Profile found in localStorage:', parsedProfile);
+        setProfile(parsedProfile);
       } else {
-        console.log('No profile found, creating one...');
-        const newProfile = {
+        console.log('No profile found, creating default one...');
+        const newProfile: Profile = {
           id: user.id,
           username: user.email?.split('@')[0] || 'User',
           bio: null,
@@ -59,18 +50,9 @@ export const useProfile = () => {
           two_factor_enabled: false
         };
 
-        const { data: insertedProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert([newProfile])
-          .select()
-          .single();
-
-        if (!insertError && insertedProfile) {
-          console.log('Profile created:', insertedProfile);
-          setProfile(insertedProfile);
-        } else {
-          console.error('Error creating profile:', insertError);
-        }
+        localStorage.setItem(storageKey, JSON.stringify(newProfile));
+        console.log('Profile created:', newProfile);
+        setProfile(newProfile);
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
@@ -87,25 +69,13 @@ export const useProfile = () => {
 
     try {
       console.log('Updating profile with:', updates);
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      const updatedProfile = { ...profile, ...updates };
+      
+      const storageKey = getStorageKey(user.id);
+      localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
 
-      if (error) {
-        console.error('Profile update error:', error);
-        toast({
-          title: "Error",
-          description: "Couldn't save your changes. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      console.log('Profile updated successfully:', data);
-      setProfile(data);
+      console.log('Profile updated successfully:', updatedProfile);
+      setProfile(updatedProfile);
       toast({
         title: "Success",
         description: "Your profile has been updated!",

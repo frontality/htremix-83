@@ -4,7 +4,6 @@ import { Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ImageUploadProps {
   currentImage?: string | null;
@@ -45,48 +44,31 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
     setUploading(true);
     
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      console.log('Uploading file to:', bucket, filePath);
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        // If bucket doesn't exist, create it and try again
-        if (uploadError.message.includes('not found')) {
-          const { error: bucketError } = await supabase.storage
-            .createBucket(bucket, { public: true });
-          
-          if (!bucketError) {
-            const { error: retryError } = await supabase.storage
-              .from(bucket)
-              .upload(filePath, file);
-            
-            if (retryError) throw retryError;
-          } else {
-            throw uploadError;
-          }
-        } else {
-          throw uploadError;
-        }
-      }
-
-      const { data } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      console.log('Image uploaded successfully:', data.publicUrl);
-      onImageUpload(data.publicUrl);
+      // For now, we'll convert to base64 and store locally since Supabase storage isn't configured
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        console.log('Image converted to base64');
+        onImageUpload(base64String);
+        
+        toast({
+          title: "Image uploaded!",
+          description: "Your image has been uploaded successfully",
+        });
+        setUploading(false);
+      };
       
-      toast({
-        title: "Image uploaded!",
-        description: "Your image has been uploaded successfully",
-      });
+      reader.onerror = () => {
+        console.error('Error reading file');
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload image. Please try again.",
+          variant: "destructive",
+        });
+        setUploading(false);
+      };
+      
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -94,7 +76,6 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
         description: "Failed to upload image. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setUploading(false);
     }
   };
