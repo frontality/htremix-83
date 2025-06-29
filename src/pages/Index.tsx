@@ -1,6 +1,7 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, TrendingUp } from "lucide-react";
+import { ShoppingBag, TrendingUp, User } from "lucide-react";
 import HotTopicHeader from "@/components/HotTopicHeader";
 import HotTopicFooter from "@/components/HotTopicFooter";
 import { useTheme } from "@/contexts/ThemeContext";
