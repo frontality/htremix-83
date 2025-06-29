@@ -21,7 +21,6 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
-import MainSidebar from "./components/MainSidebar";
 import QuickActions from "./components/QuickActions";
 import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
@@ -44,8 +43,7 @@ const App = () => (
             <div className="min-h-screen relative">
               <CursorBackground />
               <TopHeader />
-              <MainSidebar />
-              <div className="pt-16 relative z-10">
+              <div className="pt-20 relative z-10">
                 <Toaster />
                 <Sonner position="top-right" closeButton theme="dark" />
                 <Routes>

@@ -3,39 +3,39 @@ import { useState, useEffect } from "react";
 import { Search, User, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface UserSearchProps {
   onSelectUser: (userId: string) => void;
   onClose: () => void;
 }
 
-interface Profile {
+interface SearchedUser {
   id: string;
-  username: string | null;
+  username: string;
   avatar_url: string | null;
 }
 
 const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
   const { currentTheme } = useTheme();
-  const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState<Profile[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState<SearchedUser[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const searchUsers = async (query: string) => {
-    if (!query.trim() || !user) return;
-    
+  const searchUsers = async (term: string) => {
+    if (!term.trim()) {
+      setUsers([]);
+      return;
+    }
+
     setLoading(true);
     try {
+      console.log('Searching for users with term:', term);
       const { data, error } = await (supabase as any)
         .from('profiles')
         .select('id, username, avatar_url')
-        .ilike('username', `%${query}%`)
-        .neq('id', user.id)
+        .ilike('username', `%${term}%`)
         .limit(10);
 
       if (error) {
@@ -43,6 +43,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
         return;
       }
 
+      console.log('Users found:', data);
       setUsers(data || []);
     } catch (error) {
       console.error('Error in searchUsers:', error);
@@ -52,84 +53,68 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
   };
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchUsers(searchQuery);
+    const delayedSearch = setTimeout(() => {
+      searchUsers(searchTerm);
     }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, user]);
+    return () => clearTimeout(delayedSearch);
+  }, [searchTerm]);
 
-  const handleUserSelect = (userId: string) => {
+  const handleSelectUser = (userId: string) => {
+    console.log('User selected:', userId);
     onSelectUser(userId);
     onClose();
   };
 
   return (
-    <div className={`${currentTheme.cardBg} rounded-lg border ${currentTheme.border} p-4 shadow-lg`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={`text-lg font-semibold ${currentTheme.text} flex items-center gap-2`}>
-          <Search className="h-5 w-5" />
-          Find Users
-        </h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          ×
-        </Button>
-      </div>
-      
-      <div className="relative mb-4">
-        <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${currentTheme.muted}`} />
+    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-lg min-w-80`}>
+      <div className="flex items-center space-x-2 mb-4">
+        <Search className="h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search by username..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={`pl-10 ${currentTheme.secondary} ${currentTheme.text} border-0`}
+          placeholder="Search users by username..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0`}
+          autoFocus
         />
       </div>
 
-      <ScrollArea className="max-h-64">
-        <div className="space-y-2">
-          {loading ? (
-            <div className="text-center py-4">
-              <div className={`${currentTheme.muted}`}>Searching...</div>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-4">
-              <User className={`h-8 w-8 ${currentTheme.muted} mx-auto mb-2`} />
-              <div className={`${currentTheme.muted}`}>
-                {searchQuery ? 'No users found' : 'Start typing to search for users'}
+      <div className="max-h-60 overflow-y-auto space-y-2">
+        {loading ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto"></div>
+          </div>
+        ) : users.length > 0 ? (
+          users.map((user) => (
+            <div
+              key={user.id}
+              className={`flex items-center space-x-3 p-3 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+              onClick={() => handleSelectUser(user.id)}
+            >
+              <img
+                src={user.avatar_url || "/placeholder.svg"}
+                alt={user.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div className="flex-1">
+                <p className={`font-medium ${currentTheme.text}`}>
+                  {user.username || "Anonymous User"}
+                </p>
               </div>
+              <MessageCircle className="h-4 w-4 text-gray-400" />
             </div>
-          ) : (
-            users.map((profile) => (
-              <div
-                key={profile.id}
-                className={`flex items-center justify-between p-3 rounded-lg hover:${currentTheme.secondary} transition-colors`}
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={profile.avatar_url || "/placeholder.svg"}
-                    alt={profile.username || "User"}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className={`font-medium ${currentTheme.text}`}>
-                      {profile.username || "Anonymous User"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => handleUserSelect(profile.id)}
-                  className={`${currentTheme.primary} text-white flex items-center gap-2`}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Message
-                </Button>
-              </div>
-            ))
-          )}
-        </div>
-      </ScrollArea>
+          ))
+        ) : searchTerm.trim() ? (
+          <div className="text-center py-4">
+            <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className={`${currentTheme.muted} text-sm`}>No users found</p>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className={`${currentTheme.muted} text-sm`}>Start typing to search for users</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

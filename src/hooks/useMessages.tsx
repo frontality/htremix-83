@@ -29,8 +29,6 @@ interface Conversation {
     username: string;
     avatar_url: string;
   };
-  last_message?: string;
-  unread_count?: number;
 }
 
 export const useMessages = () => {
@@ -41,9 +39,13 @@ export const useMessages = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchConversations = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      console.log('Fetching conversations for user:', user.id);
       const { data, error } = await (supabase as any)
         .from('conversations')
         .select(`
@@ -59,6 +61,7 @@ export const useMessages = () => {
         return;
       }
 
+      console.log('Conversations fetched:', data);
       setConversations(data || []);
     } catch (error) {
       console.error('Error in fetchConversations:', error);
@@ -69,6 +72,7 @@ export const useMessages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
+      console.log('Fetching messages for conversation:', conversationId);
       const { data, error } = await (supabase as any)
         .from('messages')
         .select(`
@@ -83,6 +87,7 @@ export const useMessages = () => {
         return;
       }
 
+      console.log('Messages fetched:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error in fetchMessages:', error);
@@ -93,6 +98,7 @@ export const useMessages = () => {
     if (!user || !content.trim()) return false;
 
     try {
+      console.log('Sending message:', { conversationId, content });
       const { error } = await (supabase as any)
         .from('messages')
         .insert([{
@@ -111,7 +117,7 @@ export const useMessages = () => {
         return false;
       }
 
-      // Refresh messages
+      console.log('Message sent successfully');
       await fetchMessages(conversationId);
       return true;
     } catch (error) {
@@ -124,14 +130,17 @@ export const useMessages = () => {
     if (!user) return null;
 
     try {
+      console.log('Creating conversation with participant:', participantId);
+      
       // Check if conversation already exists
       const { data: existingConv } = await (supabase as any)
         .from('conversations')
         .select('id')
         .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${participantId}),and(participant1_id.eq.${participantId},participant2_id.eq.${user.id})`)
-        .single();
+        .maybeSingle();
 
-      if (existingConv && existingConv.id) {
+      if (existingConv?.id) {
+        console.log('Existing conversation found:', existingConv.id);
         return existingConv.id;
       }
 
@@ -149,6 +158,7 @@ export const useMessages = () => {
         return null;
       }
 
+      console.log('Conversation created:', data);
       await fetchConversations();
       return data?.id || null;
     } catch (error) {

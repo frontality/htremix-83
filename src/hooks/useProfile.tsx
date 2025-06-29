@@ -21,9 +21,13 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
+      console.log('Fetching profile for user:', user.id);
       const { data, error } = await (supabase as any)
         .from('profiles')
         .select('*')
@@ -32,13 +36,19 @@ export const useProfile = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data.",
+          variant: "destructive",
+        });
         return;
       }
 
       if (data) {
+        console.log('Profile found:', data);
         setProfile(data);
       } else {
-        // Create profile if it doesn't exist
+        console.log('No profile found, creating one...');
         const newProfile = {
           id: user.id,
           username: user.email?.split('@')[0] || 'User',
@@ -49,12 +59,17 @@ export const useProfile = () => {
           two_factor_enabled: false
         };
 
-        const { error: insertError } = await (supabase as any)
+        const { data: insertedProfile, error: insertError } = await (supabase as any)
           .from('profiles')
-          .insert([newProfile]);
+          .insert([newProfile])
+          .select()
+          .single();
 
-        if (!insertError) {
-          setProfile(newProfile);
+        if (!insertError && insertedProfile) {
+          console.log('Profile created:', insertedProfile);
+          setProfile(insertedProfile);
+        } else {
+          console.error('Error creating profile:', insertError);
         }
       }
     } catch (error) {
@@ -65,13 +80,19 @@ export const useProfile = () => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user || !profile) return false;
+    if (!user || !profile) {
+      console.log('No user or profile for update');
+      return false;
+    }
 
     try {
-      const { error } = await (supabase as any)
+      console.log('Updating profile with:', updates);
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .update(updates)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select()
+        .single();
 
       if (error) {
         console.error('Profile update error:', error);
@@ -83,6 +104,7 @@ export const useProfile = () => {
         return false;
       }
 
+      console.log('Profile updated successfully:', data);
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       toast({
         title: "Success",
