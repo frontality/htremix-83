@@ -7,7 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import PurchaseAlerts from "./components/PurchaseAlerts";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import Payment from "./pages/Payment";
@@ -20,7 +21,7 @@ import Messages from "./pages/Messages";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 60 * 1000,
       retry: 1,
     },
   },
@@ -34,9 +35,10 @@ const App = () => (
           <div className="min-h-screen">
             <Toaster />
             <Sonner position="top-right" closeButton theme="dark" />
-            <PurchaseAlerts />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/processing-payment" element={<ProcessingPayment />} />
               <Route path="/otp-verification" element={<OTPVerification />} />
@@ -45,7 +47,6 @@ const App = () => (
               <Route path="/crypto-exchange" element={<CryptoExchange />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/messages" element={<Messages />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
