@@ -44,7 +44,7 @@ export const useMessages = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('conversations')
         .select(`
           *,
@@ -69,7 +69,7 @@ export const useMessages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('messages')
         .select(`
           *,
@@ -93,7 +93,7 @@ export const useMessages = () => {
     if (!user || !content.trim()) return false;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('messages')
         .insert([{
           conversation_id: conversationId,
@@ -127,7 +127,7 @@ export const useMessages = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('conversations')
         .insert([{
           participant1_id: user.id,
@@ -142,7 +142,7 @@ export const useMessages = () => {
       }
 
       await fetchConversations();
-      return data.id;
+      return data?.id || null;
     } catch (error) {
       console.error('Error in createConversation:', error);
       return null;
