@@ -44,15 +44,16 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
     setUploading(true);
     
     try {
-      // For now, we'll convert to base64 and store locally since Supabase storage isn't configured
+      console.log('Starting image upload...');
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64String = e.target?.result as string;
-        console.log('Image converted to base64');
+        console.log('Image converted to base64, calling onImageUpload');
         onImageUpload(base64String);
         
         toast({
-          title: "Image uploaded!",
+          title: "Image uploaded! 📸",
           description: "Your image has been uploaded successfully",
         });
         setUploading(false);
@@ -82,11 +83,13 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
 
   return (
     <div className={`relative group ${className}`}>
-      <img
-        src={currentImage || "/placeholder.svg"}
-        alt="Upload preview"
-        className="w-24 h-24 rounded-full object-cover border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105"
-      />
+      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105">
+        <img
+          src={currentImage || "/placeholder.svg"}
+          alt="Upload preview"
+          className="w-full h-full object-cover"
+        />
+      </div>
       
       <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
         <label htmlFor="image-upload" className="cursor-pointer">

@@ -58,10 +58,12 @@ export const useMessages = () => {
         console.log('Conversations found:', userConversations);
         setConversations(userConversations);
       } else {
+        console.log('No conversations found, creating empty array');
         setConversations([]);
       }
     } catch (error) {
       console.error('Error in fetchConversations:', error);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -78,21 +80,26 @@ export const useMessages = () => {
         console.log('Messages found:', conversationMessages);
         setMessages(conversationMessages);
       } else {
+        console.log('No messages found for conversation');
         setMessages([]);
       }
     } catch (error) {
       console.error('Error in fetchMessages:', error);
+      setMessages([]);
     }
   };
 
   const sendMessage = async (conversationId: string, content: string) => {
-    if (!user || !content.trim()) return false;
+    if (!user || !content.trim()) {
+      console.log('No user or empty content');
+      return false;
+    }
 
     try {
-      console.log('Sending message:', { conversationId, content });
+      console.log('Sending message:', { conversationId, content, userId: user.id });
       
       const newMessage: Message = {
-        id: Date.now().toString(),
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         conversation_id: conversationId,
         sender_id: user.id,
         content: content.trim(),
@@ -110,14 +117,20 @@ export const useMessages = () => {
       
       localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
       
-      console.log('Message sent successfully');
+      console.log('Message sent and saved successfully');
       await fetchMessages(conversationId);
+      
+      toast({
+        title: "Message sent! 💬",
+        description: "Your message has been delivered",
+      });
+      
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
-        description: "Message didn't send. Try again?",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -125,7 +138,10 @@ export const useMessages = () => {
   };
 
   const createConversation = async (participantId: string) => {
-    if (!user) return null;
+    if (!user) {
+      console.log('No user for creating conversation');
+      return null;
+    }
 
     try {
       console.log('Creating conversation with participant:', participantId);
@@ -142,7 +158,7 @@ export const useMessages = () => {
       }
 
       const newConversation: Conversation = {
-        id: Date.now().toString(),
+        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         participant1_id: user.id,
         participant2_id: participantId,
         created_at: new Date().toISOString(),
@@ -163,11 +179,22 @@ export const useMessages = () => {
       
       localStorage.setItem(storageKey, JSON.stringify(updatedConversations));
 
-      console.log('Conversation created:', newConversation);
+      console.log('New conversation created and saved:', newConversation);
       await fetchConversations();
+      
+      toast({
+        title: "Conversation started! 🎉",
+        description: "You can now start chatting",
+      });
+      
       return newConversation.id;
     } catch (error) {
       console.error('Error in createConversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create conversation. Please try again.",
+        variant: "destructive",
+      });
       return null;
     }
   };

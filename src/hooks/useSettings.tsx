@@ -9,6 +9,8 @@ interface Settings {
   soundEffects: boolean;
   language: string;
   currency: string;
+  theme: string;
+  privacyMode: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -17,7 +19,9 @@ const DEFAULT_SETTINGS: Settings = {
   autoSave: true,
   soundEffects: true,
   language: 'en',
-  currency: 'usd'
+  currency: 'usd',
+  theme: 'dark',
+  privacyMode: false
 };
 
 export const useSettings = () => {
@@ -26,11 +30,12 @@ export const useSettings = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load settings from localStorage
     try {
+      console.log('Loading settings from localStorage...');
       const saved = localStorage.getItem('skidhaven-settings');
       if (saved) {
         const parsedSettings = JSON.parse(saved);
+        console.log('Settings loaded:', parsedSettings);
         setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
       }
     } catch (error) {
@@ -42,12 +47,14 @@ export const useSettings = () => {
 
   const updateSettings = async (newSettings: Partial<Settings>) => {
     try {
+      console.log('Updating settings with:', newSettings);
       const updatedSettings = { ...settings, ...newSettings };
       setSettings(updatedSettings);
       localStorage.setItem('skidhaven-settings', JSON.stringify(updatedSettings));
       
+      console.log('Settings saved successfully:', updatedSettings);
       toast({
-        title: "Settings Saved",
+        title: "Settings Saved! ⚙️",
         description: "Your preferences have been updated successfully.",
       });
       return true;
