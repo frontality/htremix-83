@@ -25,35 +25,30 @@ const SkidHavenHeader = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/7f28697e-7fbb-4316-ba56-7074afdf6cc6.png" 
-                alt="SkidHaven Logo" 
-                className="h-10 w-10"
-              />
               <div className="flex flex-col">
-                <span className={`text-xl font-bold ${currentTheme.accent}`}>SkidHaven</span>
-                <span className="text-xs text-gray-400">Buy & Sell Marketplace</span>
+                <span className={`text-2xl font-bold ${currentTheme.accent} tracking-tight`}>SkidHaven</span>
+                <span className="text-xs text-gray-400 font-medium">Marketplace</span>
               </div>
             </Link>
           </div>
 
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/marketplace" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+            <Link to="/marketplace" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors font-medium`}>
               Marketplace
             </Link>
-            <Link to="/sell" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+            <Link to="/sell" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors font-medium`}>
               Sell Items
             </Link>
-            <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+            <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors font-medium`}>
               Crypto Exchange
             </Link>
             {user && (
               <>
-                <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1`}>
+                <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1 font-medium`}>
                   <MessageCircle className="h-4 w-4" />
                   <span>Messages</span>
                 </Link>
-                <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1`}>
+                <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1 font-medium`}>
                   <User className="h-4 w-4" />
                   <span>Profile</span>
                 </Link>
@@ -129,13 +124,13 @@ const SkidHavenHeader = () => {
         {isMenuOpen && (
           <div className={`md:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} py-4`}>
             <nav className="flex flex-col space-y-4">
-              <Link to="/marketplace" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Marketplace</Link>
-              <Link to="/sell" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Sell Items</Link>
-              <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Crypto Exchange</Link>
+              <Link to="/marketplace" className={`${currentTheme.text} hover:${currentTheme.accent} font-medium`}>Marketplace</Link>
+              <Link to="/sell" className={`${currentTheme.text} hover:${currentTheme.accent} font-medium`}>Sell Items</Link>
+              <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent} font-medium`}>Crypto Exchange</Link>
               {user && (
                 <>
-                  <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Messages</Link>
-                  <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Profile</Link>
+                  <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent} font-medium`}>Messages</Link>
+                  <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent} font-medium`}>Profile</Link>
                 </>
               )}
             </nav>

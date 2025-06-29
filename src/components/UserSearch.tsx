@@ -31,7 +31,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
         .ilike('username', `%${query}%`)
@@ -57,7 +57,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, user]);
 
   const handleUserSelect = (userId: string) => {
     onSelectUser(userId);

@@ -24,7 +24,7 @@ export const useProfile = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -41,7 +41,7 @@ export const useProfile = () => {
         // Create profile if it doesn't exist
         const newProfile = {
           id: user.id,
-          username: user.email || 'User',
+          username: user.email?.split('@')[0] || 'User',
           bio: null,
           avatar_url: null,
           wallet_address: null,
@@ -49,7 +49,7 @@ export const useProfile = () => {
           two_factor_enabled: false
         };
 
-        const { error: insertError } = await (supabase as any)
+        const { error: insertError } = await supabase
           .from('profiles')
           .insert([newProfile]);
 
@@ -68,15 +68,16 @@ export const useProfile = () => {
     if (!user || !profile) return false;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
 
       if (error) {
+        console.error('Profile update error:', error);
         toast({
-          title: "Error 😅",
-          description: "Couldn't save your awesome changes! Try again?",
+          title: "Error",
+          description: "Couldn't save your changes. Please try again.",
           variant: "destructive",
         });
         return false;
@@ -84,12 +85,17 @@ export const useProfile = () => {
 
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       toast({
-        title: "Woohoo! 🎉",
-        description: "Your profile looks amazing!",
+        title: "Success",
+        description: "Your profile has been updated!",
       });
       return true;
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
       return false;
     }
   };

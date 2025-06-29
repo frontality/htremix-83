@@ -44,7 +44,7 @@ export const useMessages = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('conversations')
         .select(`
           *,
@@ -52,7 +52,7 @@ export const useMessages = () => {
           participant2:profiles!conversations_participant2_id_fkey(username, avatar_url)
         `)
         .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching conversations:', error);
@@ -69,7 +69,7 @@ export const useMessages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('messages')
         .select(`
           *,
@@ -93,7 +93,7 @@ export const useMessages = () => {
     if (!user || !content.trim()) return false;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('messages')
         .insert([{
           conversation_id: conversationId,
@@ -102,8 +102,9 @@ export const useMessages = () => {
         }]);
 
       if (error) {
+        console.error('Send message error:', error);
         toast({
-          title: "Oops! 😅",
+          title: "Error",
           description: "Message didn't send. Try again?",
           variant: "destructive",
         });
@@ -112,10 +113,6 @@ export const useMessages = () => {
 
       // Refresh messages
       await fetchMessages(conversationId);
-      toast({
-        title: "Message sent! 📨",
-        description: "Your message is on its way!",
-      });
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -127,7 +124,18 @@ export const useMessages = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await (supabase as any)
+      // Check if conversation already exists
+      const { data: existingConv } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${participantId}),and(participant1_id.eq.${participantId},participant2_id.eq.${user.id})`)
+        .single();
+
+      if (existingConv) {
+        return existingConv.id;
+      }
+
+      const { data, error } = await supabase
         .from('conversations')
         .insert([{
           participant1_id: user.id,
