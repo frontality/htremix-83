@@ -1,197 +1,103 @@
 
-import { useState } from 'react';
-import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { ShoppingBag, Menu, X, Palette, MessageCircle, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import ThemeSelector from "@/components/ThemeSelector";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const HotTopicHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const navigate = useNavigate();
+  const { currentTheme } = useTheme();
 
   return (
-    <header className="bg-black sticky top-0 z-50 shadow-md">
-      <div className="container mx-auto px-0">
-        {/* Top banner */}
-        <div className="bg-hottopic-red text-white text-center py-1.5 sm:py-2 px-2 sm:px-4 text-xs font-futura font-bold">
-          <p className="truncate">FREE SHIPPING ON ORDERS $60+ | FREE RETURNS IN STORE | JOIN HOTTOPIC+ FOR FREE SHIPPING!</p>
-        </div>
-        
-        {/* Middle banner */}
-        <div className="bg-black text-white text-center py-1 sm:py-1.5 px-2 sm:px-4 text-xs flex justify-center items-center space-x-2 sm:space-x-6 border-y border-hottopic-gray/20 font-helvetica overflow-x-auto whitespace-nowrap">
-          <a href="#" className="hover:underline px-1">FIND A STORE</a>
-          <a href="#" className="hover:underline px-1">TRACK ORDER</a>
-          <a href="#" className="hover:underline px-1">HELP</a>
-          <a href="#" className="hover:underline px-1">HOTTOPIC+</a>
-        </div>
-        
-        {/* Main header */}
-        <div className="flex justify-between items-center py-2 sm:py-3 px-2 sm:px-4">
-          {/* Mobile menu button */}
-          <button 
-            className="lg:hidden text-white p-1 sm:p-2" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={isMobile ? 20 : 24} /> : <Menu size={isMobile ? 20 : 24} />}
-          </button>
-          
-          {/* Logo */}
-          <div className="flex-1 lg:flex-none text-center lg:text-left">
-            <a href="/" className="inline-block">
+    <header className={`${currentTheme.headerBg} border-b ${currentTheme.border} sticky top-0 z-50`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo and Brand */}
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="flex items-center space-x-2">
               <img 
-                src="https://i.imgur.com/XvAQJr0.png" 
-                alt="Hot Topic"
-                className="h-6 sm:h-8" 
+                src="/lovable-uploads/7f28697e-7fbb-4316-ba56-7074afdf6cc6.png" 
+                alt="SkidHaven Logo" 
+                className="h-10 w-10"
               />
-            </a>
-          </div>
-          
-          {/* Search bar - visible on desktop */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <input 
-                type="search" 
-                placeholder="Search..."
-                className="w-full bg-white text-black px-2 py-1 text-xs sm:text-sm rounded-sm font-helvetica"
-              />
-              <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
-                <Search size={14} />
-              </button>
-            </div>
-          </div>
-          
-          {/* Header actions */}
-          <div className="flex items-center space-x-2 sm:space-x-4 text-white font-futura text-xs">
-            <button className="hidden md:flex flex-col items-center hover:text-hottopic-red">
-              <User size={18} />
-              <span className="mt-1 text-[10px] sm:text-xs">Sign In</span>
-            </button>
-            <button className="hidden md:flex flex-col items-center hover:text-hottopic-red">
-              <Heart size={18} />
-              <span className="mt-1 text-[10px] sm:text-xs">Favorites</span>
-            </button>
-            <button className="flex flex-col items-center hover:text-hottopic-red">
-              <div className="relative">
-                <ShoppingBag size={18} />
-                <span className="absolute -top-1 -right-1 bg-hottopic-red text-white text-[8px] rounded-full w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center">
-                  0
-                </span>
+              <div className="flex flex-col">
+                <span className={`text-xl font-bold ${currentTheme.accent}`}>SkidHaven</span>
+                <span className="text-xs text-gray-400">Gift Cards & Crypto Exchange</span>
               </div>
-              <span className="mt-1 text-[10px] sm:text-xs">Bag</span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link to="/" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+              Gift Cards
+            </Link>
+            <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+              Crypto Exchange
+            </Link>
+            <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1`}>
+              <MessageCircle className="h-4 w-4" />
+              <span>Messages</span>
+            </Link>
+            <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1`}>
+              <User className="h-4 w-4" />
+              <span>Profile</span>
+            </Link>
+          </nav>
+
+          {/* Right side actions */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowThemeSelector(!showThemeSelector)}
+              className={`p-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} hover:opacity-80 transition-opacity relative`}
+            >
+              <Palette className="h-5 w-5" />
+            </button>
+            
+            {showThemeSelector && (
+              <div className="absolute top-16 right-4 z-50">
+                <ThemeSelector onClose={() => setShowThemeSelector(false)} />
+              </div>
+            )}
+
+            <Link to="/payment">
+              <Button className={`${currentTheme.primary} text-white hover:opacity-90`}>
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Buy Now
+              </Button>
+            </Link>
+
+            {/* Mobile menu button */}
+            <button
+              className="md:hidden p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className={`h-6 w-6 ${currentTheme.text}`} />
+              ) : (
+                <Menu className={`h-6 w-6 ${currentTheme.text}`} />
+              )}
             </button>
           </div>
         </div>
-        
-        {/* Navigation */}
-        <nav className="hidden lg:block bg-black text-white border-t border-hottopic-gray/20">
-          <div className="container flex justify-center overflow-x-auto">
-            <div className="flex items-center">
-              <NavLink href="#" label="NEW" />
-              <NavLink href="#" label="GIFTS" isActive hasDropdown />
-              <NavLink href="#" label="APPAREL" hasDropdown />
-              <NavLink href="#" label="ACCESSORIES" hasDropdown />
-              <NavLink href="#" label="POP CULTURE" hasDropdown />
-              <NavLink href="#" label="COLLECTIBLES" hasDropdown />
-              <NavLink href="#" label="BEAUTY" hasDropdown />
-              <NavLink href="#" label="HOME & TECH" hasDropdown />
-              <NavLink href="#" label="SALE" highlight />
-            </div>
-          </div>
-        </nav>
-      </div>
-      
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="lg:hidden bg-black border-t border-hottopic-gray">
-          <div className="container pt-2 pb-4 px-2 sm:px-4">
-            {/* Mobile search */}
-            <div className="relative mb-4">
-              <input 
-                type="search" 
-                placeholder="Search..."
-                className="w-full bg-white text-black px-2 py-1 text-xs sm:text-sm rounded-sm font-helvetica"
-              />
-              <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600">
-                <Search size={14} />
-              </button>
-            </div>
-            
-            {/* Mobile navigation */}
-            <nav className="flex flex-col space-y-3">
-              <MobileNavLink href="#" label="NEW" />
-              <MobileNavLink href="#" label="GIFTS" isActive />
-              <MobileNavLink href="#" label="APPAREL" />
-              <MobileNavLink href="#" label="ACCESSORIES" />
-              <MobileNavLink href="#" label="POP CULTURE" />
-              <MobileNavLink href="#" label="COLLECTIBLES" />
-              <MobileNavLink href="#" label="BEAUTY" />
-              <MobileNavLink href="#" label="HOME & TECH" />
-              <MobileNavLink href="#" label="SALE" highlight />
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className={`md:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} py-4`}>
+            <nav className="flex flex-col space-y-4">
+              <Link to="/" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Gift Cards</Link>
+              <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Crypto Exchange</Link>
+              <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Messages</Link>
+              <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Profile</Link>
             </nav>
-            
-            <div className="mt-5 pt-3 border-t border-hottopic-gray/30 flex flex-col space-y-2.5 font-futura">
-              <a href="#" className="text-white hover:text-hottopic-red text-xs sm:text-sm font-medium">Sign In / Create Account</a>
-              <a href="#" className="text-white hover:text-hottopic-red text-xs sm:text-sm font-medium">Find a Store</a>
-              <a href="#" className="text-white hover:text-hottopic-red text-xs sm:text-sm font-medium">Track Order</a>
-              <a href="#" className="text-white hover:text-hottopic-red text-xs sm:text-sm font-medium">Customer Service</a>
-            </div>
           </div>
-        </div>
-      )}
-    </header>
-  );
-};
-
-// Desktop navigation link
-const NavLink = ({ 
-  href, 
-  label, 
-  isActive = false, 
-  highlight = false,
-  hasDropdown = false
-}: { 
-  href: string; 
-  label: string; 
-  isActive?: boolean; 
-  highlight?: boolean;
-  hasDropdown?: boolean;
-}) => {
-  const classes = `font-futura font-bold text-xs sm:text-sm py-2.5 sm:py-3 px-3 sm:px-5 hover:text-hottopic-red relative ${
-    isActive ? "text-hottopic-red" : "text-white"
-  } ${highlight ? "text-hottopic-red" : ""}`;
-  
-  return (
-    <a href={href} className={classes}>
-      <div className="flex items-center whitespace-nowrap">
-        {label}
-        {hasDropdown && <ChevronDown size={12} className="ml-1" />}
+        )}
       </div>
-      {isActive && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-hottopic-red"></div>}
-    </a>
-  );
-};
-
-// Mobile navigation link
-const MobileNavLink = ({ 
-  href, 
-  label, 
-  isActive = false, 
-  highlight = false 
-}: { 
-  href: string; 
-  label: string; 
-  isActive?: boolean; 
-  highlight?: boolean;
-}) => {
-  const classes = `font-futura font-bold text-xs sm:text-sm tracking-wider py-1.5 sm:py-2 flex justify-between items-center ${
-    isActive ? "text-hottopic-red" : "text-white"
-  } ${highlight ? "text-hottopic-red" : ""}`;
-  
-  return (
-    <a href={href} className={classes}>
-      {label}
-      <ChevronDown size={16} />
-    </a>
+    </header>
   );
 };
 
