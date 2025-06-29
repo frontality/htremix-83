@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { Camera, Edit, Mail, MessageCircle, User, Wallet, Heart, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Camera, Edit, Mail, MessageCircle, User, Wallet, Heart, Sparkles, Settings, Users, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
+import ImageUpload from "@/components/ImageUpload";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,23 +20,25 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     username: '',
     bio: '',
+    avatar_url: '',
     wallet_address: '',
     email_notifications: true,
     two_factor_enabled: false
   });
 
   // Update form data when profile loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setFormData({
         username: profile.username || '',
         bio: profile.bio || '',
+        avatar_url: profile.avatar_url || '',
         wallet_address: profile.wallet_address || '',
         email_notifications: profile.email_notifications,
         two_factor_enabled: profile.two_factor_enabled
       });
     }
-  });
+  }, [profile]);
 
   const handleSave = async () => {
     const success = await updateProfile(formData);
@@ -50,12 +52,18 @@ const Profile = () => {
       setFormData({
         username: profile.username || '',
         bio: profile.bio || '',
+        avatar_url: profile.avatar_url || '',
         wallet_address: profile.wallet_address || '',
         email_notifications: profile.email_notifications,
         two_factor_enabled: profile.two_factor_enabled
       });
     }
     setIsEditing(false);
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    setFormData(prev => ({ ...prev, avatar_url: imageUrl }));
+    updateProfile({ avatar_url: imageUrl });
   };
 
   const getJoinDate = () => {
@@ -71,7 +79,7 @@ const Profile = () => {
       <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
         <div className="text-center">
           <Sparkles className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
-          <p className={`${currentTheme.text} text-lg`}>Loading your awesome profile... ✨</p>
+          <p className={`${currentTheme.text} text-lg`}>Loading your profile...</p>
         </div>
       </div>
     );
@@ -83,70 +91,80 @@ const Profile = () => {
       
       <div className="container py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Playful header */}
+          {/* Header */}
           <div className="text-center mb-8">
-            <h1 className={`text-4xl font-bold ${currentTheme.text} mb-2`}>
-              Your Profile Hub 🎨
+            <h1 className={`text-4xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
+              <User className="h-10 w-10" />
+              Your Profile Hub
+              <Sparkles className="h-8 w-8" />
             </h1>
             <p className={`${currentTheme.muted} text-lg`}>
-              Make it uniquely you! ✨
+              Make it uniquely you!
             </p>
           </div>
 
           <div className={`${currentTheme.cardBg} rounded-xl p-8 border ${currentTheme.border} shadow-lg`}>
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
-              <div className="relative group">
-                <img
-                  src={profile?.avatar_url || "/placeholder.svg"}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105"
-                />
-                <button className={`absolute bottom-0 right-0 p-2 rounded-full ${currentTheme.primary} text-white shadow-lg hover:scale-110 transition-transform`}>
-                  <Camera className="h-4 w-4" />
-                </button>
-              </div>
+              <ImageUpload
+                currentImage={formData.avatar_url}
+                onImageUpload={handleImageUpload}
+              />
               
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h1 className={`text-2xl font-bold ${currentTheme.text}`}>
-                    {profile?.username || user?.email || "Awesome User"} 
-                    <Heart className="inline-block h-5 w-5 ml-2 text-red-500" />
+                  <h1 className={`text-2xl font-bold ${currentTheme.text} flex items-center gap-2`}>
+                    {formData.username || user?.email || "Awesome User"} 
+                    <Heart className="h-5 w-5 text-red-500" />
                   </h1>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => isEditing ? handleCancel() : setIsEditing(true)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 hover:scale-105 transition-transform`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 hover:scale-105 transition-transform flex items-center gap-2`}
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    {isEditing ? "Cancel 😅" : "Edit ✏️"}
+                    {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                    {isEditing ? "Cancel" : "Edit"}
                   </Button>
                 </div>
                 <p className={`${currentTheme.muted} mb-2`}>{user?.email}</p>
                 <p className={`${currentTheme.text} text-sm`}>
-                  {profile?.bio || "Tell everyone about your awesome self! 🌟"}
+                  {formData.bio || "Tell everyone about your awesome self!"}
                 </p>
-                <p className={`${currentTheme.muted} text-xs mt-2`}>
-                  Member since {getJoinDate()} 🎉
+                <p className={`${currentTheme.muted} text-xs mt-2 flex items-center gap-1`}>
+                  <Sparkles className="h-3 w-3" />
+                  Member since {getJoinDate()}
                 </p>
               </div>
             </div>
 
             <Tabs defaultValue="profile" className="space-y-6">
               <TabsList className={`${currentTheme.secondary} ${currentTheme.text} rounded-lg`}>
-                <TabsTrigger value="profile" className="rounded-md">Profile 👤</TabsTrigger>
-                <TabsTrigger value="wallet" className="rounded-md">Wallet 💰</TabsTrigger>
-                <TabsTrigger value="friends" className="rounded-md">Friends 👥</TabsTrigger>
-                <TabsTrigger value="settings" className="rounded-md">Settings ⚙️</TabsTrigger>
+                <TabsTrigger value="profile" className="rounded-md flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Profile
+                </TabsTrigger>
+                <TabsTrigger value="wallet" className="rounded-md flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  Wallet
+                </TabsTrigger>
+                <TabsTrigger value="friends" className="rounded-md flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Friends
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="rounded-md flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
-                        Username ✨
+                      <label className={`block text-sm font-medium ${currentTheme.text} mb-2 flex items-center gap-2`}>
+                        <Sparkles className="h-4 w-4" />
+                        Username
                       </label>
                       <Input
                         value={formData.username}
@@ -159,15 +177,16 @@ const Profile = () => {
                   </div>
                   
                   <div>
-                    <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
-                      Bio 📝
+                    <label className={`block text-sm font-medium ${currentTheme.text} mb-2 flex items-center gap-2`}>
+                      <Edit className="h-4 w-4" />
+                      Bio
                     </label>
                     <Textarea
                       value={formData.bio}
                       disabled={!isEditing}
                       onChange={(e) => setFormData({...formData, bio: e.target.value})}
                       className={`${currentTheme.secondary} ${currentTheme.text} border-0 min-h-24 ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
-                      placeholder="Tell everyone what makes you awesome! 🌟"
+                      placeholder="Tell everyone what makes you awesome!"
                     />
                   </div>
                 </div>
@@ -176,16 +195,18 @@ const Profile = () => {
                   <div className="flex space-x-3">
                     <Button 
                       onClick={handleSave} 
-                      className={`${currentTheme.primary} text-white hover:scale-105 transition-transform`}
+                      className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}
                     >
-                      Save Changes 🎉
+                      <Save className="h-4 w-4" />
+                      Save Changes
                     </Button>
                     <Button 
                       variant="outline"
                       onClick={handleCancel}
-                      className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                      className={`${currentTheme.secondary} ${currentTheme.text} border-0 flex items-center gap-2`}
                     >
-                      Cancel 😅
+                      <X className="h-4 w-4" />
+                      Cancel
                     </Button>
                   </div>
                 )}
@@ -196,12 +217,12 @@ const Profile = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <Wallet className={`h-6 w-6 ${currentTheme.accent}`} />
                     <h3 className={`text-lg font-semibold ${currentTheme.text}`}>
-                      Crypto Wallet 💎
+                      Crypto Wallet
                     </h3>
                   </div>
                   <div className="space-y-3">
                     <label className={`block text-sm font-medium ${currentTheme.text}`}>
-                      Wallet Address 🔐
+                      Wallet Address
                     </label>
                     <Input
                       value={formData.wallet_address}
@@ -216,19 +237,20 @@ const Profile = () => {
 
               <TabsContent value="friends" className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${currentTheme.text}`}>
-                    Friends & Community 👥
+                  <h3 className={`text-lg font-semibold ${currentTheme.text} flex items-center gap-2`}>
+                    <Users className="h-5 w-5" />
+                    Friends & Community
                   </h3>
-                  <Button className={`${currentTheme.primary} text-white hover:scale-105 transition-transform`}>
-                    <User className="h-4 w-4 mr-2" />
-                    Find Friends 🔍
+                  <Button className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}>
+                    <User className="h-4 w-4" />
+                    Find Friends
                   </Button>
                 </div>
                 
                 <div className={`${currentTheme.secondary} p-8 rounded-lg text-center border-2 border-dashed border-purple-300`}>
-                  <Sparkles className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
+                  <Users className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
                   <p className={`${currentTheme.text} text-lg font-medium mb-2`}>
-                    Your friend list is waiting! 🌟
+                    Your friend list is waiting!
                   </p>
                   <p className={`${currentTheme.muted} text-sm`}>
                     Start connecting with other awesome users!
@@ -238,16 +260,17 @@ const Profile = () => {
 
               <TabsContent value="settings" className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>
-                    Account Settings ⚙️
+                  <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4 flex items-center gap-2`}>
+                    <Settings className="h-5 w-5" />
+                    Account Settings
                   </h3>
                   
                   <div className="space-y-4">
                     <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
                       <div>
-                        <h4 className={`font-medium ${currentTheme.text} flex items-center`}>
-                          Email Notifications 📧
-                          <Mail className="h-4 w-4 ml-2" />
+                        <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2`}>
+                          <Mail className="h-4 w-4" />
+                          Email Notifications
                         </h4>
                         <p className={`text-sm ${currentTheme.muted} mt-1`}>
                           Get updates about your transactions and messages
@@ -266,9 +289,9 @@ const Profile = () => {
                     
                     <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
                       <div>
-                        <h4 className={`font-medium ${currentTheme.text} flex items-center`}>
-                          Two-Factor Authentication 🔐
-                          <Sparkles className="h-4 w-4 ml-2" />
+                        <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2`}>
+                          <Sparkles className="h-4 w-4" />
+                          Two-Factor Authentication
                         </h4>
                         <p className={`text-sm ${currentTheme.muted} mt-1`}>
                           Extra security for your awesome account

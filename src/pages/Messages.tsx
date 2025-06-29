@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { MessageCircle, Search, Send, User, Phone, Video, Heart, Sparkles } from "lucide-react";
+import { MessageCircle, Search, Send, User, Phone, Video, Heart, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
+import UserSearch from "@/components/UserSearch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,9 +14,10 @@ import { useAuth } from "@/contexts/AuthContext";
 const Messages = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
-  const { conversations, messages, loading, fetchMessages, sendMessage } = useMessages();
+  const { conversations, messages, loading, fetchMessages, sendMessage, createConversation } = useMessages();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [showUserSearch, setShowUserSearch] = useState(false);
 
   const handleSelectChat = async (conversationId: string) => {
     setSelectedChat(conversationId);
@@ -27,6 +29,24 @@ const Messages = () => {
       const success = await sendMessage(selectedChat, messageInput);
       if (success) {
         setMessageInput("");
+      }
+    }
+  };
+
+  const handleSelectUser = async (userId: string) => {
+    // Check if conversation already exists
+    const existingConversation = conversations.find(conv => 
+      (conv.participant1_id === user?.id && conv.participant2_id === userId) ||
+      (conv.participant2_id === user?.id && conv.participant1_id === userId)
+    );
+
+    if (existingConversation) {
+      handleSelectChat(existingConversation.id);
+    } else {
+      // Create new conversation
+      const conversationId = await createConversation(userId);
+      if (conversationId) {
+        handleSelectChat(conversationId);
       }
     }
   };
@@ -46,7 +66,7 @@ const Messages = () => {
       <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
         <div className="text-center">
           <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
-          <p className={`${currentTheme.text} text-lg`}>Loading your conversations... 💬</p>
+          <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
         </div>
       </div>
     );
@@ -57,15 +77,15 @@ const Messages = () => {
       <SkidHavenHeader />
       
       <div className="container py-4">
-        {/* Playful header */}
+        {/* Header */}
         <div className="text-center mb-6">
-          <h1 className={`text-3xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center`}>
-            <MessageCircle className="h-8 w-8 mr-3" />
-            Messages Hub 💬
-            <Heart className="h-6 w-6 ml-3 text-red-500" />
+          <h1 className={`text-3xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
+            <MessageCircle className="h-8 w-8" />
+            Messages Hub
+            <Heart className="h-6 w-6 text-red-500" />
           </h1>
           <p className={`${currentTheme.muted} text-lg`}>
-            Connect and chat with awesome people! ✨
+            Connect and chat with awesome people!
           </p>
         </div>
 
@@ -74,10 +94,30 @@ const Messages = () => {
             {/* Chat List */}
             <div className={`w-1/3 border-r ${currentTheme.border} flex flex-col`}>
               <div className="p-4 border-b border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <Button
+                    onClick={() => setShowUserSearch(!showUserSearch)}
+                    className={`${currentTheme.primary} text-white flex items-center gap-2`}
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                    New Chat
+                  </Button>
+                </div>
+                
+                {showUserSearch && (
+                  <div className="mb-3">
+                    <UserSearch 
+                      onSelectUser={handleSelectUser}
+                      onClose={() => setShowUserSearch(false)}
+                    />
+                  </div>
+                )}
+                
                 <div className="relative">
                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${currentTheme.muted}`} />
                   <Input
-                    placeholder="Search conversations... 🔍"
+                    placeholder="Search conversations..."
                     className={`pl-10 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-lg`}
                   />
                 </div>
@@ -88,7 +128,7 @@ const Messages = () => {
                   {conversations.length === 0 ? (
                     <div className="p-8 text-center">
                       <Sparkles className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                      <p className={`${currentTheme.text} font-medium mb-2`}>No conversations yet! 🌟</p>
+                      <p className={`${currentTheme.text} font-medium mb-2`}>No conversations yet!</p>
                       <p className={`${currentTheme.muted} text-sm`}>Start chatting to see them here</p>
                     </div>
                   ) : (
@@ -112,16 +152,16 @@ const Messages = () => {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <p className="font-medium truncate flex items-center">
+                                <p className="font-medium truncate flex items-center gap-1">
                                   {participant?.username || "Anonymous User"}
-                                  <Heart className="h-3 w-3 ml-1 text-red-400" />
+                                  <Heart className="h-3 w-3 text-red-400" />
                                 </p>
                                 <span className="text-xs opacity-70">
                                   {new Date(conversation.created_at).toLocaleDateString()}
                                 </span>
                               </div>
                               <p className="text-sm opacity-70 truncate">
-                                Click to start chatting! 💬
+                                Click to start chatting!
                               </p>
                             </div>
                           </div>
@@ -146,11 +186,14 @@ const Messages = () => {
                         className="w-10 h-10 rounded-full object-cover border-2 border-purple-400"
                       />
                       <div>
-                        <h3 className={`font-semibold ${currentTheme.text} flex items-center`}>
+                        <h3 className={`font-semibold ${currentTheme.text} flex items-center gap-2`}>
                           {otherParticipant.username || "Anonymous User"}
-                          <Sparkles className="h-4 w-4 ml-2 text-yellow-400" />
+                          <Sparkles className="h-4 w-4 text-yellow-400" />
                         </h3>
-                        <p className={`text-sm ${currentTheme.muted}`}>Online & Ready to Chat! 🟢</p>
+                        <p className={`text-sm ${currentTheme.muted} flex items-center gap-1`}>
+                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                          Online & Ready to Chat!
+                        </p>
                       </div>
                     </div>
                     
@@ -170,8 +213,8 @@ const Messages = () => {
                       {messages.length === 0 ? (
                         <div className="text-center py-12">
                           <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                          <p className={`${currentTheme.text} font-medium mb-2`}>Start the conversation! 🎉</p>
-                          <p className={`${currentTheme.muted} text-sm`}>Send a message to break the ice ❄️</p>
+                          <p className={`${currentTheme.text} font-medium mb-2`}>Start the conversation!</p>
+                          <p className={`${currentTheme.muted} text-sm`}>Send a message to break the ice</p>
                         </div>
                       ) : (
                         messages.map((message) => (
@@ -187,9 +230,9 @@ const Messages = () => {
                               }`}
                             >
                               <p className="text-sm leading-relaxed">{message.content}</p>
-                              <p className={`text-xs mt-2 opacity-70 flex items-center`}>
+                              <p className={`text-xs mt-2 opacity-70 flex items-center gap-1`}>
                                 {new Date(message.created_at).toLocaleTimeString()}
-                                <Heart className="h-3 w-3 ml-1" />
+                                <Heart className="h-3 w-3" />
                               </p>
                             </div>
                           </div>
@@ -202,7 +245,7 @@ const Messages = () => {
                   <div className={`p-4 border-t ${currentTheme.border} bg-gradient-to-r from-purple-500/5 to-pink-500/5`}>
                     <div className="flex items-center space-x-3">
                       <Input
-                        placeholder="Type something awesome... ✨"
+                        placeholder="Type something awesome..."
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -223,10 +266,10 @@ const Messages = () => {
                   <div className="text-center">
                     <MessageCircle className={`h-16 w-16 ${currentTheme.muted} mx-auto mb-6 animate-pulse`} />
                     <h3 className={`${currentTheme.text} text-xl font-semibold mb-2`}>
-                      Ready to Chat? 💬
+                      Ready to Chat?
                     </h3>
                     <p className={`${currentTheme.muted} text-lg mb-4`}>
-                      Select a conversation to start messaging! ✨
+                      Select a conversation to start messaging!
                     </p>
                     <div className="flex items-center justify-center space-x-2">
                       <Sparkles className="h-4 w-4 text-yellow-400" />
