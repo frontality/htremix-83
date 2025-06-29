@@ -1,29 +1,10 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
+/* Import clean modern font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Hot Topic font faces */
-@font-face {
-  font-family: 'Futura';
-  src: url('https://fonts.cdnfonts.com/css/futura-pt') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Rockwell';
-  src: url('https://fonts.cdnfonts.com/css/rockwell-nova') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 @layer base {
   :root {
@@ -74,133 +55,90 @@
   }
 
   body {
-    @apply bg-background text-foreground font-helvetica;
+    @apply bg-background text-foreground font-inter;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-futura font-bold tracking-tight;
+    @apply font-inter font-semibold tracking-tight;
   }
   
   .glow-text {
-    text-shadow: 0 0 10px rgba(214, 10, 45, 0.7);
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.7);
   }
   
   .card-glow {
-    box-shadow: 0 0 15px rgba(214, 10, 45, 0.4), 0 0 30px rgba(214, 10, 45, 0.2);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.2);
   }
   
-  /* Hot Topic specific heading styles */
-  .faq-heading {
-    @apply font-bebas tracking-wider text-2xl md:text-3xl text-white uppercase;
-  }
-  
-  .faq-question {
-    @apply font-oswald tracking-wide text-base md:text-lg text-white;
-  }
-  
-  .faq-answer {
-    @apply font-lato text-sm md:text-base text-gray-400;
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent;
   }
 }
 
-/* Hot Topic specific styles */
 @layer components {
-  .ht-button {
-    @apply bg-hottopic-red text-white font-futura font-bold px-6 py-3 hover:bg-hottopic-red/90 transition-colors;
+  .modern-card {
+    @apply bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 shadow-xl;
   }
   
-  .ht-input {
-    @apply bg-hottopic-dark border-hottopic-gray focus:border-hottopic-red text-white;
+  .modern-button {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
   }
   
-  .ht-card {
-    @apply bg-hottopic-gray/10 border border-hottopic-gray/20 rounded-lg p-6;
+  .modern-input {
+    @apply bg-slate-800/50 border border-slate-600 focus:border-indigo-500 text-white rounded-lg px-4 py-2 transition-colors;
   }
   
-  .ht-heading {
-    @apply text-2xl font-futura font-bold text-white mb-4;
+  .sidebar-item {
+    @apply flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 hover:bg-slate-800/50;
   }
   
-  /* New authentic Hot Topic styles */
-  .ht-badge {
-    @apply bg-hottopic-red text-white text-xs font-bold px-2 py-0.5 rotate-3 inline-block;
-  }
-  
-  .ht-border-glow {
-    @apply border border-hottopic-red shadow-[0_0_10px_rgba(214,10,45,0.6)];
-  }
-  
-  .ht-hover-effect {
-    @apply transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(214,10,45,0.5)];
-  }
-  
-  .ht-gradient-bg {
-    background: linear-gradient(to bottom, #121212, #000000);
-  }
-  
-  .ht-discount-tag {
-    @apply bg-green-600 text-white text-xs px-2 py-1 rounded-sm font-semibold;
-  }
-  
-  .nav-link {
-    @apply font-futura font-bold tracking-wider uppercase;
+  .sidebar-item.active {
+    @apply bg-gradient-to-r from-indigo-500/20 to-purple-600/20 border-l-4 border-indigo-500;
   }
 }
 
 /* Custom animations */
-@keyframes pulse-border {
+@keyframes float {
   0%, 100% {
-    border-color: rgba(214, 10, 45, 0.7);
+    transform: translateY(0px);
   }
   50% {
-    border-color: rgba(214, 10, 45, 0.3);
+    transform: translateY(-10px);
   }
 }
 
-@keyframes floating {
+@keyframes pulse-glow {
   0%, 100% {
-    transform: translateY(0) rotate(3deg);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
   }
   50% {
-    transform: translateY(-5px) rotate(3deg);
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
   }
 }
 
-.animate-pulse-border {
-  animation: pulse-border 2s infinite;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-.animate-floating {
-  animation: floating 3s ease-in-out infinite;
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Skewed elements */
-.ht-skew {
-  transform: skew(-3deg);
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-.ht-unskew {
-  transform: skew(3deg);
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
 }
 
-/* Hot Topic specific typography */
-.hottopic-heading {
-  @apply font-futura font-bold uppercase tracking-wider;
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
 }
 
-.hottopic-subheading {
-  @apply font-rockwell font-bold;
-}
-
-.hottopic-text {
-  @apply font-helvetica;
-}
-
-.hottopic-price {
-  @apply font-futura font-bold;
-}
-
-.hottopic-discount {
-  @apply font-futura font-bold text-hottopic-red;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
 }

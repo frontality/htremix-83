@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -19,6 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'inter': ['Inter', 'system-ui', 'sans-serif'],
 				'futura': ['Futura', 'Trebuchet MS', 'Arial', 'sans-serif'],
 				'rockwell': ['Rockwell', 'Courier Bold', 'Georgia', 'serif'],
 				'helvetica': ['Helvetica Neue', 'Arial', 'sans-serif'],
@@ -104,12 +106,17 @@ export default {
 				'pulse-slow': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s infinite'
+				'pulse-slow': 'pulse-slow 3s infinite',
+				'float': 'float 3s ease-in-out infinite'
 			},
 			backgroundImage: {
 				'gift-card-pattern': "url('/gift-card-pattern.svg')"
