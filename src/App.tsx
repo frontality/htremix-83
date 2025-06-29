@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +22,6 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
-import QuickActions from "./components/QuickActions";
 import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
 
@@ -63,7 +63,6 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <QuickActions />
                 <FixedUserSearch />
               </div>
             </div>

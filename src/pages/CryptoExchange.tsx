@@ -9,10 +9,42 @@ import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const SUPPORTED_CRYPTOCURRENCIES = [
-  { code: "BTC", name: "Bitcoin", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
-  { code: "ETH", name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
-  { code: "USDT", name: "Tether", logo: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
-  { code: "ADA", name: "Cardano", logo: "https://cryptologos.cc/logos/cardano-ada-logo.png" }
+  { 
+    code: "BTC", 
+    name: "Bitcoin", 
+    icon: "₿",
+    color: "text-orange-500"
+  },
+  { 
+    code: "ETH", 
+    name: "Ethereum", 
+    icon: "Ξ",
+    color: "text-blue-500"
+  },
+  { 
+    code: "USDT", 
+    name: "Tether", 
+    icon: "₮",
+    color: "text-green-500"
+  },
+  { 
+    code: "ADA", 
+    name: "Cardano", 
+    icon: "₳",
+    color: "text-blue-400"
+  },
+  { 
+    code: "DOT", 
+    name: "Polkadot", 
+    icon: "●",
+    color: "text-pink-500"
+  },
+  { 
+    code: "LINK", 
+    name: "Chainlink", 
+    icon: "⬡",
+    color: "text-blue-600"
+  }
 ];
 
 const CryptoExchange = () => {
@@ -28,6 +60,10 @@ const CryptoExchange = () => {
     const temp = fromCurrency;
     setFromCurrency(toCurrency);
     setToCurrency(temp);
+  };
+
+  const getSelectedCrypto = (code: string) => {
+    return SUPPORTED_CRYPTOCURRENCIES.find(crypto => crypto.code === code);
   };
 
   return (
@@ -62,15 +98,20 @@ const CryptoExchange = () => {
                     />
                   </div>
                   <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                    <SelectTrigger className={`w-32 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
+                    <SelectTrigger className={`w-40 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
                         <SelectItem key={crypto.code} value={crypto.code}>
-                          <div className="flex items-center space-x-2">
-                            <img src={crypto.logo} alt={crypto.name} className="w-4 h-4" />
-                            <span>{crypto.code}</span>
+                          <div className="flex items-center space-x-3">
+                            <span className={`text-lg font-bold ${crypto.color}`}>
+                              {crypto.icon}
+                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{crypto.code}</span>
+                              <span className="text-xs text-gray-500">{crypto.name}</span>
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
@@ -83,7 +124,7 @@ const CryptoExchange = () => {
               <div className="flex justify-center">
                 <button
                   onClick={handleSwapCurrencies}
-                  className={`p-2 rounded-full ${currentTheme.secondary} ${currentTheme.text} hover:opacity-80 transition-opacity`}
+                  className={`p-3 rounded-full ${currentTheme.secondary} ${currentTheme.text} hover:${currentTheme.primary} transition-all transform hover:scale-110`}
                 >
                   <ArrowUpDown className="h-5 w-5" />
                 </button>
@@ -102,15 +143,20 @@ const CryptoExchange = () => {
                     />
                   </div>
                   <Select value={toCurrency} onValueChange={setToCurrency}>
-                    <SelectTrigger className={`w-32 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
+                    <SelectTrigger className={`w-40 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
                         <SelectItem key={crypto.code} value={crypto.code}>
-                          <div className="flex items-center space-x-2">
-                            <img src={crypto.logo} alt={crypto.name} className="w-4 h-4" />
-                            <span>{crypto.code}</span>
+                          <div className="flex items-center space-x-3">
+                            <span className={`text-lg font-bold ${crypto.color}`}>
+                              {crypto.icon}
+                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{crypto.code}</span>
+                              <span className="text-xs text-gray-500">{crypto.name}</span>
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
@@ -125,14 +171,22 @@ const CryptoExchange = () => {
                   <TrendingUp className={`h-4 w-4 ${currentTheme.accent}`} />
                   <span className={`text-sm ${currentTheme.text}`}>Exchange Rate</span>
                 </div>
-                <span className={`text-sm font-medium ${currentTheme.accent}`}>
-                  1 {fromCurrency} = {exchangeRate} {toCurrency}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-lg ${getSelectedCrypto(fromCurrency)?.color}`}>
+                    {getSelectedCrypto(fromCurrency)?.icon}
+                  </span>
+                  <span className={`text-sm font-medium ${currentTheme.accent}`}>
+                    1 {fromCurrency} = {exchangeRate} {toCurrency}
+                  </span>
+                  <span className={`text-lg ${getSelectedCrypto(toCurrency)?.color}`}>
+                    {getSelectedCrypto(toCurrency)?.icon}
+                  </span>
+                </div>
               </div>
 
               {/* Exchange Button */}
               <Button 
-                className={`w-full ${currentTheme.primary} text-white h-12 text-lg font-semibold`}
+                className={`w-full ${currentTheme.primary} text-white h-12 text-lg font-semibold hover:scale-105 transition-transform`}
                 disabled={!amount || parseFloat(amount) <= 0}
               >
                 <Wallet className="mr-2 h-5 w-5" />

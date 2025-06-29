@@ -105,7 +105,8 @@ export const useProfile = () => {
       }
 
       console.log('Profile updated successfully:', data);
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      // Update the local state with the returned data
+      setProfile(data);
       toast({
         title: "Success",
         description: "Your profile has been updated!",
