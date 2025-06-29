@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -38,6 +37,8 @@ export const useMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getStorageKey = (key: string) => `messages_${key}`;
+
   const fetchConversations = async () => {
     if (!user) {
       setLoading(false);
@@ -46,23 +47,19 @@ export const useMessages = () => {
 
     try {
       console.log('Fetching conversations for user:', user.id);
-      const { data, error } = await (supabase as any)
-        .from('conversations')
-        .select(`
-          *,
-          participant1:profiles!conversations_participant1_id_fkey(username, avatar_url),
-          participant2:profiles!conversations_participant2_id_fkey(username, avatar_url)
-        `)
-        .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching conversations:', error);
-        return;
+      const storageKey = getStorageKey('conversations');
+      const saved = localStorage.getItem(storageKey);
+      
+      if (saved) {
+        const allConversations = JSON.parse(saved);
+        const userConversations = allConversations.filter((conv: Conversation) => 
+          conv.participant1_id === user.id || conv.participant2_id === user.id
+        );
+        console.log('Conversations found:', userConversations);
+        setConversations(userConversations);
+      } else {
+        setConversations([]);
       }
-
-      console.log('Conversations fetched:', data);
-      setConversations(data || []);
     } catch (error) {
       console.error('Error in fetchConversations:', error);
     } finally {
@@ -73,22 +70,16 @@ export const useMessages = () => {
   const fetchMessages = async (conversationId: string) => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
-      const { data, error } = await (supabase as any)
-        .from('messages')
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(username, avatar_url)
-        `)
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching messages:', error);
-        return;
+      const storageKey = getStorageKey(`messages_${conversationId}`);
+      const saved = localStorage.getItem(storageKey);
+      
+      if (saved) {
+        const conversationMessages = JSON.parse(saved);
+        console.log('Messages found:', conversationMessages);
+        setMessages(conversationMessages);
+      } else {
+        setMessages([]);
       }
-
-      console.log('Messages fetched:', data);
-      setMessages(data || []);
     } catch (error) {
       console.error('Error in fetchMessages:', error);
     }
@@ -99,29 +90,36 @@ export const useMessages = () => {
 
     try {
       console.log('Sending message:', { conversationId, content });
-      const { error } = await (supabase as any)
-        .from('messages')
-        .insert([{
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content: content.trim(),
-        }]);
+      
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        sender: {
+          username: user.email?.split('@')[0] || 'User',
+          avatar_url: ''
+        }
+      };
 
-      if (error) {
-        console.error('Send message error:', error);
-        toast({
-          title: "Error",
-          description: "Message didn't send. Try again?",
-          variant: "destructive",
-        });
-        return false;
-      }
-
+      const storageKey = getStorageKey(`messages_${conversationId}`);
+      const existing = localStorage.getItem(storageKey);
+      const existingMessages = existing ? JSON.parse(existing) : [];
+      const updatedMessages = [...existingMessages, newMessage];
+      
+      localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
+      
       console.log('Message sent successfully');
       await fetchMessages(conversationId);
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Message didn't send. Try again?",
+        variant: "destructive",
+      });
       return false;
     }
   };
@@ -133,34 +131,41 @@ export const useMessages = () => {
       console.log('Creating conversation with participant:', participantId);
       
       // Check if conversation already exists
-      const { data: existingConv } = await (supabase as any)
-        .from('conversations')
-        .select('id')
-        .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${participantId}),and(participant1_id.eq.${participantId},participant2_id.eq.${user.id})`)
-        .maybeSingle();
+      const existingConv = conversations.find(conv => 
+        (conv.participant1_id === user.id && conv.participant2_id === participantId) ||
+        (conv.participant1_id === participantId && conv.participant2_id === user.id)
+      );
 
       if (existingConv?.id) {
         console.log('Existing conversation found:', existingConv.id);
         return existingConv.id;
       }
 
-      const { data, error } = await (supabase as any)
-        .from('conversations')
-        .insert([{
-          participant1_id: user.id,
-          participant2_id: participantId,
-        }])
-        .select()
-        .single();
+      const newConversation: Conversation = {
+        id: Date.now().toString(),
+        participant1_id: user.id,
+        participant2_id: participantId,
+        created_at: new Date().toISOString(),
+        participant1: {
+          username: user.email?.split('@')[0] || 'User',
+          avatar_url: ''
+        },
+        participant2: {
+          username: 'Other User',
+          avatar_url: ''
+        }
+      };
 
-      if (error) {
-        console.error('Error creating conversation:', error);
-        return null;
-      }
+      const storageKey = getStorageKey('conversations');
+      const existing = localStorage.getItem(storageKey);
+      const existingConversations = existing ? JSON.parse(existing) : [];
+      const updatedConversations = [...existingConversations, newConversation];
+      
+      localStorage.setItem(storageKey, JSON.stringify(updatedConversations));
 
-      console.log('Conversation created:', data);
+      console.log('Conversation created:', newConversation);
       await fetchConversations();
-      return data?.id || null;
+      return newConversation.id;
     } catch (error) {
       console.error('Error in createConversation:', error);
       return null;

@@ -37,8 +37,12 @@ const TopHeader = () => {
       <div className="flex items-center justify-between h-full px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold">SH</span>
+          <div className="w-12 h-12 flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/43c82c9a-176b-4c41-a25a-33514402d955.png" 
+              alt="SkidHaven Logo" 
+              className="w-10 h-10 object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent font-inter">
