@@ -1,34 +1,50 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const { currentTheme } = useTheme();
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
 
-  const handleSignup = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
       return;
     }
-    // Signup logic would go here
-    console.log("Signup attempted with:", formData);
+    
+    setLoading(true);
+    const { error } = await signUp(formData.email, formData.password);
+    
+    if (!error) {
+      // User will be redirected after email confirmation
+    }
+    
+    setLoading(false);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -52,19 +68,6 @@ const Signup = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className={currentTheme.text}>Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Choose a username"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange("username", e.target.value)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
-                    required
-                  />
-                </div>
-                
                 <div className="space-y-2">
                   <Label htmlFor="email" className={currentTheme.text}>Email</Label>
                   <Input
@@ -120,11 +123,18 @@ const Signup = () => {
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {formData.password !== formData.confirmPassword && formData.confirmPassword && (
+                    <p className="text-red-500 text-sm">Passwords don't match</p>
+                  )}
                 </div>
                 
-                <Button type="submit" className={`w-full ${currentTheme.primary} text-white`}>
+                <Button 
+                  type="submit" 
+                  className={`w-full ${currentTheme.primary} text-white`}
+                  disabled={loading || formData.password !== formData.confirmPassword}
+                >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Create Account
+                  {loading ? "Creating Account..." : "Create Account"}
                 </Button>
                 
                 <div className="text-center">

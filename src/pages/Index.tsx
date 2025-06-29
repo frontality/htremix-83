@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, TrendingUp, User, DollarSign, Shield, Settings, Users, Headphones } from "lucide-react";
+import { ShoppingBag, TrendingUp, DollarSign, Shield, Settings, Users, Headphones } from "lucide-react";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -64,10 +64,10 @@ const Index = () => {
               BENEFITS
             </span>
             <h2 className={`text-4xl font-bold ${currentTheme.text} mt-4 mb-4`}>
-              Why Choose Us?
+              Why Choose SkidHaven?
             </h2>
             <p className={`text-lg ${currentTheme.muted} max-w-2xl mx-auto`}>
-              With us SkidHaven, we provide easy pricing, easy communication and easy understanding. Easy right?!
+              Experience seamless buying and selling with our user-friendly platform designed for everyone.
             </p>
           </div>
           
@@ -77,10 +77,10 @@ const Index = () => {
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
               <h3 className={`text-xl font-semibold ${currentTheme.text} mb-4`}>
-                Affordable
+                Affordable Prices
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                Obtain items for more sustainable pricing!
+                Find great deals and affordable prices on quality items from trusted sellers.
               </p>
             </div>
             
@@ -92,7 +92,7 @@ const Index = () => {
                 Real-Time Insights
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                View your purchases and easily make sure everything is right with our high-end web UI
+                Track your purchases and sales with our intuitive dashboard and analytics.
               </p>
             </div>
             
@@ -101,10 +101,10 @@ const Index = () => {
                 <Users className="h-6 w-6 text-white" />
               </div>
               <h3 className={`text-xl font-semibold ${currentTheme.text} mb-4`}>
-                Flexible Sellers
+                Trusted Community
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                Access to various buyers of the same product gives the customer more ambivalence
+                Connect with verified buyers and sellers in our growing marketplace community.
               </p>
             </div>
             
@@ -116,7 +116,7 @@ const Index = () => {
                 Secure Transactions
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                Prioritize safety with cutting-edge encryption and robust security features for every interaction
+                Shop with confidence using our secure payment system and buyer protection.
               </p>
             </div>
             
@@ -125,10 +125,10 @@ const Index = () => {
                 <Settings className="h-6 w-6 text-white" />
               </div>
               <h3 className={`text-xl font-semibold ${currentTheme.text} mb-4`}>
-                Adaptive Systems
+                Easy Management
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                Leverage driver by professionals in the industry, best of the best coders, middleman, sellers
+                Manage your listings, orders, and communications all in one place.
               </p>
             </div>
             
@@ -137,10 +137,10 @@ const Index = () => {
                 <Headphones className="h-6 w-6 text-white" />
               </div>
               <h3 className={`text-xl font-semibold ${currentTheme.text} mb-4`}>
-                Dedicated Support
+                24/7 Support
               </h3>
               <p className={`${currentTheme.muted} text-sm`}>
-                Access expert assistance 24/7 to ensure you're never alone in your shopping
+                Get help when you need it with our dedicated customer support team.
               </p>
             </div>
           </div>
@@ -148,25 +148,23 @@ const Index = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 bg-black/20">
+      <section className={`py-16 ${currentTheme.secondary}/20`}>
         <div className="container">
-          <h2 className={`text-3xl font-bold text-center ${currentTheme.text} mb-8`}>
-            What Our Users Are Saying
+          <h2 className={`text-3xl font-bold text-center ${currentTheme.text} mb-12`}>
+            What Our Users Say
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className={`${currentTheme.cardBg} rounded-xl p-6 border ${currentTheme.border}`}>
               <p className={`${currentTheme.text} italic mb-4`}>
-                "SkidHaven has revolutionized the way I buy and sell items. The platform is seamless and the community is amazing!"
+                "SkidHaven made selling my electronics so easy. Great platform with amazing buyers!"
               </p>
               <div className="flex items-center space-x-3">
-                <img
-                  src="/placeholder.svg"
-                  alt="User Avatar"
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                  <span className="text-white font-semibold">A</span>
+                </div>
                 <div>
                   <h4 className={`font-semibold ${currentTheme.text}`}>
-                    Alice Johnson
+                    Alex Johnson
                   </h4>
                   <p className={`${currentTheme.muted} text-sm`}>
                     Active Seller
@@ -176,17 +174,15 @@ const Index = () => {
             </div>
             <div className={`${currentTheme.cardBg} rounded-xl p-6 border ${currentTheme.border}`}>
               <p className={`${currentTheme.text} italic mb-4`}>
-                "I love the variety of items available on SkidHaven. It's my go-to platform for finding unique products."
+                "Found exactly what I was looking for at a great price. Highly recommend SkidHaven!"
               </p>
               <div className="flex items-center space-x-3">
-                <img
-                  src="/placeholder.svg"
-                  alt="User Avatar"
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center">
+                  <span className="text-white font-semibold">S</span>
+                </div>
                 <div>
                   <h4 className={`font-semibold ${currentTheme.text}`}>
-                    Bob Williams
+                    Sarah Chen
                   </h4>
                   <p className={`${currentTheme.muted} text-sm`}>
                     Happy Customer

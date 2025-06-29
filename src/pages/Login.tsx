@@ -1,25 +1,42 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { currentTheme } = useTheme();
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Login logic would go here
-    console.log("Login attempted with:", { email, password });
+    setLoading(true);
+    
+    const { error } = await signIn(email, password);
+    
+    if (!error) {
+      navigate('/');
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -74,9 +91,13 @@ const Login = () => {
                   </div>
                 </div>
                 
-                <Button type="submit" className={`w-full ${currentTheme.primary} text-white`}>
+                <Button 
+                  type="submit" 
+                  className={`w-full ${currentTheme.primary} text-white`}
+                  disabled={loading}
+                >
                   <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
+                  {loading ? "Signing In..." : "Sign In"}
                 </Button>
                 
                 <div className="text-center">

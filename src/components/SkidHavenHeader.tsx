@@ -1,17 +1,23 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Menu, X, Palette, MessageCircle, User, LogIn, UserPlus } from "lucide-react";
+import { ShoppingBag, Menu, X, Palette, MessageCircle, User, LogIn, UserPlus, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SkidHavenHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const { currentTheme } = useTheme();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className={`${currentTheme.headerBg} border-b ${currentTheme.border} sticky top-0 z-50`}>
@@ -41,7 +47,7 @@ const SkidHavenHeader = () => {
             <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
               Crypto Exchange
             </Link>
-            {isLoggedIn && (
+            {user && (
               <>
                 <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent} transition-colors flex items-center space-x-1`}>
                   <MessageCircle className="h-4 w-4" />
@@ -69,7 +75,7 @@ const SkidHavenHeader = () => {
               </div>
             )}
 
-            {!isLoggedIn ? (
+            {!user ? (
               <div className="flex items-center space-x-2">
                 <Button 
                   variant="outline"
@@ -88,10 +94,23 @@ const SkidHavenHeader = () => {
                 </Button>
               </div>
             ) : (
-              <Button className={`${currentTheme.primary} text-white hover:opacity-90`}>
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Shop Now
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  className={`${currentTheme.primary} text-white hover:opacity-90`}
+                  onClick={() => navigate("/marketplace")}
+                >
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  Shop Now
+                </Button>
+                <Button
+                  variant="outline"
+                  className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
             )}
 
             <button
@@ -113,7 +132,7 @@ const SkidHavenHeader = () => {
               <Link to="/marketplace" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Marketplace</Link>
               <Link to="/sell" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Sell Items</Link>
               <Link to="/crypto-exchange" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Crypto Exchange</Link>
-              {isLoggedIn && (
+              {user && (
                 <>
                   <Link to="/messages" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Messages</Link>
                   <Link to="/profile" className={`${currentTheme.text} hover:${currentTheme.accent}`}>Profile</Link>
