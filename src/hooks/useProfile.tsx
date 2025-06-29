@@ -24,7 +24,7 @@ export const useProfile = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -49,7 +49,7 @@ export const useProfile = () => {
           two_factor_enabled: false
         };
 
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('profiles')
           .insert([newProfile]);
 
@@ -68,7 +68,7 @@ export const useProfile = () => {
     if (!user || !profile) return false;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update(updates)
         .eq('id', user.id);

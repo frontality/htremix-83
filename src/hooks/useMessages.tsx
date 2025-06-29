@@ -44,7 +44,7 @@ export const useMessages = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('conversations')
         .select(`
           *,
@@ -69,7 +69,7 @@ export const useMessages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('messages')
         .select(`
           *,
@@ -93,7 +93,7 @@ export const useMessages = () => {
     if (!user || !content.trim()) return false;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('messages')
         .insert([{
           conversation_id: conversationId,
@@ -125,17 +125,17 @@ export const useMessages = () => {
 
     try {
       // Check if conversation already exists
-      const { data: existingConv } = await supabase
+      const { data: existingConv } = await (supabase as any)
         .from('conversations')
         .select('id')
         .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${participantId}),and(participant1_id.eq.${participantId},participant2_id.eq.${user.id})`)
         .single();
 
-      if (existingConv) {
+      if (existingConv && existingConv.id) {
         return existingConv.id;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('conversations')
         .insert([{
           participant1_id: user.id,

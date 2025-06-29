@@ -31,7 +31,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .select('id, username, avatar_url')
         .ilike('username', `%${query}%`)
