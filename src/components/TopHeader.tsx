@@ -8,7 +8,7 @@ import { useProfile } from "@/hooks/useProfile";
 import ThemeSelector from "./ThemeSelector";
 
 const TopHeader = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
@@ -18,8 +18,14 @@ const TopHeader = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    console.log('Sign out button clicked');
+    try {
+      await signOut();
+      setShowUserMenu(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   const menuItems = [
@@ -32,11 +38,18 @@ const TopHeader = () => {
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
+  const handleMenuClick = (path: string) => {
+    console.log('Menu item clicked:', path);
+    setShowMobileMenu(false);
+    setShowUserMenu(false);
+    navigate(path);
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 h-20 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90`}>
       <div className="flex items-center justify-between h-full px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-3">
+        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
           <div className="w-12 h-12 flex items-center justify-center">
             <img 
               src="/lovable-uploads/6f091ee3-6e28-4f39-b494-edd3050aa7e2.png" 
@@ -57,10 +70,10 @@ const TopHeader = () => {
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <Link
+              <button
                 key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all font-medium ${
+                onClick={() => handleMenuClick(item.path)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all font-medium cursor-pointer hover:scale-105 ${
                   isActive 
                     ? `${currentTheme.primary} text-white shadow-lg` 
                     : `${currentTheme.text} hover:${currentTheme.secondary}`
@@ -68,14 +81,14 @@ const TopHeader = () => {
               >
                 <item.icon size={18} />
                 <span>{item.label}</span>
-              </Link>
+              </button>
             );
           })}
         </nav>
 
         {/* Right Side */}
         <div className="flex items-center space-x-4">
-          {user && (
+          {user && !authLoading && (
             <>
               {/* Balance */}
               <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 rounded-full">
@@ -97,8 +110,11 @@ const TopHeader = () => {
               {/* Theme Selector */}
               <div className="relative">
                 <button
-                  onClick={() => setShowThemeSelector(!showThemeSelector)}
-                  className={`p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors`}
+                  onClick={() => {
+                    console.log('Theme selector clicked');
+                    setShowThemeSelector(!showThemeSelector);
+                  }}
+                  className={`p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
                 >
                   <Settings size={18} />
                 </button>
@@ -112,8 +128,11 @@ const TopHeader = () => {
               {/* User Menu */}
               <div className="relative">
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    console.log('User menu clicked');
+                    setShowUserMenu(!showUserMenu);
+                  }}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                 >
                   <img
                     src={profile?.avatar_url || "/placeholder.svg"}
@@ -129,28 +148,23 @@ const TopHeader = () => {
                 
                 {showUserMenu && (
                   <div className={`absolute right-0 top-full mt-2 w-48 ${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-lg z-50`}>
-                    <Link
-                      to="/profile"
-                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors"
-                      onClick={() => setShowUserMenu(false)}
+                    <button
+                      onClick={() => handleMenuClick('/profile')}
+                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors w-full text-left cursor-pointer"
                     >
                       <User size={16} />
                       <span>Profile</span>
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors"
-                      onClick={() => setShowUserMenu(false)}
+                    </button>
+                    <button
+                      onClick={() => handleMenuClick('/settings')}
+                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors w-full text-left cursor-pointer"
                     >
                       <Settings size={16} />
                       <span>Settings</span>
-                    </Link>
+                    </button>
                     <button
-                      onClick={() => {
-                        handleSignOut();
-                        setShowUserMenu(false);
-                      }}
-                      className="flex items-center space-x-2 p-3 w-full text-left hover:bg-gray-800 transition-colors text-red-400"
+                      onClick={handleSignOut}
+                      className="flex items-center space-x-2 p-3 w-full text-left hover:bg-gray-800 transition-colors text-red-400 cursor-pointer"
                     >
                       <LogOut size={16} />
                       <span>Sign Out</span>
@@ -161,10 +175,30 @@ const TopHeader = () => {
             </>
           )}
 
+          {!user && !authLoading && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleMenuClick('/login')}
+                className={`px-4 py-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => handleMenuClick('/signup')}
+                className={`px-4 py-2 rounded-lg ${currentTheme.primary} text-white hover:opacity-80 transition-opacity cursor-pointer`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
           {/* Mobile Menu Toggle */}
           <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className={`lg:hidden p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors`}
+            onClick={() => {
+              console.log('Mobile menu clicked');
+              setShowMobileMenu(!showMobileMenu);
+            }}
+            className={`lg:hidden p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
           >
             {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -178,11 +212,10 @@ const TopHeader = () => {
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
-                <Link
+                <button
                   key={item.path}
-                  to={item.path}
-                  onClick={() => setShowMobileMenu(false)}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-all ${
+                  onClick={() => handleMenuClick(item.path)}
+                  className={`flex items-center space-x-3 p-3 rounded-lg transition-all w-full text-left cursor-pointer ${
                     isActive 
                       ? `${currentTheme.primary} text-white` 
                       : `${currentTheme.text} hover:${currentTheme.secondary}`
@@ -190,7 +223,7 @@ const TopHeader = () => {
                 >
                   <item.icon size={20} />
                   <span className="font-medium">{item.label}</span>
-                </Link>
+                </button>
               );
             })}
           </nav>
