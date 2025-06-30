@@ -46,23 +46,59 @@ export const useMessages = () => {
     try {
       console.log('Fetching conversations for user:', user.id);
       
-      const { data, error } = await supabase
+      // First, get conversations
+      const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          participant1:profiles!participant1_id(username, avatar_url),
-          participant2:profiles!participant2_id(username, avatar_url)
-        `)
+        .select('*')
         .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
         .order('updated_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching conversations:', error);
+      if (conversationsError) {
+        console.error('Error fetching conversations:', conversationsError);
         setConversations([]);
-      } else {
-        console.log('Conversations found:', data);
-        setConversations(data || []);
+        setLoading(false);
+        return;
       }
+
+      if (!conversationsData || conversationsData.length === 0) {
+        console.log('No conversations found');
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get all unique participant IDs
+      const participantIds = new Set<string>();
+      conversationsData.forEach(conv => {
+        participantIds.add(conv.participant1_id);
+        participantIds.add(conv.participant2_id);
+      });
+
+      // Fetch profiles for all participants
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', Array.from(participantIds));
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map of profiles for easy lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
+      // Combine conversations with profile data
+      const conversationsWithProfiles = conversationsData.map(conv => ({
+        ...conv,
+        participant1: profilesMap.get(conv.participant1_id) || { username: 'Unknown User', avatar_url: null },
+        participant2: profilesMap.get(conv.participant2_id) || { username: 'Unknown User', avatar_url: null }
+      }));
+
+      console.log('Conversations with profiles:', conversationsWithProfiles);
+      setConversations(conversationsWithProfiles);
     } catch (error) {
       console.error('Error in fetchConversations:', error);
       setConversations([]);
@@ -75,22 +111,52 @@ export const useMessages = () => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
       
-      const { data, error } = await supabase
+      // First, get messages
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:profiles!sender_id(username, avatar_url)
-        `)
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching messages:', error);
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
         setMessages([]);
-      } else {
-        console.log('Messages found:', data);
-        setMessages(data || []);
+        return;
       }
+
+      if (!messagesData || messagesData.length === 0) {
+        console.log('No messages found');
+        setMessages([]);
+        return;
+      }
+
+      // Get unique sender IDs
+      const senderIds = [...new Set(messagesData.map(msg => msg.sender_id))];
+
+      // Fetch profiles for all senders
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', senderIds);
+
+      if (profilesError) {
+        console.error('Error fetching sender profiles:', profilesError);
+      }
+
+      // Create a map of profiles for easy lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
+      // Combine messages with sender profile data
+      const messagesWithSenders = messagesData.map(msg => ({
+        ...msg,
+        sender: profilesMap.get(msg.sender_id) || { username: 'Unknown User', avatar_url: null }
+      }));
+
+      console.log('Messages with senders:', messagesWithSenders);
+      setMessages(messagesWithSenders);
     } catch (error) {
       console.error('Error in fetchMessages:', error);
       setMessages([]);
