@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Camera, Upload, X } from "lucide-react";
+import { Camera, Upload, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -27,23 +28,24 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file",
+        description: "Please select an image file (PNG, JPG, GIF, WebP)",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        description: "Please select an image smaller than 10MB",
         variant: "destructive",
       });
       return;
     }
 
     setUploading(true);
+    setUploadSuccess(false);
     
     try {
       console.log('Starting image upload...');
@@ -53,11 +55,17 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
         const base64String = e.target?.result as string;
         console.log('Image converted to base64, calling onImageUpload');
         
-        // Save to localStorage for persistence
-        const imageKey = `uploaded_image_${Date.now()}`;
+        // Save to localStorage with timestamp for uniqueness
+        const imageKey = `uploaded_image_${Date.now()}_${file.name}`;
         localStorage.setItem(imageKey, base64String);
         
+        // Also save as current avatar for persistence
+        localStorage.setItem('current_avatar', base64String);
+        
         onImageUpload(base64String);
+        
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 2000);
         
         toast({
           title: "Image uploaded! 📸",
@@ -70,7 +78,7 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
         console.error('Error reading file');
         toast({
           title: "Upload failed",
-          description: "Failed to upload image. Please try again.",
+          description: "Failed to read the image file. Please try again.",
           variant: "destructive",
         });
         setUploading(false);
@@ -88,9 +96,18 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
     }
   };
 
+  const handleRemoveImage = () => {
+    localStorage.removeItem('current_avatar');
+    onImageUpload("/placeholder.svg");
+    toast({
+      title: "Image removed",
+      description: "Profile image has been reset to default",
+    });
+  };
+
   return (
     <div className={`relative group ${className}`}>
-      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105">
+      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105 bg-gray-800">
         <img
           src={currentImage || "/placeholder.svg"}
           alt="Upload preview"
@@ -112,13 +129,25 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
           >
             {uploading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : uploadSuccess ? (
+              <Check className="h-4 w-4" />
             ) : (
               <Camera className="h-4 w-4" />
             )}
-            {uploading ? 'Uploading...' : 'Change'}
+            {uploading ? 'Uploading...' : uploadSuccess ? 'Success!' : 'Change'}
           </Button>
         </label>
       </div>
+      
+      {/* Remove button */}
+      {currentImage && currentImage !== "/placeholder.svg" && (
+        <button
+          onClick={handleRemoveImage}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="h-3 w-3 text-white" />
+        </button>
+      )}
       
       <input
         id="image-upload"

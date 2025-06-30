@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { DollarSign, User, Settings, LogOut, Bell, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X } from "lucide-react";
+import { DollarSign, User, Settings, LogOut, Bell, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X, Palette } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -53,13 +53,13 @@ const TopHeader = () => {
           <div className="w-12 h-12 flex items-center justify-center">
             <img 
               src="/lovable-uploads/6f091ee3-6e28-4f39-b494-edd3050aa7e2.png" 
-              alt="$SKID HAVEN Logo" 
+              alt="$KID HAVEN Logo" 
               className="w-10 h-10 object-contain"
             />
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter">
-              $SKID HAVEN
+              $KID HAVEN
             </span>
             <span className="text-xs text-gray-400">Underground Market</span>
           </div>
@@ -113,10 +113,11 @@ const TopHeader = () => {
                   onClick={() => {
                     console.log('Theme selector clicked');
                     setShowThemeSelector(!showThemeSelector);
+                    setShowUserMenu(false);
                   }}
                   className={`p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
                 >
-                  <Settings size={18} />
+                  <Palette size={18} className={currentTheme.text} />
                 </button>
                 {showThemeSelector && (
                   <div className="absolute right-0 top-full mt-2 z-50">
@@ -131,13 +132,14 @@ const TopHeader = () => {
                   onClick={() => {
                     console.log('User menu clicked');
                     setShowUserMenu(!showUserMenu);
+                    setShowThemeSelector(false);
                   }}
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                 >
                   <img
                     src={profile?.avatar_url || "/placeholder.svg"}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-500"
                   />
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-sm font-medium text-white">
@@ -150,21 +152,22 @@ const TopHeader = () => {
                   <div className={`absolute right-0 top-full mt-2 w-48 ${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-lg z-50`}>
                     <button
                       onClick={() => handleMenuClick('/profile')}
-                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors w-full text-left cursor-pointer"
+                      className={`flex items-center space-x-2 p-3 hover:${currentTheme.secondary} transition-colors w-full text-left cursor-pointer ${currentTheme.text}`}
                     >
                       <User size={16} />
                       <span>Profile</span>
                     </button>
                     <button
                       onClick={() => handleMenuClick('/settings')}
-                      className="flex items-center space-x-2 p-3 hover:bg-gray-800 transition-colors w-full text-left cursor-pointer"
+                      className={`flex items-center space-x-2 p-3 hover:${currentTheme.secondary} transition-colors w-full text-left cursor-pointer ${currentTheme.text}`}
                     >
                       <Settings size={16} />
                       <span>Settings</span>
                     </button>
+                    <hr className={`border-t ${currentTheme.border} my-1`} />
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center space-x-2 p-3 w-full text-left hover:bg-gray-800 transition-colors text-red-400 cursor-pointer"
+                      className="flex items-center space-x-2 p-3 w-full text-left hover:bg-red-900/20 transition-colors text-red-400 cursor-pointer"
                     >
                       <LogOut size={16} />
                       <span>Sign Out</span>
@@ -179,7 +182,7 @@ const TopHeader = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => handleMenuClick('/login')}
-                className={`px-4 py-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+                className={`px-4 py-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer ${currentTheme.text}`}
               >
                 Login
               </button>
@@ -197,10 +200,12 @@ const TopHeader = () => {
             onClick={() => {
               console.log('Mobile menu clicked');
               setShowMobileMenu(!showMobileMenu);
+              setShowThemeSelector(false);
+              setShowUserMenu(false);
             }}
             className={`lg:hidden p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
           >
-            {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
+            {showMobileMenu ? <X size={20} className={currentTheme.text} /> : <Menu size={20} className={currentTheme.text} />}
           </button>
         </div>
       </div>
@@ -226,6 +231,22 @@ const TopHeader = () => {
                 </button>
               );
             })}
+            
+            {/* Mobile Theme Selector */}
+            <div className="pt-2 border-t border-gray-600">
+              <button
+                onClick={() => setShowThemeSelector(!showThemeSelector)}
+                className={`flex items-center space-x-3 p-3 rounded-lg transition-all w-full text-left cursor-pointer ${currentTheme.text} hover:${currentTheme.secondary}`}
+              >
+                <Palette size={20} />
+                <span className="font-medium">Change Theme</span>
+              </button>
+              {showThemeSelector && (
+                <div className="mt-2 pl-4">
+                  <ThemeSelector onClose={() => setShowThemeSelector(false)} />
+                </div>
+              )}
+            </div>
           </nav>
         </div>
       )}

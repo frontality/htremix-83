@@ -3,65 +3,92 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Settings {
-  notifications: boolean;
-  twoFactor: boolean;
-  autoSave: boolean;
-  soundEffects: boolean;
   language: string;
   currency: string;
-  theme: string;
+  notifications: boolean;
+  soundEffects: boolean;
+  autoSave: boolean;
+  twoFactor: boolean;
   privacyMode: boolean;
+  darkMode: boolean;
+  displayName: string;
+  status: string;
+  dataEncryption: boolean;
+  emailNotifications: boolean;
+  marketingEmails: boolean;
+  developerMode: boolean;
+  betaFeatures: boolean;
 }
 
-const DEFAULT_SETTINGS: Settings = {
-  notifications: true,
-  twoFactor: false,
-  autoSave: true,
-  soundEffects: true,
+const defaultSettings: Settings = {
   language: 'en',
   currency: 'usd',
-  theme: 'dark',
-  privacyMode: false
+  notifications: true,
+  soundEffects: true,
+  autoSave: true,
+  twoFactor: false,
+  privacyMode: false,
+  darkMode: true,
+  displayName: '',
+  status: 'online',
+  dataEncryption: false,
+  emailNotifications: true,
+  marketingEmails: false,
+  developerMode: false,
+  betaFeatures: false,
 };
 
 export const useSettings = () => {
-  const { toast } = useToast();
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = () => {
     try {
       console.log('Loading settings from localStorage...');
-      const saved = localStorage.getItem('skidhaven-settings');
-      if (saved) {
-        const parsedSettings = JSON.parse(saved);
+      const savedSettings = localStorage.getItem('kid-haven-settings');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings({ ...defaultSettings, ...parsedSettings });
         console.log('Settings loaded:', parsedSettings);
-        setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
+      } else {
+        console.log('No saved settings found, using defaults');
+        setSettings(defaultSettings);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+      setSettings(defaultSettings);
+      toast({
+        title: "Settings Error",
+        description: "Failed to load settings. Using defaults.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const updateSettings = async (newSettings: Partial<Settings>) => {
+  const updateSettings = async (newSettings: Settings): Promise<boolean> => {
     try {
-      console.log('Updating settings with:', newSettings);
-      const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-      localStorage.setItem('skidhaven-settings', JSON.stringify(updatedSettings));
+      console.log('Updating settings:', newSettings);
+      localStorage.setItem('kid-haven-settings', JSON.stringify(newSettings));
+      setSettings(newSettings);
       
-      console.log('Settings saved successfully:', updatedSettings);
-      toast({
-        title: "Settings Saved! ⚙️",
-        description: "Your preferences have been updated successfully.",
-      });
+      // Apply theme changes if dark mode setting changed
+      if (newSettings.darkMode !== settings.darkMode) {
+        document.documentElement.classList.toggle('dark', newSettings.darkMode);
+      }
+      
+      console.log('Settings updated successfully');
       return true;
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error updating settings:', error);
       toast({
-        title: "Error",
+        title: "Save Error",
         description: "Failed to save settings. Please try again.",
         variant: "destructive",
       });
@@ -69,5 +96,19 @@ export const useSettings = () => {
     }
   };
 
-  return { settings, loading, updateSettings };
+  const resetSettings = () => {
+    setSettings(defaultSettings);
+    localStorage.removeItem('kid-haven-settings');
+    toast({
+      title: "Settings Reset",
+      description: "All settings have been reset to defaults.",
+    });
+  };
+
+  return {
+    settings,
+    loading,
+    updateSettings,
+    resetSettings,
+  };
 };

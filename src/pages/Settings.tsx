@@ -1,20 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Save, Bell, Shield, Globe, Palette, Volume2, Download, Trash2, Moon, Sun } from "lucide-react";
+import { Settings as SettingsIcon, Save, Bell, Shield, Globe, Palette, Volume2, Download, Trash2, User, Zap, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSettings } from "@/hooks/useSettings";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { currentTheme } = useTheme();
   const { settings, loading, updateSettings } = useSettings();
+  const { toast } = useToast();
   const [localSettings, setLocalSettings] = useState(settings);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -27,6 +31,30 @@ const Settings = () => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     setHasChanges(true);
+    
+    // Apply language change immediately for better UX
+    if (key === 'language') {
+      toast({
+        title: "Language Updated! 🌍",
+        description: `Language changed to ${getLanguageName(value)}`,
+      });
+    }
+  };
+
+  const getLanguageName = (code: string) => {
+    const languages = {
+      'en': 'English',
+      'es': 'Español',
+      'fr': 'Français',
+      'de': 'Deutsch',
+      'zh': '中文',
+      'ja': '日本語',
+      'ru': 'Русский',
+      'pt': 'Português',
+      'it': 'Italiano',
+      'ko': '한국어'
+    };
+    return languages[code as keyof typeof languages] || code;
   };
 
   const handleSave = async () => {
@@ -34,12 +62,44 @@ const Settings = () => {
     const success = await updateSettings(localSettings);
     if (success) {
       setHasChanges(false);
+      toast({
+        title: "Settings Saved! ✅",
+        description: "Your preferences have been updated successfully.",
+      });
     }
   };
 
   const handleReset = () => {
     setLocalSettings(settings);
     setHasChanges(false);
+    toast({
+      title: "Settings Reset",
+      description: "All changes have been discarded.",
+      variant: "destructive",
+    });
+  };
+
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(localSettings, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'kid-haven-settings.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    toast({
+      title: "Data Exported! 📥",
+      description: "Your settings have been downloaded.",
+    });
+  };
+
+  const handleClearCache = () => {
+    localStorage.clear();
+    toast({
+      title: "Cache Cleared! 🧹",
+      description: "All cached data has been removed.",
+    });
   };
 
   if (loading) {
@@ -65,13 +125,14 @@ const Settings = () => {
               Settings Hub
             </h1>
             <p className={`${currentTheme.muted} text-lg`}>
-              Customize your $SKID HAVEN experience
+              Customize your $KID HAVEN experience
             </p>
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className={`${currentTheme.secondary} ${currentTheme.text} grid w-full grid-cols-4`}>
+            <TabsList className={`${currentTheme.secondary} ${currentTheme.text} grid w-full grid-cols-5`}>
               <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="account">Account</TabsTrigger>
               <TabsTrigger value="privacy">Privacy</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
@@ -91,9 +152,9 @@ const Settings = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+                      <Label className={`text-sm font-medium ${currentTheme.text} mb-2`}>
                         Language
-                      </label>
+                      </Label>
                       <Select 
                         value={localSettings.language} 
                         onValueChange={(value) => handleSettingChange('language', value)}
@@ -101,21 +162,24 @@ const Settings = () => {
                         <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Español</SelectItem>
-                          <SelectItem value="fr">Français</SelectItem>
-                          <SelectItem value="de">Deutsch</SelectItem>
-                          <SelectItem value="zh">中文</SelectItem>
-                          <SelectItem value="ja">日本語</SelectItem>
-                          <SelectItem value="ru">Русский</SelectItem>
+                        <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+                          <SelectItem value="en">🇺🇸 English</SelectItem>
+                          <SelectItem value="es">🇪🇸 Español</SelectItem>
+                          <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                          <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                          <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                          <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                          <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                          <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                          <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                          <SelectItem value="ko">🇰🇷 한국어</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+                      <Label className={`text-sm font-medium ${currentTheme.text} mb-2`}>
                         Currency
-                      </label>
+                      </Label>
                       <Select 
                         value={localSettings.currency} 
                         onValueChange={(value) => handleSettingChange('currency', value)}
@@ -123,11 +187,13 @@ const Settings = () => {
                         <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="usd">USD ($)</SelectItem>
-                          <SelectItem value="eur">EUR (€)</SelectItem>
-                          <SelectItem value="btc">BTC (₿)</SelectItem>
-                          <SelectItem value="eth">ETH (Ξ)</SelectItem>
+                        <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+                          <SelectItem value="usd">💵 USD ($)</SelectItem>
+                          <SelectItem value="eur">💶 EUR (€)</SelectItem>
+                          <SelectItem value="btc">₿ BTC</SelectItem>
+                          <SelectItem value="eth">Ξ ETH</SelectItem>
+                          <SelectItem value="gbp">💷 GBP (£)</SelectItem>
+                          <SelectItem value="jpy">💴 JPY (¥)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -139,7 +205,7 @@ const Settings = () => {
                 <CardHeader>
                   <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
                     <Volume2 className="h-5 w-5" />
-                    Audio & Visual
+                    Experience Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -162,6 +228,61 @@ const Settings = () => {
                       checked={localSettings.autoSave}
                       onCheckedChange={(checked) => handleSettingChange('autoSave', checked)}
                     />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Dark Mode</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Use dark theme everywhere</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.darkMode}
+                      onCheckedChange={(checked) => handleSettingChange('darkMode', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="account" className="space-y-6">
+              <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+                <CardHeader>
+                  <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                    <User className="h-5 w-5" />
+                    Account Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className={`text-sm font-medium ${currentTheme.text} mb-2`}>
+                        Display Name
+                      </Label>
+                      <Input 
+                        value={localSettings.displayName || ''} 
+                        onChange={(e) => handleSettingChange('displayName', e.target.value)}
+                        className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                        placeholder="Enter your display name"
+                      />
+                    </div>
+                    <div>
+                      <Label className={`text-sm font-medium ${currentTheme.text} mb-2`}>
+                        Status
+                      </Label>
+                      <Select 
+                        value={localSettings.status || 'online'} 
+                        onValueChange={(value) => handleSettingChange('status', value)}
+                      >
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+                          <SelectItem value="online">🟢 Online</SelectItem>
+                          <SelectItem value="away">🟡 Away</SelectItem>
+                          <SelectItem value="busy">🔴 Busy</SelectItem>
+                          <SelectItem value="invisible">⚫ Invisible</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -196,6 +317,16 @@ const Settings = () => {
                       onCheckedChange={(checked) => handleSettingChange('privacyMode', checked)}
                     />
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Data Encryption</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Encrypt your personal data</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.dataEncryption}
+                      onCheckedChange={(checked) => handleSettingChange('dataEncryption', checked)}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -219,6 +350,26 @@ const Settings = () => {
                       onCheckedChange={(checked) => handleSettingChange('notifications', checked)}
                     />
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Email Notifications</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Get updates via email</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.emailNotifications}
+                      onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Marketing Emails</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Receive promotional content</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.marketingEmails}
+                      onCheckedChange={(checked) => handleSettingChange('marketingEmails', checked)}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -233,14 +384,44 @@ const Settings = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Button variant="outline" className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                    <Button 
+                      onClick={handleExportData}
+                      variant="outline" 
+                      className={`${currentTheme.secondary} ${currentTheme.text} border-0 hover:${currentTheme.primary}`}
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Export Data
                     </Button>
-                    <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+                    <Button 
+                      onClick={handleClearCache}
+                      variant="destructive" 
+                      className="bg-red-600 hover:bg-red-700"
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Clear Cache
                     </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Developer Mode</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Enable advanced debugging features</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.developerMode}
+                      onCheckedChange={(checked) => handleSettingChange('developerMode', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className={`font-medium ${currentTheme.text}`}>Beta Features</h4>
+                      <p className={`text-sm ${currentTheme.muted}`}>Access experimental features</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.betaFeatures}
+                      onCheckedChange={(checked) => handleSettingChange('betaFeatures', checked)}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -249,7 +430,7 @@ const Settings = () => {
 
           {/* Save/Reset Buttons */}
           {hasChanges && (
-            <div className={`fixed bottom-6 right-6 flex space-x-3 p-4 ${currentTheme.cardBg} rounded-lg shadow-lg border ${currentTheme.border}`}>
+            <div className={`fixed bottom-6 right-6 flex space-x-3 p-4 ${currentTheme.cardBg} rounded-lg shadow-lg border ${currentTheme.border} z-40`}>
               <Button 
                 onClick={handleReset}
                 variant="outline"
