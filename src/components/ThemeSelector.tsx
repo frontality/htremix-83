@@ -27,17 +27,28 @@ const ThemeSelector = ({ onClose }: ThemeSelectorProps) => {
 
   const getThemeColor = (key: string) => {
     switch (key) {
-      case 'volcano': return 'bg-red-500';
-      case 'ocean': return 'bg-blue-500';
-      case 'forest': return 'bg-green-500';
-      case 'galaxy': return 'bg-purple-500';
-      case 'dark': return 'bg-gray-500';
+      case 'volcano': return 'bg-gradient-to-r from-red-500 to-orange-500';
+      case 'ocean': return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+      case 'forest': return 'bg-gradient-to-r from-green-500 to-emerald-500';
+      case 'galaxy': return 'bg-gradient-to-r from-purple-500 to-pink-500';
+      case 'dark': return 'bg-gradient-to-r from-gray-500 to-gray-700';
       default: return 'bg-gray-500';
     }
   };
 
+  const getThemeEmoji = (key: string) => {
+    switch (key) {
+      case 'volcano': return '🌋';
+      case 'ocean': return '🌊';
+      case 'forest': return '🌲';
+      case 'galaxy': return '🌌';
+      case 'dark': return '🌑';
+      default: return '🎨';
+    }
+  };
+
   return (
-    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-xl min-w-56 backdrop-blur-sm`}>
+    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-xl min-w-60 backdrop-blur-sm`}>
       <h3 className={`${currentTheme.text} font-semibold mb-3 flex items-center gap-2`}>
         <Palette className="h-4 w-4" />
         Choose Theme
@@ -50,12 +61,14 @@ const ThemeSelector = ({ onClose }: ThemeSelectorProps) => {
             className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
               currentTheme.name === theme.name 
                 ? `${currentTheme.primary} text-white shadow-lg` 
-                : `hover:${currentTheme.secondary} ${currentTheme.text} hover:scale-105`
+                : `hover:${currentTheme.secondary} ${currentTheme.text} hover:scale-102`
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full border-2 ${getThemeColor(key)}`} />
-              <span className="font-medium">{theme.name}</span>
+              <div className={`w-5 h-5 rounded-full ${getThemeColor(key)} shadow-sm`} />
+              <span className="font-medium flex items-center gap-2">
+                {getThemeEmoji(key)} {theme.name}
+              </span>
             </div>
             {currentTheme.name === theme.name && <Check className="h-4 w-4" />}
           </button>

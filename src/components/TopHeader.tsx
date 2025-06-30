@@ -46,19 +46,19 @@ const TopHeader = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 h-14 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90`}>
-      <div className="flex items-center justify-between h-full px-4">
+    <header className={`fixed top-0 left-0 right-0 h-12 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90`}>
+      <div className="flex items-center justify-between h-full px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 flex items-center justify-center">
+        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+          <div className="w-6 h-6 flex items-center justify-center">
             <img 
               src="/lovable-uploads/6f091ee3-6e28-4f39-b494-edd3050aa7e2.png" 
               alt="$KID HAVEN Logo" 
-              className="w-7 h-7 object-contain"
+              className="w-5 h-5 object-contain"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter">
+            <span className="text-base font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter">
               $KID HAVEN
             </span>
             <span className="text-xs text-gray-400 -mt-1">Underground Market</span>
@@ -66,20 +66,20 @@ const TopHeader = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
+        <nav className="hidden lg:flex items-center space-x-4">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => handleMenuClick(item.path)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all font-medium cursor-pointer text-sm ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all font-medium cursor-pointer text-sm ${
                   isActive 
                     ? `${currentTheme.primary} text-white shadow-md` 
                     : `${currentTheme.text} hover:${currentTheme.secondary}`
                 }`}
               >
-                <item.icon size={16} />
+                <item.icon size={14} />
                 <span>{item.label}</span>
               </button>
             );
@@ -87,13 +87,13 @@ const TopHeader = () => {
         </nav>
 
         {/* Right Side */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           {user && !authLoading && (
             <>
               {/* Balance - Stake.com style */}
-              <div className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 border border-gray-600 rounded-md">
-                <DollarSign size={14} className="text-green-400" />
-                <span className="text-white font-medium text-sm">$0.00</span>
+              <div className="flex items-center space-x-2 px-4 py-1.5 bg-gray-900/80 border border-gray-700 rounded-lg">
+                <DollarSign size={12} className="text-green-400" />
+                <span className="text-white font-semibold text-sm">$0.00</span>
               </div>
 
               {/* Theme Selector */}
@@ -104,9 +104,9 @@ const TopHeader = () => {
                     setShowThemeSelector(!showThemeSelector);
                     setShowUserMenu(false);
                   }}
-                  className={`p-2 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+                  className={`p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
                 >
-                  <Palette size={16} className={currentTheme.text} />
+                  <Palette size={14} className={currentTheme.text} />
                 </button>
                 {showThemeSelector && (
                   <div className="absolute right-0 top-full mt-2 z-50">
@@ -123,15 +123,15 @@ const TopHeader = () => {
                     setShowUserMenu(!showUserMenu);
                     setShowThemeSelector(false);
                   }}
-                  className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
+                  className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                 >
                   <img
                     src={profile?.avatar_url || "/placeholder.svg"}
                     alt="Profile"
-                    className="w-7 h-7 rounded-full object-cover border-2 border-purple-500"
+                    className="w-6 h-6 rounded-full object-cover border-2 border-purple-500"
                   />
                   <div className="hidden md:flex flex-col items-start">
-                    <span className="text-sm font-medium text-white">
+                    <span className="text-xs font-medium text-white">
                       {profile?.username || "User"}
                     </span>
                   </div>
@@ -168,16 +168,16 @@ const TopHeader = () => {
           )}
 
           {!user && !authLoading && (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={() => handleMenuClick('/login')}
-                className={`px-3 py-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer ${currentTheme.text} text-sm`}
+                className={`px-4 py-1.5 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer ${currentTheme.text} text-sm`}
               >
                 Login
               </button>
               <button
                 onClick={() => handleMenuClick('/signup')}
-                className={`px-3 py-1.5 rounded-md ${currentTheme.primary} text-white hover:opacity-80 transition-opacity cursor-pointer text-sm`}
+                className={`px-4 py-1.5 rounded-lg ${currentTheme.primary} text-white hover:opacity-80 transition-opacity cursor-pointer text-sm`}
               >
                 Sign Up
               </button>
@@ -192,9 +192,9 @@ const TopHeader = () => {
               setShowThemeSelector(false);
               setShowUserMenu(false);
             }}
-            className={`lg:hidden p-2 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+            className={`lg:hidden p-2 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
           >
-            {showMobileMenu ? <X size={18} className={currentTheme.text} /> : <Menu size={18} className={currentTheme.text} />}
+            {showMobileMenu ? <X size={16} className={currentTheme.text} /> : <Menu size={16} className={currentTheme.text} />}
           </button>
         </div>
       </div>
@@ -202,14 +202,14 @@ const TopHeader = () => {
       {/* Mobile Menu */}
       {showMobileMenu && (
         <div className={`lg:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} absolute top-full left-0 right-0 shadow-lg`}>
-          <nav className="p-3 space-y-1">
+          <nav className="p-4 space-y-2">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <button
                   key={item.path}
                   onClick={() => handleMenuClick(item.path)}
-                  className={`flex items-center space-x-3 p-3 rounded-md transition-all w-full text-left cursor-pointer ${
+                  className={`flex items-center space-x-3 p-3 rounded-lg transition-all w-full text-left cursor-pointer ${
                     isActive 
                       ? `${currentTheme.primary} text-white` 
                       : `${currentTheme.text} hover:${currentTheme.secondary}`
@@ -225,7 +225,7 @@ const TopHeader = () => {
             <div className="pt-2 border-t border-gray-600">
               <button
                 onClick={() => setShowThemeSelector(!showThemeSelector)}
-                className={`flex items-center space-x-3 p-3 rounded-md transition-all w-full text-left cursor-pointer ${currentTheme.text} hover:${currentTheme.secondary}`}
+                className={`flex items-center space-x-3 p-3 rounded-lg transition-all w-full text-left cursor-pointer ${currentTheme.text} hover:${currentTheme.secondary}`}
               >
                 <Palette size={18} />
                 <span className="font-medium">Change Theme</span>
