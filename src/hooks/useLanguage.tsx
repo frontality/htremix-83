@@ -19,6 +19,11 @@ export const languages: LanguageConfig[] = [
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
 ];
 
+// Simple translation function - returns the key as-is for now
+const translate = (key: string): string => {
+  return key;
+};
+
 export const useLanguage = () => {
   const [currentLanguage, setCurrentLanguage] = useState<string>('en');
   const { toast } = useToast();
@@ -55,6 +60,7 @@ export const useLanguage = () => {
     currentLanguage,
     changeLanguage,
     getCurrentLanguage,
-    availableLanguages: languages
+    availableLanguages: languages,
+    t: translate
   };
 };

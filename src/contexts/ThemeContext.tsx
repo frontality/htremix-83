@@ -12,6 +12,7 @@ export interface Theme {
   secondary: string;
   border: string;
   muted: string;
+  gradient: string;
 }
 
 const themes: Record<string, Theme> = {
@@ -25,7 +26,8 @@ const themes: Record<string, Theme> = {
     primary: 'bg-red-600 hover:bg-red-700',
     secondary: 'bg-orange-800/30',
     border: 'border-red-800/30',
-    muted: 'text-red-300'
+    muted: 'text-red-300',
+    gradient: 'from-red-500 to-orange-500'
   },
   ocean: {
     name: 'Ocean',
@@ -37,7 +39,8 @@ const themes: Record<string, Theme> = {
     primary: 'bg-blue-600 hover:bg-blue-700',
     secondary: 'bg-cyan-800/30',
     border: 'border-blue-800/30',
-    muted: 'text-blue-300'
+    muted: 'text-blue-300',
+    gradient: 'from-blue-500 to-cyan-500'
   },
   forest: {
     name: 'Forest',
@@ -49,7 +52,8 @@ const themes: Record<string, Theme> = {
     primary: 'bg-green-600 hover:bg-green-700',
     secondary: 'bg-emerald-800/30',
     border: 'border-green-800/30',
-    muted: 'text-green-300'
+    muted: 'text-green-300',
+    gradient: 'from-green-500 to-emerald-500'
   },
   galaxy: {
     name: 'Galaxy',
@@ -61,7 +65,8 @@ const themes: Record<string, Theme> = {
     primary: 'bg-purple-600 hover:bg-purple-700',
     secondary: 'bg-pink-800/30',
     border: 'border-purple-800/30',
-    muted: 'text-purple-300'
+    muted: 'text-purple-300',
+    gradient: 'from-purple-500 to-pink-500'
   },
   dark: {
     name: 'Dark',
@@ -73,7 +78,8 @@ const themes: Record<string, Theme> = {
     primary: 'bg-gray-700 hover:bg-gray-600',
     secondary: 'bg-gray-800/30',
     border: 'border-gray-700/30',
-    muted: 'text-gray-400'
+    muted: 'text-gray-400',
+    gradient: 'from-gray-500 to-gray-700'
   }
 };
 
