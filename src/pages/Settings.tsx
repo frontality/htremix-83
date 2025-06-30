@@ -5,12 +5,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Settings as SettingsIcon, User, Bell, Globe, Shield, Save, RefreshCw, Palette } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Globe, Shield, Save, RefreshCw, Palette } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -24,7 +22,6 @@ const Settings = () => {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [settings, setSettings] = useState({
-    displayName: '',
     emailNotifications: true,
     marketingEmails: false,
     soundEffects: true,
@@ -71,7 +68,6 @@ const Settings = () => {
 
   const handleResetSettings = () => {
     const defaultSettings = {
-      displayName: '',
       emailNotifications: true,
       marketingEmails: false,
       soundEffects: true,
@@ -126,31 +122,6 @@ const Settings = () => {
         </div>
 
         <div className="grid gap-6">
-          {/* Profile Settings */}
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-            <CardHeader>
-              <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
-                <User className="h-5 w-5" />
-                Profile Settings
-              </CardTitle>
-              <CardDescription className={currentTheme.muted}>
-                Manage your profile information and display preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName" className={currentTheme.text}>Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={settings.displayName}
-                  onChange={(e) => updateSetting('displayName', e.target.value)}
-                  placeholder="Enter your display name"
-                  className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Appearance */}
           <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
             <CardHeader>

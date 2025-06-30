@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { Search, User, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface UserSearchProps {
@@ -32,19 +30,28 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     setLoading(true);
     try {
       console.log('Searching for users with term:', term);
-      const { data, error } = await (supabase as any)
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${term}%`)
-        .limit(10);
+      
+      // Create some demo users for testing since we're using localStorage
+      const demoUsers: SearchedUser[] = [
+        {
+          id: 'demo_user_1',
+          username: term.toLowerCase().includes('john') ? 'john_doe' : `${term}_user1`,
+          avatar_url: null
+        },
+        {
+          id: 'demo_user_2', 
+          username: term.toLowerCase().includes('jane') ? 'jane_smith' : `${term}_user2`,
+          avatar_url: null
+        },
+        {
+          id: 'demo_user_3',
+          username: `${term}_demo`,
+          avatar_url: null
+        }
+      ].filter(user => user.username.toLowerCase().includes(term.toLowerCase()));
 
-      if (error) {
-        console.error('Error searching users:', error);
-        return;
-      }
-
-      console.log('Users found:', data);
-      setUsers(data || []);
+      console.log('Demo users found:', demoUsers);
+      setUsers(demoUsers);
     } catch (error) {
       console.error('Error in searchUsers:', error);
     } finally {
@@ -100,6 +107,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
                 <p className={`font-medium ${currentTheme.text}`}>
                   {user.username || "Anonymous User"}
                 </p>
+                <p className={`text-sm ${currentTheme.muted}`}>Demo user - Connect Supabase for real users</p>
               </div>
               <MessageCircle className="h-4 w-4 text-gray-400" />
             </div>
@@ -108,10 +116,12 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
           <div className="text-center py-4">
             <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
             <p className={`${currentTheme.muted} text-sm`}>No users found</p>
+            <p className={`${currentTheme.muted} text-xs mt-1`}>Try searching for "john" or "jane"</p>
           </div>
         ) : (
           <div className="text-center py-4">
             <p className={`${currentTheme.muted} text-sm`}>Start typing to search for users</p>
+            <p className={`${currentTheme.muted} text-xs mt-1`}>Connect Supabase for real user search</p>
           </div>
         )}
       </div>
