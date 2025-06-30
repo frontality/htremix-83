@@ -48,9 +48,9 @@ const ThemeSelector = ({ onClose }: ThemeSelectorProps) => {
   };
 
   return (
-    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-xl min-w-60 backdrop-blur-sm`}>
-      <h3 className={`${currentTheme.text} font-semibold mb-3 flex items-center gap-2`}>
-        <Palette className="h-4 w-4" />
+    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-xl min-w-64 backdrop-blur-sm`}>
+      <h3 className={`${currentTheme.text} font-semibold mb-4 flex items-center gap-2`}>
+        <Palette className="h-5 w-5" />
         Choose Theme
       </h3>
       <div className="space-y-2">
@@ -65,12 +65,12 @@ const ThemeSelector = ({ onClose }: ThemeSelectorProps) => {
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full ${getThemeColor(key)} shadow-sm`} />
+              <div className={`w-6 h-6 rounded-full ${getThemeColor(key)} shadow-sm`} />
               <span className="font-medium flex items-center gap-2">
                 {getThemeEmoji(key)} {theme.name}
               </span>
             </div>
-            {currentTheme.name === theme.name && <Check className="h-4 w-4" />}
+            {currentTheme.name === theme.name && <Check className="h-5 w-5" />}
           </button>
         ))}
       </div>
