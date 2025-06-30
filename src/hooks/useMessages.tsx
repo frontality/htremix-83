@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -51,8 +50,8 @@ export const useMessages = () => {
         .from('conversations')
         .select(`
           *,
-          participant1:profiles!conversations_participant1_id_fkey(username, avatar_url),
-          participant2:profiles!conversations_participant2_id_fkey(username, avatar_url)
+          participant1:profiles!participant1_id(username, avatar_url),
+          participant2:profiles!participant2_id(username, avatar_url)
         `)
         .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
         .order('updated_at', { ascending: false });
@@ -80,7 +79,7 @@ export const useMessages = () => {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(username, avatar_url)
+          sender:profiles!sender_id(username, avatar_url)
         `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
