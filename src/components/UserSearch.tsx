@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { Search, User, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/contexts/ThemeContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserSearchProps {
   onSelectUser: (userId: string) => void;
@@ -17,12 +19,13 @@ interface SearchedUser {
 
 const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
   const { currentTheme } = useTheme();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<SearchedUser[]>([]);
   const [loading, setLoading] = useState(false);
 
   const searchUsers = async (term: string) => {
-    if (!term.trim()) {
+    if (!term.trim() || !user) {
       setUsers([]);
       return;
     }
@@ -31,29 +34,24 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     try {
       console.log('Searching for users with term:', term);
       
-      // Create some demo users for testing since we're using localStorage
-      const demoUsers: SearchedUser[] = [
-        {
-          id: 'demo_user_1',
-          username: term.toLowerCase().includes('john') ? 'john_doe' : `${term}_user1`,
-          avatar_url: null
-        },
-        {
-          id: 'demo_user_2', 
-          username: term.toLowerCase().includes('jane') ? 'jane_smith' : `${term}_user2`,
-          avatar_url: null
-        },
-        {
-          id: 'demo_user_3',
-          username: `${term}_demo`,
-          avatar_url: null
-        }
-      ].filter(user => user.username.toLowerCase().includes(term.toLowerCase()));
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .ilike('username', `%${term}%`)
+        .neq('id', user.id)
+        .limit(10);
 
-      console.log('Demo users found:', demoUsers);
-      setUsers(demoUsers);
+      if (error) {
+        console.error('Error searching users:', error);
+        setUsers([]);
+        return;
+      }
+
+      console.log('Users found:', data);
+      setUsers(data || []);
     } catch (error) {
       console.error('Error in searchUsers:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -65,7 +63,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     }, 300);
 
     return () => clearTimeout(delayedSearch);
-  }, [searchTerm]);
+  }, [searchTerm, user]);
 
   const handleSelectUser = (userId: string) => {
     console.log('User selected:', userId);
@@ -107,7 +105,6 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
                 <p className={`font-medium ${currentTheme.text}`}>
                   {user.username || "Anonymous User"}
                 </p>
-                <p className={`text-sm ${currentTheme.muted}`}>Demo user - Connect Supabase for real users</p>
               </div>
               <MessageCircle className="h-4 w-4 text-gray-400" />
             </div>
@@ -116,12 +113,10 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
           <div className="text-center py-4">
             <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
             <p className={`${currentTheme.muted} text-sm`}>No users found</p>
-            <p className={`${currentTheme.muted} text-xs mt-1`}>Try searching for "john" or "jane"</p>
           </div>
         ) : (
           <div className="text-center py-4">
             <p className={`${currentTheme.muted} text-sm`}>Start typing to search for users</p>
-            <p className={`${currentTheme.muted} text-xs mt-1`}>Connect Supabase for real user search</p>
           </div>
         )}
       </div>

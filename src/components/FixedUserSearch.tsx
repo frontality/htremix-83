@@ -32,7 +32,7 @@ const FixedUserSearch = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
         .ilike('username', `%${query}%`)

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -37,8 +38,6 @@ export const useMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getStorageKey = (key: string) => `messages_${key}`;
-
   const fetchConversations = async () => {
     if (!user) {
       setLoading(false);
@@ -47,19 +46,23 @@ export const useMessages = () => {
 
     try {
       console.log('Fetching conversations for user:', user.id);
-      const storageKey = getStorageKey('conversations');
-      const saved = localStorage.getItem(storageKey);
       
-      if (saved) {
-        const allConversations = JSON.parse(saved);
-        const userConversations = allConversations.filter((conv: Conversation) => 
-          conv.participant1_id === user.id || conv.participant2_id === user.id
-        );
-        console.log('Conversations found:', userConversations);
-        setConversations(userConversations);
-      } else {
-        console.log('No conversations found, creating empty array');
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          participant1:profiles!conversations_participant1_id_fkey(username, avatar_url),
+          participant2:profiles!conversations_participant2_id_fkey(username, avatar_url)
+        `)
+        .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching conversations:', error);
         setConversations([]);
+      } else {
+        console.log('Conversations found:', data);
+        setConversations(data || []);
       }
     } catch (error) {
       console.error('Error in fetchConversations:', error);
@@ -72,16 +75,22 @@ export const useMessages = () => {
   const fetchMessages = async (conversationId: string) => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
-      const storageKey = getStorageKey(`messages_${conversationId}`);
-      const saved = localStorage.getItem(storageKey);
       
-      if (saved) {
-        const conversationMessages = JSON.parse(saved);
-        console.log('Messages found:', conversationMessages);
-        setMessages(conversationMessages);
-      } else {
-        console.log('No messages found for conversation');
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          sender:profiles!messages_sender_id_fkey(username, avatar_url)
+        `)
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
         setMessages([]);
+      } else {
+        console.log('Messages found:', data);
+        setMessages(data || []);
       }
     } catch (error) {
       console.error('Error in fetchMessages:', error);
@@ -98,26 +107,25 @@ export const useMessages = () => {
     try {
       console.log('Sending message:', { conversationId, content, userId: user.id });
       
-      const newMessage: Message = {
-        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        sender: {
-          username: user.email?.split('@')[0] || 'User',
-          avatar_url: ''
-        }
-      };
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content: content.trim()
+        });
 
-      const storageKey = getStorageKey(`messages_${conversationId}`);
-      const existing = localStorage.getItem(storageKey);
-      const existingMessages = existing ? JSON.parse(existing) : [];
-      const updatedMessages = [...existingMessages, newMessage];
-      
-      localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
-      
-      console.log('Message sent and saved successfully');
+      if (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log('Message sent successfully');
       await fetchMessages(conversationId);
       
       toast({
@@ -157,29 +165,26 @@ export const useMessages = () => {
         return existingConv.id;
       }
 
-      const newConversation: Conversation = {
-        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        participant1_id: user.id,
-        participant2_id: participantId,
-        created_at: new Date().toISOString(),
-        participant1: {
-          username: user.email?.split('@')[0] || 'User',
-          avatar_url: ''
-        },
-        participant2: {
-          username: 'Other User',
-          avatar_url: ''
-        }
-      };
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({
+          participant1_id: user.id,
+          participant2_id: participantId
+        })
+        .select()
+        .single();
 
-      const storageKey = getStorageKey('conversations');
-      const existing = localStorage.getItem(storageKey);
-      const existingConversations = existing ? JSON.parse(existing) : [];
-      const updatedConversations = [...existingConversations, newConversation];
-      
-      localStorage.setItem(storageKey, JSON.stringify(updatedConversations));
+      if (error) {
+        console.error('Error creating conversation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create conversation. Please try again.",
+          variant: "destructive",
+        });
+        return null;
+      }
 
-      console.log('New conversation created and saved:', newConversation);
+      console.log('New conversation created:', data);
       await fetchConversations();
       
       toast({
@@ -187,7 +192,7 @@ export const useMessages = () => {
         description: "You can now start chatting",
       });
       
-      return newConversation.id;
+      return data.id;
     } catch (error) {
       console.error('Error in createConversation:', error);
       toast({

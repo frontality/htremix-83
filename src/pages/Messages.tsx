@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { MessageCircle, Search, Send, User, Phone, Video, Heart, Sparkles, Plus } from "lucide-react";
+import { MessageCircle, Search, Send, User, Phone, Video, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -81,11 +81,10 @@ const Messages = () => {
         <div className="text-center mb-6">
           <h1 className={`text-3xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
             <MessageCircle className="h-8 w-8" />
-            Messages Hub
-            <Heart className="h-6 w-6 text-red-500" />
+            Messages
           </h1>
-          <p className={`${currentTheme.muted} text-lg`}>
-            Connect and chat with awesome people!
+          <p className={`${currentTheme.muted}`}>
+            Connect with people around the world
           </p>
         </div>
 
@@ -127,9 +126,9 @@ const Messages = () => {
                 <div className="p-2">
                   {conversations.length === 0 ? (
                     <div className="p-8 text-center">
-                      <Sparkles className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                      <p className={`${currentTheme.text} font-medium mb-2`}>No conversations yet!</p>
-                      <p className={`${currentTheme.muted} text-sm`}>Start chatting to see them here</p>
+                      <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
+                      <p className={`${currentTheme.text} font-medium mb-2`}>No conversations yet</p>
+                      <p className={`${currentTheme.muted} text-sm`}>Start a new chat to get started</p>
                     </div>
                   ) : (
                     conversations.map((conversation) => {
@@ -138,9 +137,9 @@ const Messages = () => {
                         <button
                           key={conversation.id}
                           onClick={() => handleSelectChat(conversation.id)}
-                          className={`w-full p-3 rounded-lg mb-2 text-left transition-all hover:scale-[1.02] ${
+                          className={`w-full p-3 rounded-lg mb-2 text-left transition-all ${
                             selectedChat === conversation.id 
-                              ? `${currentTheme.secondary} ${currentTheme.accent} ring-2 ring-purple-400` 
+                              ? `${currentTheme.secondary} ring-2 ring-blue-400` 
                               : `hover:${currentTheme.secondary} ${currentTheme.text}`
                           }`}
                         >
@@ -148,20 +147,14 @@ const Messages = () => {
                             <img
                               src={participant?.avatar_url || "/placeholder.svg"}
                               alt={participant?.username || "User"}
-                              className="w-12 h-12 rounded-full object-cover border-2 border-purple-400"
+                              className="w-10 h-10 rounded-full object-cover"
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <p className="font-medium truncate flex items-center gap-1">
-                                  {participant?.username || "Anonymous User"}
-                                  <Heart className="h-3 w-3 text-red-400" />
-                                </p>
-                                <span className="text-xs opacity-70">
-                                  {new Date(conversation.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
+                              <p className="font-medium truncate">
+                                {participant?.username || "Anonymous User"}
+                              </p>
                               <p className="text-sm opacity-70 truncate">
-                                Click to start chatting!
+                                Click to start chatting
                               </p>
                             </div>
                           </div>
@@ -178,30 +171,26 @@ const Messages = () => {
               {selectedChatData && otherParticipant ? (
                 <>
                   {/* Chat Header */}
-                  <div className={`p-4 border-b ${currentTheme.border} flex items-center justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10`}>
+                  <div className={`p-4 border-b ${currentTheme.border} flex items-center justify-between`}>
                     <div className="flex items-center space-x-3">
                       <img
                         src={otherParticipant.avatar_url || "/placeholder.svg"}
                         alt={otherParticipant.username || "User"}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-purple-400"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
                       <div>
-                        <h3 className={`font-semibold ${currentTheme.text} flex items-center gap-2`}>
+                        <h3 className={`font-semibold ${currentTheme.text}`}>
                           {otherParticipant.username || "Anonymous User"}
-                          <Sparkles className="h-4 w-4 text-yellow-400" />
                         </h3>
-                        <p className={`text-sm ${currentTheme.muted} flex items-center gap-1`}>
-                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                          Online & Ready to Chat!
-                        </p>
+                        <p className={`text-sm ${currentTheme.muted}`}>Online</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary} hover:scale-110 transition-transform`}>
+                      <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary}`}>
                         <Phone className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary} hover:scale-110 transition-transform`}>
+                      <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary}`}>
                         <Video className="h-4 w-4" />
                       </Button>
                     </div>
@@ -223,16 +212,15 @@ const Messages = () => {
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
                             <div
-                              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl transition-all hover:scale-[1.02] ${
+                              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                                 message.sender_id === user?.id
-                                  ? `${currentTheme.primary} text-white shadow-lg`
-                                  : `${currentTheme.secondary} ${currentTheme.text} border border-purple-200`
+                                  ? `${currentTheme.primary} text-white`
+                                  : `${currentTheme.secondary} ${currentTheme.text}`
                               }`}
                             >
-                              <p className="text-sm leading-relaxed">{message.content}</p>
-                              <p className={`text-xs mt-2 opacity-70 flex items-center gap-1`}>
+                              <p className="text-sm">{message.content}</p>
+                              <p className="text-xs mt-2 opacity-70">
                                 {new Date(message.created_at).toLocaleTimeString()}
-                                <Heart className="h-3 w-3" />
                               </p>
                             </div>
                           </div>
@@ -242,19 +230,19 @@ const Messages = () => {
                   </ScrollArea>
 
                   {/* Message Input */}
-                  <div className={`p-4 border-t ${currentTheme.border} bg-gradient-to-r from-purple-500/5 to-pink-500/5`}>
+                  <div className={`p-4 border-t ${currentTheme.border}`}>
                     <div className="flex items-center space-x-3">
                       <Input
-                        placeholder="Type something awesome..."
+                        placeholder="Type a message..."
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full px-6 py-3 focus:ring-2 focus:ring-purple-400`}
+                        className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full px-4`}
                       />
                       <Button 
                         onClick={handleSendMessage}
                         disabled={!messageInput.trim()}
-                        className={`${currentTheme.primary} text-white rounded-full w-12 h-12 hover:scale-110 transition-transform shadow-lg`}
+                        className={`${currentTheme.primary} text-white rounded-full w-10 h-10`}
                       >
                         <Send className="h-4 w-4" />
                       </Button>
@@ -262,20 +250,15 @@ const Messages = () => {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-500/5 to-pink-500/5">
+                <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <MessageCircle className={`h-16 w-16 ${currentTheme.muted} mx-auto mb-6 animate-pulse`} />
+                    <MessageCircle className={`h-16 w-16 ${currentTheme.muted} mx-auto mb-6`} />
                     <h3 className={`${currentTheme.text} text-xl font-semibold mb-2`}>
-                      Ready to Chat?
+                      Select a conversation
                     </h3>
-                    <p className={`${currentTheme.muted} text-lg mb-4`}>
-                      Select a conversation to start messaging!
+                    <p className={`${currentTheme.muted}`}>
+                      Choose a conversation to start messaging
                     </p>
-                    <div className="flex items-center justify-center space-x-2">
-                      <Sparkles className="h-4 w-4 text-yellow-400" />
-                      <span className={`${currentTheme.muted} text-sm`}>Your next great conversation awaits</span>
-                      <Heart className="h-4 w-4 text-red-400" />
-                    </div>
                   </div>
                 </div>
               )}
