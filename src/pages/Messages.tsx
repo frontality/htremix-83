@@ -63,10 +63,12 @@ const Messages = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
-        <div className="text-center">
-          <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
-          <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
+      <div className={`min-h-screen ${currentTheme.bg}`}>
+        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 200px)' }}>
+          <div className="text-center">
+            <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
+            <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
+          </div>
         </div>
       </div>
     );

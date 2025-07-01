@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingBag, Activity, Gamepad2, Gift, Zap } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const MarketStats = () => {
   const { currentTheme } = useTheme();
@@ -15,19 +16,54 @@ const MarketStats = () => {
     volume24h: 0
   });
 
-  useEffect(() => {
-    // Simulate real-time stats for digital marketplace
-    const interval = setInterval(() => {
-      setStats({
-        totalValue: Math.floor(Math.random() * 500000) + 250000,
-        activeUsers: Math.floor(Math.random() * 3000) + 800,
-        totalListings: Math.floor(Math.random() * 8000) + 3000,
-        todaysSales: Math.floor(Math.random() * 300) + 50,
-        priceChange: (Math.random() - 0.5) * 8,
-        volume24h: Math.floor(Math.random() * 80000) + 30000
-      });
-    }, 4000);
+  const fetchRealStats = async () => {
+    try {
+      // Get real user count
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact' });
 
+      // Get conversation count (represents activity)
+      const { data: conversations, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('id', { count: 'exact' });
+
+      // Get message count (represents engagement)
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact' });
+
+      const profileCount = profiles?.length || 0;
+      const conversationCount = conversations?.length || 0;
+      const messageCount = messages?.length || 0;
+
+      setStats({
+        totalValue: 0, // No sales yet, so $0
+        activeUsers: profileCount,
+        totalListings: 0, // No items listed yet
+        todaysSales: 0, // No sales yet
+        priceChange: 0, // No change since no sales
+        volume24h: messageCount * 10 // Use message activity as volume indicator
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      // Fallback to zeros if error
+      setStats({
+        totalValue: 0,
+        activeUsers: 0,
+        totalListings: 0,
+        todaysSales: 0,
+        priceChange: 0,
+        volume24h: 0
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchRealStats();
+    
+    // Refresh every 30 seconds with real data
+    const interval = setInterval(fetchRealStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -118,13 +154,13 @@ const MarketStats = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[
-              { action: "Gaming Account sold", item: "Fortnite OG Account", price: "$85", time: "1m ago", icon: Gamepad2 },
-              { action: "Discord Nitro listed", item: "12-Month Subscription", price: "$45", time: "3m ago", icon: Zap },
-              { action: "Gift Card sold", item: "$50 Steam Card", price: "$47", time: "5m ago", icon: Gift },
-              { action: "New trader joined", item: "GamerPro_2024", price: "", time: "7m ago", icon: Users },
-              { action: "Account upgraded", item: "Minecraft Premium", price: "$65", time: "12m ago", icon: Gamepad2 }
-            ].map((activity, index) => (
+            {(stats.activeUsers > 0 ? [
+              { action: "New user joined", item: "Welcome to SkidHaven!", price: "", time: "Recent", icon: Users },
+              { action: "Platform growing", item: `${stats.activeUsers} active users`, price: "", time: "Live", icon: Activity },
+              { action: "Ready for trading", item: "Start your digital marketplace journey", price: "", time: "Now", icon: Gift }
+            ] : [
+              { action: "No activity yet", item: "Be the first to join!", price: "", time: "Waiting", icon: Users }
+            ]).map((activity, index) => (
               <div key={index} className="flex items-center justify-between py-2 border-b border-gray-700/30 last:border-0">
                 <div className="flex items-center gap-3">
                   <activity.icon className={`h-4 w-4 ${currentTheme.accent}`} />

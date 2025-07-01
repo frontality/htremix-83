@@ -51,7 +51,7 @@ export const useMessages = () => {
         .from('conversations')
         .select('*')
         .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (conversationsError) {
         console.error('Error fetching conversations:', conversationsError);
@@ -271,6 +271,35 @@ export const useMessages = () => {
 
   useEffect(() => {
     fetchConversations();
+    
+    // Set up realtime subscriptions
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages'
+      }, () => {
+        // Refresh conversations when messages change
+        fetchConversations();
+      })
+      .subscribe();
+
+    const conversationsChannel = supabase
+      .channel('conversations-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations'
+      }, () => {
+        fetchConversations();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(conversationsChannel);
+    };
   }, [user]);
 
   return {
