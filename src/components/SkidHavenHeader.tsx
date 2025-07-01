@@ -58,12 +58,12 @@ const SkidHavenHeader = () => {
           {/* Logo & Brand */}
           <Link to="/" className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/43c82c9a-176b-4c41-a25a-33514402d955.png" 
-              alt="SkidHaven Logo" 
-              className="h-10 w-10 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
+              src="/lovable-uploads/9c848e6b-b756-4e08-ba12-dde7ca4f3339.png" 
+              alt="SkidHaven Volcano Logo" 
+              className="h-10 w-10 object-contain rounded-lg shadow-lg hover:shadow-xl transition-shadow"
             />
             <div className="flex flex-col">
-              <span className={`text-xl font-bold ${currentTheme.text} bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent`}>
+              <span className={`text-xl font-bold ${currentTheme.text} bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent`}>
                 SkidHaven
               </span>
               <span className="text-xs text-green-500 font-medium flex items-center gap-1">

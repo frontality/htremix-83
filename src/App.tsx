@@ -21,10 +21,11 @@ import OTPVerification from "./pages/OTPVerification";
 import CryptoExchange from "./pages/CryptoExchange";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
-import CursorBackground from "./components/CursorBackground";
-import TopHeader from "./components/TopHeader";
-import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
+import CursorBackground from "./components/CursorBackground";
+import SkidHavenHeader from "./components/SkidHavenHeader";
+import SkidHavenFooter from "./components/SkidHavenFooter";
+import FixedUserSearch from "./components/FixedUserSearch";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,8 +44,8 @@ const App = () => (
           <TooltipProvider>
             <div className="min-h-screen relative">
               <CursorBackground />
-              <TopHeader />
-              <div className="pt-14 relative z-10">
+              <SkidHavenHeader />
+              <div className="relative z-10">
                 <Toaster />
                 <Sonner position="top-right" closeButton theme="dark" />
                 <Routes>
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <SkidHavenFooter />
                 <FixedUserSearch />
               </div>
             </div>
