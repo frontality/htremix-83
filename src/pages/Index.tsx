@@ -72,13 +72,13 @@ const Index = () => {
             <div className="text-center max-w-4xl mx-auto">
               <div className="flex items-center justify-center mb-6">
                 <img 
-                  src="/lovable-uploads/9c848e6b-b756-4e08-ba12-dde7ca4f3339.png" 
-                  alt="SkidHaven Volcano Logo" 
-                  className="w-16 h-16 object-contain mr-4"
+                  src="/lovable-uploads/6f091ee3-6e28-4f39-b494-edd3050aa7e2.png" 
+                  alt="$KID HAVEN Logo" 
+                  className="w-12 h-12 object-contain mr-4"
                 />
                 <h1 className="text-5xl md:text-7xl font-bold">
                   <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-                    SkidHaven
+                    $KID HAVEN
                   </span>
                 </h1>
               </div>
@@ -144,9 +144,9 @@ const Index = () => {
       <div className={`${currentTheme.secondary} py-16`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-              <h2 className={`text-3xl md:text-4xl font-bold ${currentTheme.text} mb-4`}>
-                {t("Why Choose SkidHaven?")}
-              </h2>
+            <h2 className={`text-3xl md:text-4xl font-bold ${currentTheme.text} mb-4`}>
+              {t("Why Choose $KID HAVEN?")}
+            </h2>
             <p className={`text-lg ${currentTheme.muted} max-w-2xl mx-auto`}>
               {t("Experience the future of digital trading with our cutting-edge platform")}
             </p>

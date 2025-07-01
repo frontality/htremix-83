@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -9,13 +8,10 @@ interface Message {
   conversation_id: string;
   sender_id: string;
   content: string;
-  encrypted_content?: string;
-  is_encrypted?: boolean;
   created_at: string;
   sender?: {
     username: string;
     avatar_url: string;
-    anonymous_mode?: boolean;
   };
 }
 
@@ -24,31 +20,15 @@ interface Conversation {
   participant1_id: string;
   participant2_id: string;
   created_at: string;
-  updated_at: string;
   participant1?: {
     username: string;
     avatar_url: string;
-    anonymous_mode?: boolean;
   };
   participant2?: {
     username: string;
     avatar_url: string;
-    anonymous_mode?: boolean;
   };
 }
-
-// Simple encryption utility
-const encryptMessage = (message: string): string => {
-  return btoa(message); // Base64 encoding for demo - in production use proper encryption
-};
-
-const decryptMessage = (encryptedMessage: string): string => {
-  try {
-    return atob(encryptedMessage);
-  } catch {
-    return encryptedMessage; // Return as-is if decryption fails
-  }
-};
 
 export const useMessages = () => {
   const { user } = useAuth();
@@ -66,6 +46,7 @@ export const useMessages = () => {
     try {
       console.log('Fetching conversations for user:', user.id);
       
+      // First, get conversations
       const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
         .select('*')
@@ -96,7 +77,7 @@ export const useMessages = () => {
       // Fetch profiles for all participants
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, anonymous_mode, hide_email')
+        .select('id, username, avatar_url')
         .in('id', Array.from(participantIds));
 
       if (profilesError) {
@@ -106,11 +87,7 @@ export const useMessages = () => {
       // Create a map of profiles for easy lookup
       const profilesMap = new Map();
       profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, {
-          username: profile.anonymous_mode ? 'Anonymous User' : (profile.username || 'User'),
-          avatar_url: profile.anonymous_mode ? '/placeholder.svg' : profile.avatar_url,
-          anonymous_mode: profile.anonymous_mode
-        });
+        profilesMap.set(profile.id, profile);
       });
 
       // Combine conversations with profile data
@@ -134,6 +111,7 @@ export const useMessages = () => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
       
+      // First, get messages
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -158,7 +136,7 @@ export const useMessages = () => {
       // Fetch profiles for all senders
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, anonymous_mode')
+        .select('id, username, avatar_url')
         .in('id', senderIds);
 
       if (profilesError) {
@@ -168,19 +146,12 @@ export const useMessages = () => {
       // Create a map of profiles for easy lookup
       const profilesMap = new Map();
       profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, {
-          username: profile.anonymous_mode ? 'Anonymous User' : (profile.username || 'User'),
-          avatar_url: profile.anonymous_mode ? '/placeholder.svg' : profile.avatar_url,
-          anonymous_mode: profile.anonymous_mode
-        });
+        profilesMap.set(profile.id, profile);
       });
 
-      // Combine messages with sender profile data and decrypt content
+      // Combine messages with sender profile data
       const messagesWithSenders = messagesData.map(msg => ({
         ...msg,
-        content: msg.is_encrypted && msg.encrypted_content 
-          ? decryptMessage(msg.encrypted_content) 
-          : msg.content,
         sender: profilesMap.get(msg.sender_id) || { username: 'Unknown User', avatar_url: null }
       }));
 
@@ -201,28 +172,13 @@ export const useMessages = () => {
     try {
       console.log('Sending message:', { conversationId, content, userId: user.id });
       
-      // Get user's encryption preference
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('encrypted_messaging')
-        .eq('id', user.id)
-        .single();
-
-      const shouldEncrypt = profileData?.encrypted_messaging ?? true;
-      const messageData: any = {
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content: shouldEncrypt ? '' : content.trim(),
-        is_encrypted: shouldEncrypt
-      };
-
-      if (shouldEncrypt) {
-        messageData.encrypted_content = encryptMessage(content.trim());
-      }
-
       const { error } = await supabase
         .from('messages')
-        .insert(messageData);
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content: content.trim()
+        });
 
       if (error) {
         console.error('Error sending message:', error);
@@ -239,7 +195,7 @@ export const useMessages = () => {
       
       toast({
         title: "Message sent! 💬",
-        description: shouldEncrypt ? "Your encrypted message has been delivered" : "Your message has been delivered",
+        description: "Your message has been delivered",
       });
       
       return true;
@@ -298,7 +254,7 @@ export const useMessages = () => {
       
       toast({
         title: "Conversation started! 🎉",
-        description: "You can now start chatting securely",
+        description: "You can now start chatting",
       });
       
       return data.id;
@@ -312,41 +268,6 @@ export const useMessages = () => {
       return null;
     }
   };
-
-  // Set up real-time listeners
-  useEffect(() => {
-    if (!user) return;
-
-    const messagesChannel = supabase
-      .channel('messages-changes')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => {
-          console.log('New message received:', payload);
-          // Refresh messages if it's for current conversation
-          if (messages.length > 0 && payload.new.conversation_id === messages[0]?.conversation_id) {
-            fetchMessages(payload.new.conversation_id);
-          }
-        }
-      )
-      .subscribe();
-
-    const conversationsChannel = supabase
-      .channel('conversations-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'conversations' },
-        (payload) => {
-          console.log('Conversation updated:', payload);
-          fetchConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(conversationsChannel);
-    };
-  }, [user, messages]);
 
   useEffect(() => {
     fetchConversations();

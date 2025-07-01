@@ -38,27 +38,21 @@ export type Database = {
           content: string
           conversation_id: string | null
           created_at: string | null
-          encrypted_content: string | null
           id: string
-          is_encrypted: boolean | null
           sender_id: string | null
         }
         Insert: {
           content: string
           conversation_id?: string | null
           created_at?: string | null
-          encrypted_content?: string | null
           id?: string
-          is_encrypted?: boolean | null
           sender_id?: string | null
         }
         Update: {
           content?: string
           conversation_id?: string | null
           created_at?: string | null
-          encrypted_content?: string | null
           id?: string
-          is_encrypted?: boolean | null
           sender_id?: string | null
         }
         Relationships: [
@@ -73,13 +67,10 @@ export type Database = {
       }
       profiles: {
         Row: {
-          anonymous_mode: boolean | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
           email_notifications: boolean | null
-          encrypted_messaging: boolean | null
-          hide_email: boolean | null
           id: string
           two_factor_enabled: boolean | null
           updated_at: string | null
@@ -87,13 +78,10 @@ export type Database = {
           wallet_address: string | null
         }
         Insert: {
-          anonymous_mode?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email_notifications?: boolean | null
-          encrypted_messaging?: boolean | null
-          hide_email?: boolean | null
           id: string
           two_factor_enabled?: boolean | null
           updated_at?: string | null
@@ -101,13 +89,10 @@ export type Database = {
           wallet_address?: string | null
         }
         Update: {
-          anonymous_mode?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email_notifications?: boolean | null
-          encrypted_messaging?: boolean | null
-          hide_email?: boolean | null
           id?: string
           two_factor_enabled?: boolean | null
           updated_at?: string | null
