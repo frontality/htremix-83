@@ -111,13 +111,23 @@ export const useSettings = () => {
 
   const shouldShowEmail = (userSettings?: Settings) => {
     const targetSettings = userSettings || settings;
+    console.log('Checking email visibility:', {
+      showEmailToPublic: targetSettings.showEmailToPublic,
+      hideEmail: targetSettings.hideEmail
+    });
     return targetSettings.showEmailToPublic && !targetSettings.hideEmail;
+  };
+
+  const updateSingleSetting = async (key: keyof Settings, value: any): Promise<boolean> => {
+    const newSettings = { ...settings, [key]: value };
+    return await updateSettings(newSettings);
   };
 
   return {
     settings,
     loading,
     updateSettings,
+    updateSingleSetting,
     resetSettings,
     shouldShowEmail,
   };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -7,106 +8,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, Bell, Globe, Shield, Save, RefreshCw, Palette, Eye, EyeOff } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Globe, Shield, Save, RefreshCw, Palette } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeSelector from "@/components/ThemeSelector";
-import { useAnimations } from "@/hooks/useAnimations";
+import { useSettings } from "@/hooks/useSettings";
 
 const Settings = () => {
   const { user } = useAuth();
   const { currentTheme } = useTheme();
   const { getCurrentLanguage } = useLanguage();
   const { toast } = useToast();
-  const { animationClasses, hoverClasses } = useAnimations();
+  const { settings, updateSingleSetting, resetSettings } = useSettings();
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    marketingEmails: false,
-    soundEffects: true,
-    autoSave: true,
-    twoFactor: false,
-    privacyMode: false,
-    hideEmail: true, // Email hidden by default
-    language: 'en',
-    currency: 'usd',
-    theme: 'volcano',
-    showEmailToPublic: false // New setting for email visibility
-  });
 
-  useEffect(() => {
-    if (user) {
-      // Load settings from localStorage
-      const savedSettings = localStorage.getItem(`settings_${user.id}`);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-        console.log('Settings loaded:', parsed);
-      }
-    }
-  }, [user]);
-
-  const handleSaveSettings = () => {
-    if (!user) return;
-    
-    try {
-      localStorage.setItem(`settings_${user.id}`, JSON.stringify(settings));
-      console.log('Settings saved:', settings);
-      
+  const handleSettingChange = async (key: string, value: any) => {
+    console.log(`Updating setting ${key} to:`, value);
+    const success = await updateSingleSetting(key as any, value);
+    if (success) {
       toast({
-        title: "Settings Saved! ✅",
-        description: "Your preferences have been updated successfully.",
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
+        title: "Setting Updated! ✅",
+        description: `${key} has been updated successfully.`,
       });
     }
   };
 
   const handleResetSettings = () => {
-    const defaultSettings = {
-      emailNotifications: true,
-      marketingEmails: false,
-      soundEffects: true,
-      autoSave: true,
-      twoFactor: false,
-      privacyMode: false,
-      hideEmail: true,
-      language: 'en',
-      currency: 'usd',
-      theme: 'volcano',
-      showEmailToPublic: false
-    };
-    
-    setSettings(defaultSettings);
-    if (user) {
-      localStorage.setItem(`settings_${user.id}`, JSON.stringify(defaultSettings));
-    }
-    
-    toast({
-      title: "Settings Reset",
-      description: "All settings have been reset to defaults.",
-    });
-  };
-
-  const updateSetting = (key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-    console.log(`Setting ${key} updated to:`, value);
+    resetSettings();
   };
 
   if (!user) {
     return (
       <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
-        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8 ${animationClasses.scaleIn}`}>
+        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8`}>
           <h2 className={`${currentTheme.text} text-xl font-bold mb-4`}>Access Denied</h2>
           <p className={`${currentTheme.muted}`}>Please log in to access settings.</p>
         </div>
@@ -116,19 +52,19 @@ const Settings = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} pt-16`}>
-      <div className={`container max-w-4xl mx-auto py-8 space-y-8 ${animationClasses.fadeIn}`}>
+      <div className={`container max-w-4xl mx-auto py-8 space-y-8`}>
         {/* Header */}
         <div className="flex items-center gap-3">
-          <SettingsIcon className={`h-8 w-8 ${currentTheme.accent} ${animationClasses.float}`} />
+          <SettingsIcon className={`h-8 w-8 ${currentTheme.accent}`} />
           <div>
-            <h1 className={`text-3xl font-bold ${currentTheme.text} ${hoverClasses.scale} transition-transform duration-300`}>Settings</h1>
+            <h1 className={`text-3xl font-bold ${currentTheme.text}`}>Settings</h1>
             <p className={`${currentTheme.muted}`}>Manage your account preferences and settings</p>
           </div>
         </div>
 
         <div className="grid gap-6">
           {/* Privacy & Security */}
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} ${hoverClasses.lift} transition-all duration-300`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
             <CardHeader>
               <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
                 <Shield className="h-5 w-5" />
@@ -146,7 +82,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.showEmailToPublic}
-                  onCheckedChange={(checked) => updateSetting('showEmailToPublic', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('showEmailToPublic', checked)}
                 />
               </div>
 
@@ -157,7 +93,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.twoFactor}
-                  onCheckedChange={(checked) => updateSetting('twoFactor', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('twoFactor', checked)}
                 />
               </div>
 
@@ -168,7 +104,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.privacyMode}
-                  onCheckedChange={(checked) => updateSetting('privacyMode', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('privacyMode', checked)}
                 />
               </div>
 
@@ -179,14 +115,14 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.autoSave}
-                  onCheckedChange={(checked) => updateSetting('autoSave', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('autoSave', checked)}
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Appearance */}
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} ${hoverClasses.lift} transition-all duration-300`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
             <CardHeader>
               <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
                 <Palette className="h-5 w-5" />
@@ -206,7 +142,7 @@ const Settings = () => {
                   <Button
                     variant="outline"
                     onClick={() => setShowThemeSelector(!showThemeSelector)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} ${hoverClasses.scale} transition-all duration-300`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
                   >
                     Change Theme
                   </Button>
@@ -227,7 +163,7 @@ const Settings = () => {
                   <Button
                     variant="outline"
                     onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2 ${hoverClasses.scale} transition-all duration-300`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2`}
                   >
                     <Globe className="h-4 w-4" />
                     {getCurrentLanguage().flag} {getCurrentLanguage().name}
@@ -242,7 +178,10 @@ const Settings = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="currency" className={currentTheme.text}>Currency</Label>
-                <Select value={settings.currency} onValueChange={(value) => updateSetting('currency', value)}>
+                <Select 
+                  value={settings.currency} 
+                  onValueChange={(value) => handleSettingChange('currency', value)}
+                >
                   <SelectTrigger className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
                     <SelectValue />
                   </SelectTrigger>
@@ -258,7 +197,7 @@ const Settings = () => {
           </Card>
 
           {/* Notifications */}
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} ${hoverClasses.lift} transition-all duration-300`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
             <CardHeader>
               <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
                 <Bell className="h-5 w-5" />
@@ -276,7 +215,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.emailNotifications}
-                  onCheckedChange={(checked) => updateSetting('emailNotifications', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
                 />
               </div>
 
@@ -287,7 +226,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.marketingEmails}
-                  onCheckedChange={(checked) => updateSetting('marketingEmails', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('marketingEmails', checked)}
                 />
               </div>
 
@@ -298,7 +237,7 @@ const Settings = () => {
                 </div>
                 <Switch
                   checked={settings.soundEffects}
-                  onCheckedChange={(checked) => updateSetting('soundEffects', checked)}
+                  onCheckedChange={(checked) => handleSettingChange('soundEffects', checked)}
                 />
               </div>
             </CardContent>
@@ -309,18 +248,10 @@ const Settings = () => {
             <Button
               variant="outline"
               onClick={handleResetSettings}
-              className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2 ${hoverClasses.scale} transition-all duration-300`}
+              className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2`}
             >
               <RefreshCw className="h-4 w-4" />
               Reset to Defaults
-            </Button>
-            
-            <Button
-              onClick={handleSaveSettings}
-              className={`${currentTheme.primary} text-white flex items-center gap-2 ${hoverClasses.scale} transition-all duration-300 ${animationClasses.pulseGlow}`}
-            >
-              <Save className="h-4 w-4" />
-              Save Settings
             </Button>
           </div>
         </div>

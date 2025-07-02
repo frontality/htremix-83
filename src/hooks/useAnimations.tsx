@@ -71,27 +71,18 @@ export const useAnimations = () => {
     return `${index * baseDelay}ms`;
   };
 
-  // Hover animation classes
+  // Reduced hover animation classes
   const hoverClasses = {
-    scale: 'hover:scale-105 transition-transform duration-300',
-    lift: 'hover:-translate-y-2 transition-transform duration-300',
-    glow: 'hover:shadow-xl hover:shadow-blue-500/25 transition-shadow duration-300',
-    rotate: 'hover:rotate-3 transition-transform duration-300',
-    bounce: 'hover:animate-bounce-subtle',
+    scale: 'hover:scale-105 transition-transform duration-200',
+    lift: 'hover:-translate-y-1 transition-transform duration-200',
+    glow: 'hover:shadow-lg transition-shadow duration-200',
   };
 
-  // Animation classes
+  // Minimal animation classes
   const animationClasses = {
     fadeIn: 'animate-fade-in',
-    fadeOut: 'animate-fade-out',
     scaleIn: 'animate-scale-in',
-    scaleOut: 'animate-scale-out',
-    slideInRight: 'animate-slide-in-right',
-    slideOutRight: 'animate-slide-out-right',
     float: 'animate-float',
-    pulse: 'animate-pulse',
-    pulseSlow: 'animate-pulse-slow',
-    pulseGlow: 'animate-pulse-glow',
   };
 
   return {
@@ -110,12 +101,8 @@ export const combineAnimations = (...classes: string[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
-// Pre-defined animation combinations
+// Simplified animation presets
 export const animationPresets = {
-  cardHover: 'hover:scale-105 hover:shadow-xl transition-all duration-300',
-  buttonHover: 'hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95',
-  iconSpin: 'hover:rotate-180 transition-transform duration-500',
-  fadeInUp: 'animate-fade-in opacity-0',
-  bounceIn: 'animate-bounce-subtle',
-  glowHover: 'hover:shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300',
+  cardHover: 'hover:scale-105 transition-all duration-200',
+  buttonHover: 'hover:scale-105 transition-all duration-200',
 };
