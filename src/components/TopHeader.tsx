@@ -52,22 +52,22 @@ const TopHeader = () => {
   const currentLanguage = getCurrentLanguage();
 
   return (
-    <header className={`fixed top-0 left-0 right-0 h-12 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90`}>
+    <header className={`fixed top-0 left-0 right-0 h-12 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90 animate-fade-in`}>
       <div className="flex items-center justify-between h-full px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <div className="w-6 h-6 flex items-center justify-center">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-all duration-300 hover:scale-105 group">
+          <div className="w-6 h-6 flex items-center justify-center animate-float">
             <img 
-              src="/lovable-uploads/6f091ee3-6e28-4f39-b494-edd3050aa7e2.png" 
+              src="/lovable-uploads/2a21bfaa-d803-4e5a-aa4e-e377ae6c835f.png" 
               alt="$KID HAVEN Logo" 
-              className="w-5 h-5 object-contain"
+              className="w-5 h-5 object-contain group-hover:animate-pulse"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter">
+            <span className="text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter transition-all duration-300">
               $KID HAVEN
             </span>
-            <span className="text-xs text-gray-400 -mt-1">Digital Market</span>
+            <span className="text-xs text-gray-400 -mt-1 group-hover:text-gray-300 transition-colors">Digital Market</span>
           </div>
         </Link>
 
@@ -79,14 +79,14 @@ const TopHeader = () => {
               <button
                 key={item.path}
                 onClick={() => handleMenuClick(item.path)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-all font-medium cursor-pointer text-xs ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-all duration-300 font-medium cursor-pointer text-xs hover:scale-105 transform ${
                   isActive 
-                    ? `${currentTheme.primary} text-white shadow-md` 
-                    : `${currentTheme.text} hover:${currentTheme.secondary}`
+                    ? `${currentTheme.primary} text-white shadow-md animate-pulse-slow` 
+                    : `${currentTheme.text} hover:${currentTheme.secondary} hover:shadow-lg`
                 }`}
               >
-                <item.icon size={14} />
-                <span>{item.label}</span>
+                <item.icon size={14} className="transition-transform duration-200" />
+                <span className="transition-all duration-200">{item.label}</span>
               </button>
             );
           })}
@@ -97,8 +97,8 @@ const TopHeader = () => {
           {user && !authLoading && (
             <>
               {/* Balance - Stake.com style */}
-              <div className="flex items-center space-x-2 px-2 py-1 bg-gray-900/90 border border-gray-700/50 rounded-md">
-                <DollarSign size={12} className="text-green-400" />
+              <div className="flex items-center space-x-2 px-2 py-1 bg-gray-900/90 border border-gray-700/50 rounded-md hover:bg-gray-800/90 transition-all duration-300 hover:scale-105">
+                <DollarSign size={12} className="text-green-400 animate-pulse" />
                 <span className="text-white font-bold text-xs">$0.00</span>
               </div>
 
@@ -113,13 +113,13 @@ const TopHeader = () => {
                       setShowThemeSelector(false);
                       setShowUserMenu(false);
                     }}
-                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer flex items-center space-x-1`}
+                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer flex items-center space-x-1 hover:scale-110 transform`}
                   >
-                    <Globe size={14} className={currentTheme.text} />
+                    <Globe size={14} className={`${currentTheme.text} transition-transform duration-200`} />
                     <span className="text-xs font-medium">{currentLanguage.flag}</span>
                   </button>
                   {showLanguageSelector && (
-                    <div className="absolute right-0 top-full mt-2 z-50">
+                    <div className="absolute right-0 top-full mt-2 z-50 animate-scale-in">
                       <LanguageSelector onClose={() => setShowLanguageSelector(false)} />
                     </div>
                   )}
@@ -134,12 +134,12 @@ const TopHeader = () => {
                       setShowLanguageSelector(false);
                       setShowUserMenu(false);
                     }}
-                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
                   >
-                    <Palette size={14} className={currentTheme.text} />
+                    <Palette size={14} className={`${currentTheme.text} transition-transform duration-200`} />
                   </button>
                   {showThemeSelector && (
-                    <div className="absolute right-0 top-full mt-2 z-50">
+                    <div className="absolute right-0 top-full mt-2 z-50 animate-scale-in">
                       <ThemeSelector onClose={() => setShowThemeSelector(false)} />
                     </div>
                   )}
@@ -148,17 +148,17 @@ const TopHeader = () => {
                 {/* Settings */}
                 <button
                   onClick={() => handleMenuClick('/settings')}
-                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
                 >
-                  <Settings size={14} className={currentTheme.text} />
+                  <Settings size={14} className={`${currentTheme.text} hover:rotate-90 transition-transform duration-300`} />
                 </button>
 
                 {/* Profile */}
                 <button
                   onClick={() => handleMenuClick('/profile')}
-                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
                 >
-                  <User size={14} className={currentTheme.text} />
+                  <User size={14} className={`${currentTheme.text} transition-transform duration-200`} />
                 </button>
                 
                 {/* User Avatar & Menu */}
@@ -170,25 +170,25 @@ const TopHeader = () => {
                       setShowThemeSelector(false);
                       setShowLanguageSelector(false);
                     }}
-                    className="flex items-center space-x-1 p-1 rounded-md hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 p-1 rounded-md hover:bg-gray-800/50 transition-all duration-300 cursor-pointer hover:scale-105 transform"
                   >
                     <img
                       src={profile?.avatar_url || "/placeholder.svg"}
                       alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border border-purple-500"
+                      className="w-6 h-6 rounded-full object-cover border border-purple-500 transition-all duration-300 hover:border-purple-400 hover:shadow-lg"
                     />
-                    <span className="text-xs font-medium text-white hidden md:block">
+                    <span className="text-xs font-medium text-white hidden md:block transition-colors duration-200">
                       {profile?.username || "User"}
                     </span>
                   </button>
                   
                   {showUserMenu && (
-                    <div className={`absolute right-0 top-full mt-2 w-40 ${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-lg z-50`}>
+                    <div className={`absolute right-0 top-full mt-2 w-40 ${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-lg z-50 animate-scale-in`}>
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center space-x-2 p-2 w-full text-left hover:bg-red-900/20 transition-colors text-red-400 cursor-pointer text-xs"
+                        className="flex items-center space-x-2 p-2 w-full text-left hover:bg-red-900/20 transition-all duration-300 text-red-400 cursor-pointer text-xs hover:scale-105 transform"
                       >
-                        <LogOut size={14} />
+                        <LogOut size={14} className="transition-transform duration-200" />
                         <span>Sign Out</span>
                       </button>
                     </div>
@@ -202,13 +202,13 @@ const TopHeader = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => handleMenuClick('/login')}
-                className={`px-3 py-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer ${currentTheme.text} text-xs font-medium`}
+                className={`px-3 py-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer ${currentTheme.text} text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
               >
                 Login
               </button>
               <button
                 onClick={() => handleMenuClick('/signup')}
-                className={`px-3 py-1.5 rounded-md ${currentTheme.primary} text-white hover:opacity-80 transition-opacity cursor-pointer text-xs font-medium`}
+                className={`px-3 py-1.5 rounded-md ${currentTheme.primary} text-white hover:opacity-80 transition-all duration-300 cursor-pointer text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
               >
                 Sign Up
               </button>
@@ -224,16 +224,16 @@ const TopHeader = () => {
               setShowLanguageSelector(false);
               setShowUserMenu(false);
             }}
-            className={`lg:hidden p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
+            className={`lg:hidden p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
           >
-            {showMobileMenu ? <X size={14} className={currentTheme.text} /> : <Menu size={14} className={currentTheme.text} />}
+            {showMobileMenu ? <X size={14} className={`${currentTheme.text} transition-transform duration-200`} /> : <Menu size={14} className={`${currentTheme.text} transition-transform duration-200`} />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {showMobileMenu && (
-        <div className={`lg:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} absolute top-full left-0 right-0 shadow-lg`}>
+        <div className={`lg:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} absolute top-full left-0 right-0 shadow-lg animate-slide-in-right`}>
           <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -241,14 +241,14 @@ const TopHeader = () => {
                 <button
                   key={item.path}
                   onClick={() => handleMenuClick(item.path)}
-                  className={`flex items-center space-x-2 p-2 rounded-md transition-all w-full text-left cursor-pointer text-sm ${
+                  className={`flex items-center space-x-2 p-2 rounded-md transition-all duration-300 w-full text-left cursor-pointer text-sm hover:scale-105 transform ${
                     isActive 
-                      ? `${currentTheme.primary} text-white` 
-                      : `${currentTheme.text} hover:${currentTheme.secondary}`
+                      ? `${currentTheme.primary} text-white animate-pulse-slow` 
+                      : `${currentTheme.text} hover:${currentTheme.secondary} hover:shadow-md`
                   }`}
                 >
-                  <item.icon size={16} />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon size={16} className="transition-transform duration-200" />
+                  <span className="font-medium transition-all duration-200">{item.label}</span>
                 </button>
               );
             })}
