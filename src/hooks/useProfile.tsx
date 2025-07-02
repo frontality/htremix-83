@@ -11,6 +11,7 @@ interface Profile {
   wallet_address: string | null;
   email_notifications: boolean;
   two_factor_enabled: boolean;
+  show_email_to_public: boolean;
 }
 
 export const useProfile = () => {
@@ -46,7 +47,8 @@ export const useProfile = () => {
           avatar_url: null,
           wallet_address: null,
           email_notifications: true,
-          two_factor_enabled: false
+          two_factor_enabled: false,
+          show_email_to_public: false // Email hidden by default
         };
 
         localStorage.setItem(storageKey, JSON.stringify(newProfile));
@@ -97,9 +99,23 @@ export const useProfile = () => {
     }
   };
 
+  const getDisplayEmail = (profileData?: Profile) => {
+    const targetProfile = profileData || profile;
+    if (!targetProfile || !user) return null;
+    
+    // Only show email if user has opted to show it publicly
+    return targetProfile.show_email_to_public ? user.email : null;
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [user]);
 
-  return { profile, loading, updateProfile, refetch: fetchProfile };
+  return { 
+    profile, 
+    loading, 
+    updateProfile, 
+    refetch: fetchProfile,
+    getDisplayEmail
+  };
 };

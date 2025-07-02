@@ -18,6 +18,8 @@ interface Settings {
   marketingEmails: boolean;
   developerMode: boolean;
   betaFeatures: boolean;
+  showEmailToPublic: boolean;
+  hideEmail: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -36,6 +38,8 @@ const defaultSettings: Settings = {
   marketingEmails: false,
   developerMode: false,
   betaFeatures: false,
+  showEmailToPublic: false, // Email hidden by default
+  hideEmail: true,
 };
 
 export const useSettings = () => {
@@ -105,10 +109,16 @@ export const useSettings = () => {
     });
   };
 
+  const shouldShowEmail = (userSettings?: Settings) => {
+    const targetSettings = userSettings || settings;
+    return targetSettings.showEmailToPublic && !targetSettings.hideEmail;
+  };
+
   return {
     settings,
     loading,
     updateSettings,
     resetSettings,
+    shouldShowEmail,
   };
 };
