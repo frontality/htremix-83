@@ -78,11 +78,12 @@ export const useAnimations = () => {
     glow: 'hover:shadow-lg transition-shadow duration-200',
   };
 
-  // Minimal animation classes
+  // Animation classes with pulseGlow added
   const animationClasses = {
     fadeIn: 'animate-fade-in',
     scaleIn: 'animate-scale-in',
     float: 'animate-float',
+    pulseGlow: 'animate-pulse-glow',
   };
 
   return {
