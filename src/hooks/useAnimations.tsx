@@ -71,14 +71,13 @@ export const useAnimations = () => {
     return `${index * baseDelay}ms`;
   };
 
-  // Reduced hover animation classes
+  // Simplified hover animation classes
   const hoverClasses = {
     scale: 'hover:scale-105 transition-transform duration-200',
     lift: 'hover:-translate-y-1 transition-transform duration-200',
-    glow: 'hover:shadow-lg transition-shadow duration-200',
   };
 
-  // Animation classes with pulseGlow added
+  // Minimal animation classes
   const animationClasses = {
     fadeIn: 'animate-fade-in',
     scaleIn: 'animate-scale-in',
