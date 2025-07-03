@@ -10,10 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfileCardProps {
   userId: string;
+  username?: string;
   children: React.ReactNode;
 }
 
-const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
+const UserProfileCard = ({ userId, username, children }: UserProfileCardProps) => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
   const { profiles, fetchUserProfile, sendFriendRequest } = useUserProfiles();
@@ -41,6 +42,9 @@ const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
   const getDisplayName = () => {
     if (profile?.username) {
       return profile.username;
+    }
+    if (username) {
+      return username;
     }
     return `User ${userId.slice(0, 8)}`;
   };

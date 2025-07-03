@@ -36,29 +36,31 @@ const TopHeader = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 ${currentTheme.cardBg} border-b ${currentTheme.border} backdrop-blur-sm`}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-16">
+          {/* Logo with Volcano */}
           <Link to="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SH</span>
-            </div>
-            <span className={`font-bold text-xl ${currentTheme.text} hidden sm:block tracking-tight`}>
+            <img 
+              src="/lovable-uploads/10cc0416-4505-4670-ac0a-2d2afe9dd18f.png" 
+              alt="Volcano Logo" 
+              className="w-10 h-10 object-contain"
+            />
+            <span className={`font-bold text-2xl ${currentTheme.text} tracking-tight`}>
               SKID HAVEN
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
                     isActive(item.path)
-                      ? `${currentTheme.primary} text-white`
-                      : `${currentTheme.text} hover:${currentTheme.secondary}`
+                      ? `${currentTheme.primary} text-white shadow-lg`
+                      : `${currentTheme.text} hover:${currentTheme.secondary} hover:scale-105`
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -68,16 +70,16 @@ const TopHeader = () => {
             })}
           </nav>
 
-          {/* Right side */}
-          <div className="flex items-center space-x-3">
+          {/* Right side controls */}
+          <div className="flex items-center space-x-4">
             {/* Theme and Language selectors - desktop only */}
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-3">
               <div className="relative">
                 <Button
                   onClick={() => setShowThemeSelector(!showThemeSelector)}
                   variant="ghost"
                   size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm`}
+                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm px-3 py-2`}
                 >
                   Theme
                 </Button>
@@ -92,7 +94,7 @@ const TopHeader = () => {
                   onClick={() => setShowLanguageSelector(!showLanguageSelector)}
                   variant="ghost"
                   size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm`}
+                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm px-3 py-2`}
                 >
                   Language
                 </Button>
@@ -104,11 +106,12 @@ const TopHeader = () => {
               </div>
             </div>
 
+            {/* User section */}
             {user ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Link
                   to="/profile"
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${currentTheme.text} hover:${currentTheme.secondary}`}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${currentTheme.text} hover:${currentTheme.secondary} hover:scale-105`}
                 >
                   <User className="h-4 w-4" />
                   <span className="text-sm font-medium hidden sm:block">Profile</span>
@@ -117,21 +120,21 @@ const TopHeader = () => {
                   onClick={handleSignOut}
                   variant="ghost"
                   size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  className={`${currentTheme.text} hover:${currentTheme.secondary} px-4 py-2`}
                 >
                   <LogOut className="h-4 w-4" />
                   <span className="text-sm font-medium hidden sm:block ml-2">Logout</span>
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary}`}>
+                  <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary} px-4 py-2`}>
                     Login
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button size="sm" className={`${currentTheme.primary} text-white`}>
+                  <Button size="sm" className={`${currentTheme.primary} text-white px-4 py-2 hover:scale-105 transition-transform`}>
                     Sign Up
                   </Button>
                 </Link>
@@ -143,7 +146,7 @@ const TopHeader = () => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               variant="ghost"
               size="sm"
-              className={`md:hidden ${currentTheme.text}`}
+              className={`md:hidden ${currentTheme.text} p-2`}
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>

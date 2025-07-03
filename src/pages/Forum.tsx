@@ -1,402 +1,294 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useForumPosts } from "@/hooks/useForumPosts";
-import { useForumComments } from "@/hooks/useForumComments";
-import { useUserProfiles } from "@/hooks/useUserProfiles";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Code, Heart, Eye, Plus, User, Send, MessageCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Search, 
+  Plus, 
+  MessageCircle, 
+  Heart, 
+  Eye, 
+  Calendar,
+  Code,
+  Filter,
+  TrendingUp,
+  Clock
+} from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useForumPosts } from "@/hooks/useForumPosts";
 import UserProfileCard from "@/components/UserProfileCard";
 
 const Forum = () => {
-  const { user } = useAuth();
   const { currentTheme } = useTheme();
-  const { posts, loading, createPost, likePost } = useForumPosts();
-  const { fetchMultipleProfiles, getUserDisplayName } = useUserProfiles();
-  
+  const { user } = useAuth();
+  const { posts, createPost, likePost, loading } = useForumPosts();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [newPost, setNewPost] = useState({
-    title: '',
-    content: '',
-    code_snippet: '',
-    category: 'general'
+    title: "",
+    content: "",
+    category: "general",
+    code_snippet: ""
   });
-  const [isCreating, setIsCreating] = useState(false);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<string | null>(null);
 
-  // Fetch user profiles for all posts
-  useEffect(() => {
-    if (posts.length > 0) {
-      const userIds = posts.map(post => post.user_id);
-      fetchMultipleProfiles(userIds);
-    }
-  }, [posts]);
+  const categories = [
+    { id: "all", name: "All Posts", icon: TrendingUp },
+    { id: "general", name: "General", icon: MessageCircle },
+    { id: "trading", name: "Trading", icon: TrendingUp },
+    { id: "technical", name: "Technical", icon: Code },
+    { id: "help", name: "Help & Support", icon: MessageCircle }
+  ];
 
-  const handleCreatePost = async () => {
-    if (!newPost.title.trim() || !newPost.content.trim()) {
-      return;
-    }
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newPost.title.trim() || !newPost.content.trim()) return;
 
-    setIsCreating(true);
-    const success = await createPost(newPost);
-    
+    const success = await createPost({
+      title: newPost.title,
+      content: newPost.content,
+      category: newPost.category,
+      code_snippet: newPost.code_snippet || null
+    });
+
     if (success) {
-      setNewPost({ title: '', content: '', code_snippet: '', category: 'general' });
-      setShowCreateDialog(false);
+      setNewPost({ title: "", content: "", category: "general", code_snippet: "" });
+      setShowCreatePost(false);
     }
+  };
+
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
-    setIsCreating(false);
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
   };
-
-  const handleLike = async (postId: string) => {
-    await likePost(postId);
-  };
-
-  if (!user) {
-    return (
-      <div className={`min-h-screen ${currentTheme.bg} pt-16 flex items-center justify-center`}>
-        <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 max-w-md mx-4`}>
-          <CardHeader className="text-center">
-            <CardTitle className={`${currentTheme.text} text-xl`}>Access Denied</CardTitle>
-            <CardDescription className={currentTheme.muted}>
-              Please log in to access the forum.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} pt-16`}>
-      <div className="container max-w-4xl mx-auto py-8 px-4 space-y-8">
+    <div className={`min-h-screen ${currentTheme.bg} py-8`}>
+      <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${currentTheme.secondary}`}>
-              <MessageSquare className={`h-6 w-6 ${currentTheme.accent}`} />
-            </div>
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className={`text-2xl sm:text-3xl font-bold ${currentTheme.text}`}>Forum</h1>
-              <p className={`${currentTheme.muted} text-sm sm:text-base`}>Share code, ask questions, and connect with the community</p>
+              <h1 className={`text-4xl font-bold ${currentTheme.text} mb-2`}>Community Forum</h1>
+              <p className={`text-lg ${currentTheme.muted}`}>
+                Connect, share knowledge and discuss with the SKID HAVEN community
+              </p>
             </div>
-          </div>
-
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button className={`${currentTheme.primary} text-white flex items-center gap-2 whitespace-nowrap`}>
-                <Plus className="h-4 w-4" />
+            {user && (
+              <Button
+                onClick={() => setShowCreatePost(!showCreatePost)}
+                className={`${currentTheme.primary} text-white px-6 py-3 hover:scale-105 transition-transform`}
+              >
+                <Plus className="h-5 w-5 mr-2" />
                 New Post
               </Button>
-            </DialogTrigger>
-            <DialogContent className={`${currentTheme.cardBg} border ${currentTheme.border} max-w-2xl max-h-[90vh] overflow-y-auto`}>
-              <DialogHeader>
-                <DialogTitle className={currentTheme.text}>Create New Post</DialogTitle>
-                <DialogDescription className={currentTheme.muted}>
-                  Share your thoughts, ask questions, or showcase your code
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title" className={currentTheme.text}>Title</Label>
-                  <Input
-                    id="title"
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    placeholder="Enter post title..."
-                    className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
-                  />
-                </div>
+            )}
+          </div>
 
-                <div>
-                  <Label htmlFor="category" className={currentTheme.text}>Category</Label>
-                  <Select value={newPost.category} onValueChange={(value) => setNewPost({ ...newPost, category: value })}>
-                    <SelectTrigger className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-                      <SelectItem value="general" className={currentTheme.text}>General Discussion</SelectItem>
-                      <SelectItem value="javascript" className={currentTheme.text}>JavaScript</SelectItem>
-                      <SelectItem value="python" className={currentTheme.text}>Python</SelectItem>
-                      <SelectItem value="react" className={currentTheme.text}>React</SelectItem>
-                      <SelectItem value="help" className={currentTheme.text}>Help & Support</SelectItem>
-                      <SelectItem value="showcase" className={currentTheme.text}>Showcase</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="content" className={currentTheme.text}>Content</Label>
-                  <Textarea
-                    id="content"
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    placeholder="Write your post content..."
-                    rows={4}
-                    className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="code" className={currentTheme.text}>Code Snippet (Optional)</Label>
-                  <Textarea
-                    id="code"
-                    value={newPost.code_snippet}
-                    onChange={(e) => setNewPost({ ...newPost, code_snippet: e.target.value })}
-                    placeholder="Paste your code here..."
-                    rows={6}
-                    className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} font-mono text-sm`}
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${currentTheme.muted}`} />
+              <Input
+                placeholder="Search posts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-12 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full`}
+              />
+            </div>
+            <div className="flex gap-2 overflow-x-auto">
+              {categories.map((category) => {
+                const Icon = category.icon;
+                return (
                   <Button
-                    onClick={handleCreatePost}
-                    disabled={isCreating || !newPost.title.trim() || !newPost.content.trim()}
-                    className={`${currentTheme.primary} text-white flex-1`}
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    className={`flex items-center gap-2 whitespace-nowrap ${
+                      selectedCategory === category.id 
+                        ? `${currentTheme.primary} text-white` 
+                        : `${currentTheme.text} hover:${currentTheme.secondary}`
+                    }`}
                   >
-                    {isCreating ? 'Creating...' : 'Create Post'}
+                    <Icon className="h-4 w-4" />
+                    {category.name}
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowCreateDialog(false)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Create Post Form */}
+        {showCreatePost && user && (
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} mb-8`}>
+            <CardHeader>
+              <CardTitle className={currentTheme.text}>Create New Post</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreatePost} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input
+                    placeholder="Post title..."
+                    value={newPost.title}
+                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                  />
+                  <select
+                    value={newPost.category}
+                    onChange={(e) => setNewPost({...newPost, category: e.target.value})}
+                    className={`px-4 py-2 rounded-lg ${currentTheme.secondary} ${currentTheme.text} border-0`}
+                  >
+                    {categories.slice(1).map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <Textarea
+                  placeholder="What's on your mind?"
+                  value={newPost.content}
+                  onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                  rows={4}
+                  className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                />
+                <Textarea
+                  placeholder="Code snippet (optional)..."
+                  value={newPost.code_snippet}
+                  onChange={(e) => setNewPost({...newPost, code_snippet: e.target.value})}
+                  rows={3}
+                  className={`${currentTheme.secondary} ${currentTheme.text} border-0 font-mono`}
+                />
+                <div className="flex gap-3">
+                  <Button 
+                    type="submit" 
+                    className={`${currentTheme.primary} text-white px-6`}
+                    disabled={!newPost.title.trim() || !newPost.content.trim()}
+                  >
+                    Post
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowCreatePost(false)}
+                    className={`${currentTheme.text} border ${currentTheme.border}`}
                   >
                     Cancel
                   </Button>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Posts */}
+        {/* Posts List */}
         <div className="space-y-6">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className={`${currentTheme.text}`}>Loading posts...</div>
+            <div className="text-center py-12">
+              <div className={`${currentTheme.text} text-lg`}>Loading posts...</div>
             </div>
-          ) : posts.length === 0 ? (
-            <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-              <CardContent className="text-center py-12">
-                <MessageSquare className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>No posts yet</h3>
-                <p className={`${currentTheme.muted} mb-4`}>Be the first to start a discussion!</p>
-              </CardContent>
+          ) : filteredPosts.length === 0 ? (
+            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-12 text-center`}>
+              <MessageCircle className={`h-16 w-16 mx-auto mb-4 ${currentTheme.muted}`} />
+              <h3 className={`text-xl font-semibold ${currentTheme.text} mb-2`}>No posts found</h3>
+              <p className={`${currentTheme.muted} mb-4`}>
+                {searchQuery ? "Try adjusting your search terms" : "Be the first to start a discussion!"}
+              </p>
+              {user && !searchQuery && (
+                <Button 
+                  onClick={() => setShowCreatePost(true)}
+                  className={`${currentTheme.primary} text-white`}
+                >
+                  Create First Post
+                </Button>
+              )}
             </Card>
           ) : (
-            posts.map((post) => (
-              <ForumPostCard
-                key={post.id}
-                post={post}
-                onLike={handleLike}
-                getUserDisplayName={getUserDisplayName}
-                currentTheme={currentTheme}
-                selectedPost={selectedPost}
-                setSelectedPost={setSelectedPost}
-              />
+            filteredPosts.map((post) => (
+              <Card key={post.id} className={`${currentTheme.cardBg} border ${currentTheme.border} hover:shadow-lg transition-all duration-200`}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <UserProfileCard userId={post.user_id}>
+                        <div className={`w-10 h-10 rounded-full ${currentTheme.secondary} flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}>
+                          <span className={`text-sm font-medium ${currentTheme.text}`}>
+                            {post.user_id.slice(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                      </UserProfileCard>
+                      <div>
+                        <UserProfileCard userId={post.user_id}>
+                          <h4 className={`font-medium ${currentTheme.text} cursor-pointer hover:underline`}>
+                            User {post.user_id.slice(0, 8)}
+                          </h4>
+                        </UserProfileCard>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className={`h-3 w-3 ${currentTheme.muted}`} />
+                          <span className={currentTheme.muted}>{formatDate(post.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                      {post.category}
+                    </Badge>
+                  </div>
+
+                  <h3 className={`text-xl font-semibold ${currentTheme.text} mb-3 hover:${currentTheme.primary} cursor-pointer transition-colors`}>
+                    {post.title}
+                  </h3>
+                  
+                  <p className={`${currentTheme.muted} mb-4 leading-relaxed line-clamp-3`}>
+                    {post.content}
+                  </p>
+
+                  {post.code_snippet && (
+                    <div className={`${currentTheme.secondary} rounded-lg p-4 mb-4 border-l-4 ${currentTheme.primary}`}>
+                      <pre className={`text-sm ${currentTheme.text} font-mono overflow-x-auto`}>
+                        <code>{post.code_snippet}</code>
+                      </pre>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => likePost(post.id)}
+                        className={`${currentTheme.text} hover:${currentTheme.secondary} flex items-center gap-2`}
+                      >
+                        <Heart className="h-4 w-4" />
+                        <span>{post.likes_count || 0}</span>
+                      </Button>
+                      <div className={`flex items-center gap-2 text-sm ${currentTheme.muted}`}>
+                        <Eye className="h-4 w-4" />
+                        <span>{post.views_count || 0} views</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))
           )}
         </div>
       </div>
     </div>
-  );
-};
-
-interface ForumPostCardProps {
-  post: any;
-  onLike: (postId: string) => void;
-  getUserDisplayName: (userId: string) => string;
-  currentTheme: any;
-  selectedPost: string | null;
-  setSelectedPost: (postId: string | null) => void;
-}
-
-const ForumPostCard = ({ post, onLike, getUserDisplayName, currentTheme, selectedPost, setSelectedPost }: ForumPostCardProps) => {
-  const { comments, loading: commentsLoading, createComment } = useForumComments(selectedPost === post.id ? post.id : '');
-  const { fetchMultipleProfiles, getUserDisplayName: getCommentUserName } = useUserProfiles();
-  const [newComment, setNewComment] = useState('');
-  const [isCommenting, setIsCommenting] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-
-  useEffect(() => {
-    if (comments.length > 0) {
-      const userIds = comments.map(comment => comment.user_id);
-      fetchMultipleProfiles(userIds);
-    }
-  }, [comments]);
-
-  const handleShowComments = () => {
-    setShowComments(!showComments);
-    if (!showComments) {
-      setSelectedPost(post.id);
-    } else {
-      setSelectedPost(null);
-    }
-  };
-
-  const handleCreateComment = async () => {
-    if (!newComment.trim()) return;
-
-    setIsCommenting(true);
-    const success = await createComment({
-      post_id: post.id,
-      content: newComment,
-    });
-
-    if (success) {
-      setNewComment('');
-    }
-    setIsCommenting(false);
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      general: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-      javascript: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      python: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      react: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
-      help: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      showcase: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-    };
-    return colors[category as keyof typeof colors] || colors.general;
-  };
-
-  return (
-    <Card className={`${currentTheme.cardBg} border ${currentTheme.border} hover:shadow-md transition-shadow`}>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <UserProfileCard userId={post.user_id}>
-                <div className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
-                  <div className={`w-8 h-8 rounded-full ${currentTheme.secondary} flex items-center justify-center`}>
-                    <User className={`h-4 w-4 ${currentTheme.text}`} />
-                  </div>
-                  <span className={`text-sm font-medium ${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
-                    {getUserDisplayName(post.user_id)}
-                  </span>
-                </div>
-              </UserProfileCard>
-              <span className={`px-2 py-1 text-xs rounded-full font-medium ${getCategoryColor(post.category)}`}>
-                {post.category}
-              </span>
-            </div>
-            <CardTitle className={`${currentTheme.text} text-lg mb-2 leading-tight`}>
-              {post.title}
-            </CardTitle>
-            <CardDescription className={`${currentTheme.muted} text-sm`}>
-              {new Date(post.created_at).toLocaleDateString()} • {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-4">
-          <p className={`${currentTheme.text} whitespace-pre-wrap leading-relaxed`}>{post.content}</p>
-          
-          {post.code_snippet && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Code className={`h-4 w-4 ${currentTheme.accent}`} />
-                <span className={`text-sm font-medium ${currentTheme.text}`}>Code Snippet</span>
-              </div>
-              <pre className={`${currentTheme.secondary} p-4 rounded-lg overflow-x-auto text-sm border ${currentTheme.border}`}>
-                <code className={currentTheme.text}>{post.code_snippet}</code>
-              </pre>
-            </div>
-          )}
-
-          <div className="flex items-center gap-6 pt-3 border-t border-gray-100 dark:border-gray-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onLike(post.id)}
-              className="flex items-center gap-2 hover:bg-transparent p-0 h-auto"
-            >
-              <Heart className={`h-4 w-4 ${currentTheme.accent}`} />
-              <span className={`${currentTheme.text} text-sm font-medium`}>{post.likes_count}</span>
-            </Button>
-            <div className="flex items-center gap-2">
-              <Eye className={`h-4 w-4 ${currentTheme.muted}`} />
-              <span className={`${currentTheme.muted} text-sm`}>{post.views_count}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleShowComments}
-              className="flex items-center gap-2 hover:bg-transparent p-0 h-auto"
-            >
-              <MessageCircle className={`h-4 w-4 ${currentTheme.accent}`} />
-              <span className={`${currentTheme.text} text-sm font-medium`}>
-                {showComments ? 'Hide Comments' : 'Comments'}
-              </span>
-            </Button>
-          </div>
-
-          {/* Comments Section */}
-          {showComments && (
-            <div className={`border-t ${currentTheme.border} pt-6 space-y-4`}>
-              {/* Add Comment */}
-              <div className="space-y-3">
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  rows={3}
-                  className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
-                />
-                <Button
-                  onClick={handleCreateComment}
-                  disabled={isCommenting || !newComment.trim()}
-                  className={`${currentTheme.primary} text-white flex items-center gap-2`}
-                >
-                  <Send className="h-4 w-4" />
-                  {isCommenting ? 'Posting...' : 'Post Comment'}
-                </Button>
-              </div>
-
-              {/* Comments List */}
-              <div className="space-y-4">
-                {commentsLoading ? (
-                  <div className={`text-center py-6 ${currentTheme.muted}`}>Loading comments...</div>
-                ) : comments.length === 0 ? (
-                  <div className={`text-center py-6 ${currentTheme.muted}`}>No comments yet. Be the first to comment!</div>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className={`${currentTheme.secondary} p-4 rounded-lg border ${currentTheme.border}`}>
-                      <div className="flex items-center gap-3 mb-3">
-                        <UserProfileCard userId={comment.user_id}>
-                          <div className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
-                            <div className={`w-6 h-6 rounded-full ${currentTheme.bg} flex items-center justify-center`}>
-                              <User className={`h-3 w-3 ${currentTheme.text}`} />
-                            </div>
-                            <span className={`text-sm font-medium ${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
-                              {getCommentUserName(comment.user_id)}
-                            </span>
-                          </div>
-                        </UserProfileCard>
-                        <span className={`text-xs ${currentTheme.muted}`}>
-                          {new Date(comment.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className={`${currentTheme.text} text-sm leading-relaxed`}>{comment.content}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
