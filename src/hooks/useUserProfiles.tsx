@@ -111,28 +111,28 @@ export const useUserProfiles = () => {
     }
 
     try {
-      // Check if friendship already exists (using raw SQL for complex OR query)
-      const { data: existing, error: checkError } = await supabase.rpc('check_friendship', {
-        user1: user.id,
-        user2: friendId
-      });
+      // Check if friendship already exists by checking both directions separately
+      const { data: existingFriendship1 } = await supabase
+        .from('friendships')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('friend_id', friendId)
+        .single();
 
-      // If RPC doesn't exist, fallback to regular query
-      if (checkError) {
-        const { data: existingData } = await supabase
-          .from('friendships')
-          .select('*')
-          .or(`and(user_id.eq.${user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user.id})`)
-          .single();
+      const { data: existingFriendship2 } = await supabase
+        .from('friendships')
+        .select('*')
+        .eq('user_id', friendId)
+        .eq('friend_id', user.id)
+        .single();
 
-        if (existingData) {
-          toast({
-            title: 'Friend Request Exists',
-            description: 'You already have a connection with this user.',
-            variant: 'destructive',
-          });
-          return false;
-        }
+      if (existingFriendship1 || existingFriendship2) {
+        toast({
+          title: 'Friend Request Exists',
+          description: 'You already have a connection with this user.',
+          variant: 'destructive',
+        });
+        return false;
       }
 
       const { error } = await supabase
