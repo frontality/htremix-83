@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
 import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
+import Forum from "./pages/Forum";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +63,7 @@ const App = () => (
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/forum" element={<Forum />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <FixedUserSearch />

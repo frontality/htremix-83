@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { DollarSign, User, Settings, LogOut, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X, Palette, Globe } from "lucide-react";
+import { DollarSign, User, Settings, LogOut, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X, Palette, Globe, Users } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -38,6 +37,7 @@ const TopHeader = () => {
     { icon: TrendingUp, label: "Sell Items", path: "/sell" },
     { icon: DollarSign, label: "Crypto Exchange", path: "/crypto-exchange" },
     { icon: MessageCircle, label: "Messages", path: "/messages" },
+    { icon: Users, label: "Forum", path: "/forum" },
   ];
 
   const handleMenuClick = (path: string) => {
