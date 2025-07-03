@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +16,7 @@ interface ForumPost {
   authorId: string;
   authorAvatar: string;
   content: string;
+  code?: string;
   category: string;
   replies: number;
   views: number;
@@ -45,7 +47,7 @@ const Forum = () => {
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
-  const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
+  const [newPost, setNewPost] = useState({ title: '', content: '', code: '', category: 'general' });
 
   const categories: ForumCategory[] = [
     {
@@ -99,24 +101,42 @@ const Forum = () => {
   ];
 
   useEffect(() => {
-    // Load ALL posts from localStorage - this ensures everyone can see all posts
+    // Load ALL posts from localStorage with debugging
     const loadPosts = () => {
-      const savedPosts = localStorage.getItem('forum_posts');
-      console.log('Loading posts from localStorage:', savedPosts);
-      if (savedPosts) {
-        const allPosts = JSON.parse(savedPosts);
-        console.log('Parsed posts:', allPosts);
-        setPosts(allPosts);
-      } else {
-        console.log('No posts found in localStorage');
+      try {
+        const savedPosts = localStorage.getItem('forum_posts');
+        console.log('Raw localStorage data:', savedPosts);
+        
+        if (savedPosts && savedPosts !== 'null' && savedPosts !== 'undefined') {
+          const allPosts = JSON.parse(savedPosts);
+          console.log('All posts loaded:', allPosts);
+          console.log('Number of posts:', allPosts.length);
+          
+          // Ensure we have an array
+          if (Array.isArray(allPosts)) {
+            setPosts(allPosts);
+            console.log('Posts set successfully:', allPosts.length);
+          } else {
+            console.error('Posts data is not an array:', allPosts);
+            setPosts([]);
+          }
+        } else {
+          console.log('No posts found in localStorage, setting empty array');
+          setPosts([]);
+        }
+      } catch (error) {
+        console.error('Error loading posts:', error);
         setPosts([]);
       }
     };
 
     loadPosts();
 
-    // Set up an interval to refresh posts every 5 seconds to catch new posts from other users
-    const interval = setInterval(loadPosts, 5000);
+    // Set up an interval to refresh posts every 3 seconds
+    const interval = setInterval(() => {
+      console.log('Refreshing posts...');
+      loadPosts();
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -124,6 +144,10 @@ const Forum = () => {
   const filteredPosts = selectedCategory 
     ? posts.filter(post => post.category === selectedCategory)
     : posts;
+
+  const isCodingRelated = (category: string) => {
+    return ['coding', 'scripting', 'source'].includes(category);
+  };
 
   const handleCreatePost = () => {
     if (!user) {
@@ -145,12 +169,13 @@ const Forum = () => {
     }
 
     const post: ForumPost = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: newPost.title,
       author: user.email?.split('@')[0] || 'Anonymous',
       authorId: user.id,
       authorAvatar: '/placeholder.svg',
       content: newPost.content,
+      code: newPost.code.trim() || undefined,
       category: newPost.category,
       replies: 0,
       views: 0,
@@ -159,24 +184,51 @@ const Forum = () => {
       isPinned: false
     };
 
-    // Load existing posts, add new post, and save back to localStorage
-    const existingPosts = localStorage.getItem('forum_posts');
-    const allPosts = existingPosts ? JSON.parse(existingPosts) : [];
-    const updatedPosts = [post, ...allPosts];
-    
-    console.log('Creating new post:', post);
-    console.log('Updated posts array:', updatedPosts);
-    
-    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
-    setPosts(updatedPosts);
+    try {
+      // Get existing posts from localStorage
+      const existingPostsData = localStorage.getItem('forum_posts');
+      let allPosts = [];
+      
+      if (existingPostsData && existingPostsData !== 'null') {
+        allPosts = JSON.parse(existingPostsData);
+      }
+      
+      // Ensure allPosts is an array
+      if (!Array.isArray(allPosts)) {
+        allPosts = [];
+      }
+      
+      // Add new post to the beginning
+      const updatedPosts = [post, ...allPosts];
+      
+      console.log('Creating new post:', post);
+      console.log('All posts before save:', updatedPosts);
+      
+      // Save to localStorage
+      localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+      
+      // Verify it was saved
+      const verifyPosts = localStorage.getItem('forum_posts');
+      console.log('Verified saved posts:', verifyPosts);
+      
+      // Update local state
+      setPosts(updatedPosts);
 
-    setNewPost({ title: '', content: '', category: 'general' });
-    setShowNewPostForm(false);
+      setNewPost({ title: '', content: '', code: '', category: 'general' });
+      setShowNewPostForm(false);
 
-    toast({
-      title: "Post Created! 🎉",
-      description: "Your post has been published successfully."
-    });
+      toast({
+        title: "Post Created! 🎉",
+        description: "Your post has been published successfully."
+      });
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create post. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handlePostClick = (postId: string) => {
@@ -270,13 +322,24 @@ const Forum = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Content</label>
-                <textarea
+                <Textarea
                   value={newPost.content}
                   onChange={(e) => setNewPost({...newPost, content: e.target.value})}
                   className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 ${currentTheme.text}`}
                   placeholder="Write your post content..."
                 />
               </div>
+              {isCodingRelated(newPost.category) && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Code (Optional)</label>
+                  <Textarea
+                    value={newPost.code}
+                    onChange={(e) => setNewPost({...newPost, code: e.target.value})}
+                    className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 font-mono text-sm ${currentTheme.text}`}
+                    placeholder="Paste your code here..."
+                  />
+                </div>
+              )}
               <div className="flex space-x-2">
                 <Button onClick={handleCreatePost}>Create Post</Button>
                 <Button variant="outline" onClick={() => setShowNewPostForm(false)}>Cancel</Button>
@@ -284,6 +347,11 @@ const Forum = () => {
             </div>
           </div>
         )}
+
+        {/* Debug Info */}
+        <div className="mb-4 text-xs text-gray-500">
+          Debug: Total posts loaded: {posts.length} | Filtered posts: {filteredPosts.length}
+        </div>
 
         {/* Posts */}
         <div className="space-y-4">
@@ -324,6 +392,9 @@ const Forum = () => {
                       <span className={`text-xs px-2 py-1 rounded-full ${categories.find(cat => cat.id === post.category)?.color} bg-opacity-20`}>
                         {categories.find(cat => cat.id === post.category)?.name}
                       </span>
+                      {post.code && (
+                        <Code className="w-4 h-4 text-green-400" title="Contains code" />
+                      )}
                     </div>
                     
                     <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>

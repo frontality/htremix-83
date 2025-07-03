@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -15,6 +15,7 @@ interface ForumPost {
   authorId: string;
   authorAvatar: string;
   content: string;
+  code?: string;
   category: string;
   replies: number;
   views: number;
@@ -163,6 +164,7 @@ const ForumPost = () => {
     const updatedComments = [...comments, comment];
     setComments(updatedComments);
 
+    // Save comments to localStorage
     const savedComments = localStorage.getItem('forum_comments');
     const allComments = savedComments ? JSON.parse(savedComments) : [];
     allComments.push(comment);
@@ -272,9 +274,25 @@ const ForumPost = () => {
           </div>
 
           <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-          <div className="prose prose-invert max-w-none">
+          
+          <div className="prose prose-invert max-w-none mb-4">
             <p className="whitespace-pre-wrap">{post.content}</p>
           </div>
+
+          {/* Code Section */}
+          {post.code && (
+            <div className="mt-6">
+              <div className="flex items-center space-x-2 mb-2">
+                <Code className="w-4 h-4 text-green-400" />
+                <h3 className="text-lg font-semibold text-green-400">Code</h3>
+              </div>
+              <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 bg-gray-900/50`}>
+                <pre className="text-sm overflow-x-auto">
+                  <code className="text-green-300">{post.code}</code>
+                </pre>
+              </div>
+            </div>
+          )}
 
           {/* Vote Buttons */}
           {user && (
