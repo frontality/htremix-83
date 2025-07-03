@@ -99,11 +99,26 @@ const Forum = () => {
   ];
 
   useEffect(() => {
-    // Load posts from localStorage
-    const savedPosts = localStorage.getItem('forum_posts');
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
-    }
+    // Load ALL posts from localStorage - this ensures everyone can see all posts
+    const loadPosts = () => {
+      const savedPosts = localStorage.getItem('forum_posts');
+      console.log('Loading posts from localStorage:', savedPosts);
+      if (savedPosts) {
+        const allPosts = JSON.parse(savedPosts);
+        console.log('Parsed posts:', allPosts);
+        setPosts(allPosts);
+      } else {
+        console.log('No posts found in localStorage');
+        setPosts([]);
+      }
+    };
+
+    loadPosts();
+
+    // Set up an interval to refresh posts every 5 seconds to catch new posts from other users
+    const interval = setInterval(loadPosts, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const filteredPosts = selectedCategory 
@@ -144,9 +159,16 @@ const Forum = () => {
       isPinned: false
     };
 
-    const updatedPosts = [post, ...posts];
-    setPosts(updatedPosts);
+    // Load existing posts, add new post, and save back to localStorage
+    const existingPosts = localStorage.getItem('forum_posts');
+    const allPosts = existingPosts ? JSON.parse(existingPosts) : [];
+    const updatedPosts = [post, ...allPosts];
+    
+    console.log('Creating new post:', post);
+    console.log('Updated posts array:', updatedPosts);
+    
     localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+    setPosts(updatedPosts);
 
     setNewPost({ title: '', content: '', category: 'general' });
     setShowNewPostForm(false);
@@ -224,9 +246,9 @@ const Forum = () => {
                   <SelectTrigger className={`w-full ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
+                  <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} bg-gray-900 z-50`}>
                     {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id} className={`${currentTheme.text} hover:${currentTheme.secondary}`}>
+                      <SelectItem key={cat.id} value={cat.id} className={`${currentTheme.text} hover:bg-gray-800 focus:bg-gray-800`}>
                         <div className="flex items-center space-x-2">
                           <cat.icon className={`w-4 h-4 ${cat.color}`} />
                           <span>{cat.name}</span>
