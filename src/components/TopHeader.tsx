@@ -1,218 +1,260 @@
 
 import { useState } from "react";
-import { Home, ShoppingCart, DollarSign, MessageSquare, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { DollarSign, User, Settings, LogOut, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X, Palette, Globe } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useProfile } from "@/hooks/useProfile";
+import { useLanguage } from "@/hooks/useLanguage";
 import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
 
 const TopHeader = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const { profile } = useProfile();
   const { currentTheme } = useTheme();
-  const location = useLocation();
+  const { getCurrentLanguage } = useLanguage();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    console.log('Sign out button clicked');
+    try {
+      await signOut();
+      setShowUserMenu(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
-  const isActive = (path: string) => location.pathname === path;
-
-  const navItems = [
-    { path: "/", icon: Home, label: "Home" },
-    { path: "/marketplace", icon: ShoppingCart, label: "Marketplace" },
-    { path: "/sell", icon: DollarSign, label: "Sell Items" },
-    { path: "/crypto-exchange", icon: DollarSign, label: "Crypto Exchange" },
-    { path: "/forum", icon: MessageCircle, label: "Forum" },
-    { path: "/messages", icon: MessageSquare, label: "Messages" },
+  const menuItems = [
+    { icon: Home, label: "Home", path: "/" },
+    { icon: ShoppingBag, label: "Marketplace", path: "/marketplace" },
+    { icon: TrendingUp, label: "Sell Items", path: "/sell" },
+    { icon: DollarSign, label: "Crypto Exchange", path: "/crypto-exchange" },
+    { icon: MessageCircle, label: "Messages", path: "/messages" },
   ];
 
+  const handleMenuClick = (path: string) => {
+    console.log('Menu item clicked:', path);
+    setShowMobileMenu(false);
+    setShowUserMenu(false);
+    setShowThemeSelector(false);
+    setShowLanguageSelector(false);
+    navigate(path);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 ${currentTheme.headerBg} border-b ${currentTheme.border}`}>
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-12">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+    <header className={`fixed top-0 left-0 right-0 h-12 ${currentTheme.headerBg} border-b ${currentTheme.border} z-50 backdrop-blur-sm bg-opacity-90 animate-fade-in`}>
+      <div className="flex items-center justify-between h-full px-4">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-all duration-300 hover:scale-105 group">
+          <div className="w-6 h-6 flex items-center justify-center animate-float">
             <img 
-              src="/lovable-uploads/10cc0416-4505-4670-ac0a-2d2afe9dd18f.png" 
-              alt="Volcano Logo" 
-              className="w-8 h-8 object-contain"
+              src="/lovable-uploads/2a21bfaa-d803-4e5a-aa4e-e377ae6c835f.png" 
+              alt="$KID HAVEN Logo" 
+              className="w-5 h-5 object-contain group-hover:animate-pulse"
             />
-            <span className={`font-bold text-lg ${currentTheme.text} tracking-tight`}>
-              SKID HAVEN
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
-                    isActive(item.path)
-                      ? `${currentTheme.primary} text-white`
-                      : `${currentTheme.text} hover:${currentTheme.secondary}`
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right side controls */}
-          <div className="flex items-center space-x-2">
-            {/* Theme and Language selectors */}
-            <div className="hidden lg:flex items-center space-x-1">
-              <div className="relative">
-                <Button
-                  onClick={() => setShowThemeSelector(!showThemeSelector)}
-                  variant="ghost"
-                  size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm px-3 py-1.5 h-8`}
-                >
-                  Theme
-                </Button>
-                {showThemeSelector && (
-                  <div className="absolute top-full right-0 mt-1 z-50">
-                    <ThemeSelector onClose={() => setShowThemeSelector(false)} />
-                  </div>
-                )}
-              </div>
-              <div className="relative">
-                <Button
-                  onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                  variant="ghost"
-                  size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm px-3 py-1.5 h-8`}
-                >
-                  Language
-                </Button>
-                {showLanguageSelector && (
-                  <div className="absolute top-full right-0 mt-1 z-50">
-                    <LanguageSelector onClose={() => setShowLanguageSelector(false)} />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* User section */}
-            {user ? (
-              <div className="flex items-center space-x-1">
-                <Link
-                  to="/profile"
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors ${currentTheme.text} hover:${currentTheme.secondary} h-8`}
-                >
-                  <User className="h-4 w-4" />
-                  <span className="text-sm font-medium hidden sm:block">Profile</span>
-                </Link>
-                <Button
-                  onClick={handleSignOut}
-                  variant="ghost"
-                  size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary} px-3 py-1.5 h-8`}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="text-sm font-medium hidden sm:block ml-2">Logout</span>
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-1">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm" className={`${currentTheme.text} hover:${currentTheme.secondary} px-3 py-1.5 h-8`}>
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button size="sm" className={`${currentTheme.primary} text-white px-3 py-1.5 h-8`}>
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile menu button */}
-            <Button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              variant="ghost"
-              size="sm"
-              className={`md:hidden ${currentTheme.text} p-1.5 h-8 w-8`}
-            >
-              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
           </div>
-        </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent font-inter transition-all duration-300">
+              $KID HAVEN
+            </span>
+            <span className="text-xs text-gray-400 -mt-1 group-hover:text-gray-300 transition-colors">Digital Market</span>
+          </div>
+        </Link>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className={`md:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} py-2`}>
-            <div className="flex flex-col space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
-                      isActive(item.path)
-                        ? `${currentTheme.primary} text-white`
-                        : `${currentTheme.text} hover:${currentTheme.secondary}`
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
-              
-              {/* Mobile Theme and Language selectors */}
-              <div className="flex items-center space-x-2 px-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center space-x-4">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleMenuClick(item.path)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-all duration-300 font-medium cursor-pointer text-xs hover:scale-105 transform ${
+                  isActive 
+                    ? `${currentTheme.primary} text-white shadow-md animate-pulse-slow` 
+                    : `${currentTheme.text} hover:${currentTheme.secondary} hover:shadow-lg`
+                }`}
+              >
+                <item.icon size={14} className="transition-transform duration-200" />
+                <span className="transition-all duration-200">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right Side */}
+        <div className="flex items-center space-x-3">
+          {user && !authLoading && (
+            <>
+              {/* Balance - Stake.com style */}
+              <div className="flex items-center space-x-2 px-2 py-1 bg-gray-900/90 border border-gray-700/50 rounded-md hover:bg-gray-800/90 transition-all duration-300 hover:scale-105">
+                <DollarSign size={12} className="text-green-400 animate-pulse" />
+                <span className="text-white font-bold text-xs">$0.00</span>
+              </div>
+
+              {/* Profile Section */}
+              <div className="flex items-center space-x-2">
+                {/* Language Selector */}
                 <div className="relative">
-                  <Button
-                    onClick={() => setShowThemeSelector(!showThemeSelector)}
-                    variant="ghost"
-                    size="sm"
-                    className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  <button
+                    onClick={() => {
+                      console.log('Language selector clicked');
+                      setShowLanguageSelector(!showLanguageSelector);
+                      setShowThemeSelector(false);
+                      setShowUserMenu(false);
+                    }}
+                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer flex items-center space-x-1 hover:scale-110 transform`}
                   >
-                    Theme
-                  </Button>
-                  {showThemeSelector && (
-                    <div className="absolute top-full left-0 mt-2 z-50">
-                      <ThemeSelector onClose={() => setShowThemeSelector(false)} />
-                    </div>
-                  )}
-                </div>
-                <div className="relative">
-                  <Button
-                    onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                    variant="ghost"
-                    size="sm"
-                    className={`${currentTheme.text} hover:${currentTheme.secondary}`}
-                  >
-                    Language
-                  </Button>
+                    <Globe size={14} className={`${currentTheme.text} transition-transform duration-200`} />
+                    <span className="text-xs font-medium">{currentLanguage.flag}</span>
+                  </button>
                   {showLanguageSelector && (
-                    <div className="absolute top-full left-0 mt-2 z-50">
+                    <div className="absolute right-0 top-full mt-2 z-50 animate-scale-in">
                       <LanguageSelector onClose={() => setShowLanguageSelector(false)} />
                     </div>
                   )}
                 </div>
+
+                {/* Theme Selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      console.log('Theme selector clicked');
+                      setShowThemeSelector(!showThemeSelector);
+                      setShowLanguageSelector(false);
+                      setShowUserMenu(false);
+                    }}
+                    className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
+                  >
+                    <Palette size={14} className={`${currentTheme.text} transition-transform duration-200`} />
+                  </button>
+                  {showThemeSelector && (
+                    <div className="absolute right-0 top-full mt-2 z-50 animate-scale-in">
+                      <ThemeSelector onClose={() => setShowThemeSelector(false)} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Settings */}
+                <button
+                  onClick={() => handleMenuClick('/settings')}
+                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
+                >
+                  <Settings size={14} className={`${currentTheme.text} hover:rotate-90 transition-transform duration-300`} />
+                </button>
+
+                {/* Profile */}
+                <button
+                  onClick={() => handleMenuClick('/profile')}
+                  className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
+                >
+                  <User size={14} className={`${currentTheme.text} transition-transform duration-200`} />
+                </button>
+                
+                {/* User Avatar & Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      console.log('User menu clicked');
+                      setShowUserMenu(!showUserMenu);
+                      setShowThemeSelector(false);
+                      setShowLanguageSelector(false);
+                    }}
+                    className="flex items-center space-x-1 p-1 rounded-md hover:bg-gray-800/50 transition-all duration-300 cursor-pointer hover:scale-105 transform"
+                  >
+                    <img
+                      src={profile?.avatar_url || "/placeholder.svg"}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full object-cover border border-purple-500 transition-all duration-300 hover:border-purple-400 hover:shadow-lg"
+                    />
+                    <span className="text-xs font-medium text-white hidden md:block transition-colors duration-200">
+                      {profile?.username || "User"}
+                    </span>
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className={`absolute right-0 top-full mt-2 w-40 ${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-lg z-50 animate-scale-in`}>
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center space-x-2 p-2 w-full text-left hover:bg-red-900/20 transition-all duration-300 text-red-400 cursor-pointer text-xs hover:scale-105 transform"
+                      >
+                        <LogOut size={14} className="transition-transform duration-200" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
+            </>
+          )}
+
+          {!user && !authLoading && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleMenuClick('/login')}
+                className={`px-3 py-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer ${currentTheme.text} text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => handleMenuClick('/signup')}
+                className={`px-3 py-1.5 rounded-md ${currentTheme.primary} text-white hover:opacity-80 transition-all duration-300 cursor-pointer text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
+              >
+                Sign Up
+              </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => {
+              console.log('Mobile menu clicked');
+              setShowMobileMenu(!showMobileMenu);
+              setShowThemeSelector(false);
+              setShowLanguageSelector(false);
+              setShowUserMenu(false);
+            }}
+            className={`lg:hidden p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
+          >
+            {showMobileMenu ? <X size={14} className={`${currentTheme.text} transition-transform duration-200`} /> : <Menu size={14} className={`${currentTheme.text} transition-transform duration-200`} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {showMobileMenu && (
+        <div className={`lg:hidden ${currentTheme.cardBg} border-t ${currentTheme.border} absolute top-full left-0 right-0 shadow-lg animate-slide-in-right`}>
+          <nav className="p-3 space-y-1">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleMenuClick(item.path)}
+                  className={`flex items-center space-x-2 p-2 rounded-md transition-all duration-300 w-full text-left cursor-pointer text-sm hover:scale-105 transform ${
+                    isActive 
+                      ? `${currentTheme.primary} text-white animate-pulse-slow` 
+                      : `${currentTheme.text} hover:${currentTheme.secondary} hover:shadow-md`
+                  }`}
+                >
+                  <item.icon size={16} className="transition-transform duration-200" />
+                  <span className="font-medium transition-all duration-200">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

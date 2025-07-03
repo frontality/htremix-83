@@ -50,7 +50,7 @@ export const useProfile = () => {
           wallet_address: null,
           email_notifications: true,
           two_factor_enabled: false,
-          show_email_to_public: false
+          show_email_to_public: false // Email hidden by default
         };
 
         localStorage.setItem(storageKey, JSON.stringify(newProfile));
@@ -101,12 +101,13 @@ export const useProfile = () => {
     }
   };
 
-  const getDisplayEmail = () => {
-    if (!user) return null;
+  const getDisplayEmail = (profileData?: Profile) => {
+    const targetProfile = profileData || profile;
+    if (!targetProfile || !user) return null;
     
     console.log('getDisplayEmail check:', {
-      shouldShowEmailResult: shouldShowEmail(),
-      userEmail: user.email
+      profile: targetProfile,
+      shouldShowEmailResult: shouldShowEmail()
     });
     
     // Only show email if settings allow it

@@ -25,7 +25,6 @@ import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
 import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
-import Forum from "./pages/Forum";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,7 +44,7 @@ const App = () => (
             <div className="min-h-screen relative">
               <CursorBackground />
               <TopHeader />
-              <div className="pt-12 relative z-10">
+              <div className="pt-14 relative z-10">
                 <Toaster />
                 <Sonner position="top-right" closeButton theme="dark" />
                 <Routes>
@@ -64,7 +63,6 @@ const App = () => (
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/forum" element={<Forum />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <FixedUserSearch />

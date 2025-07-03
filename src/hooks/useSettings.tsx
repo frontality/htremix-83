@@ -38,7 +38,7 @@ const defaultSettings: Settings = {
   marketingEmails: false,
   developerMode: false,
   betaFeatures: false,
-  showEmailToPublic: false,
+  showEmailToPublic: false, // Email hidden by default
   hideEmail: true,
 };
 
@@ -109,26 +109,17 @@ export const useSettings = () => {
     });
   };
 
-  const shouldShowEmail = () => {
+  const shouldShowEmail = (userSettings?: Settings) => {
+    const targetSettings = userSettings || settings;
     console.log('Checking email visibility:', {
-      showEmailToPublic: settings.showEmailToPublic,
-      hideEmail: settings.hideEmail
+      showEmailToPublic: targetSettings.showEmailToPublic,
+      hideEmail: targetSettings.hideEmail
     });
-    // Show email only if showEmailToPublic is true AND hideEmail is false
-    return settings.showEmailToPublic && !settings.hideEmail;
+    return targetSettings.showEmailToPublic && !targetSettings.hideEmail;
   };
 
   const updateSingleSetting = async (key: keyof Settings, value: any): Promise<boolean> => {
     const newSettings = { ...settings, [key]: value };
-    
-    // Special handling for email visibility settings
-    if (key === 'showEmailToPublic' && value === true) {
-      newSettings.hideEmail = false; // Auto-unhide email when showing to public
-    }
-    if (key === 'hideEmail' && value === true) {
-      newSettings.showEmailToPublic = false; // Auto-hide from public when hiding email
-    }
-    
     return await updateSettings(newSettings);
   };
 
