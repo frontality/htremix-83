@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus } from 'lucide-react';
+import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -64,11 +65,35 @@ const Forum = () => {
       color: 'text-green-400'
     },
     {
+      id: 'coding',
+      name: 'Coding & Programming',
+      description: 'Programming discussions and code sharing',
+      postCount: posts.filter(p => p.category === 'coding').length,
+      icon: Code,
+      color: 'text-purple-400'
+    },
+    {
+      id: 'scripting',
+      name: 'Scripting & Automation',
+      description: 'Scripts, bots, and automation tools',
+      postCount: posts.filter(p => p.category === 'scripting').length,
+      icon: FileText,
+      color: 'text-cyan-400'
+    },
+    {
+      id: 'source',
+      name: 'Source Code',
+      description: 'Share and request source code',
+      postCount: posts.filter(p => p.category === 'source').length,
+      icon: Code,
+      color: 'text-orange-400'
+    },
+    {
       id: 'support',
       name: 'Support & Help',
       description: 'Get help and support from the community',
       postCount: posts.filter(p => p.category === 'support').length,
-      icon: Reply,
+      icon: HelpCircle,
       color: 'text-yellow-400'
     }
   ];
@@ -195,15 +220,21 @@ const Forum = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Category</label>
-                <select 
-                  value={newPost.category}
-                  onChange={(e) => setNewPost({...newPost, category: e.target.value})}
-                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border}`}
-                >
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                <Select value={newPost.category} onValueChange={(value) => setNewPost({...newPost, category: value})}>
+                  <SelectTrigger className={`w-full ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id} className={`${currentTheme.text} hover:${currentTheme.secondary}`}>
+                        <div className="flex items-center space-x-2">
+                          <cat.icon className={`w-4 h-4 ${cat.color}`} />
+                          <span>{cat.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Title</label>
@@ -211,7 +242,7 @@ const Forum = () => {
                   type="text"
                   value={newPost.title}
                   onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border}`}
+                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
                   placeholder="Enter post title..."
                 />
               </div>
@@ -220,7 +251,7 @@ const Forum = () => {
                 <textarea
                   value={newPost.content}
                   onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32`}
+                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 ${currentTheme.text}`}
                   placeholder="Write your post content..."
                 />
               </div>
@@ -268,6 +299,9 @@ const Forum = () => {
                       <h3 className="font-semibold text-lg hover:text-purple-400">
                         {post.title}
                       </h3>
+                      <span className={`text-xs px-2 py-1 rounded-full ${categories.find(cat => cat.id === post.category)?.color} bg-opacity-20`}>
+                        {categories.find(cat => cat.id === post.category)?.name}
+                      </span>
                     </div>
                     
                     <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
