@@ -62,8 +62,8 @@ const Forum = () => {
   if (!user) {
     return (
       <div className={`min-h-screen ${currentTheme.bg} pt-16 flex items-center justify-center`}>
-        <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-8`}>
-          <CardHeader>
+        <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 max-w-md mx-4`}>
+          <CardHeader className="text-center">
             <CardTitle className={`${currentTheme.text} text-xl`}>Access Denied</CardTitle>
             <CardDescription className={currentTheme.muted}>
               Please log in to access the forum.
@@ -76,25 +76,27 @@ const Forum = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} pt-16`}>
-      <div className="container max-w-6xl mx-auto py-8 space-y-8">
+      <div className="container max-w-4xl mx-auto py-8 px-4 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <MessageSquare className={`h-8 w-8 ${currentTheme.accent}`} />
+            <div className={`p-2 rounded-lg ${currentTheme.secondary}`}>
+              <MessageSquare className={`h-6 w-6 ${currentTheme.accent}`} />
+            </div>
             <div>
-              <h1 className={`text-3xl font-bold ${currentTheme.text}`}>Forum</h1>
-              <p className={`${currentTheme.muted}`}>Share code, ask questions, and connect with the community</p>
+              <h1 className={`text-2xl sm:text-3xl font-bold ${currentTheme.text}`}>Forum</h1>
+              <p className={`${currentTheme.muted} text-sm sm:text-base`}>Share code, ask questions, and connect with the community</p>
             </div>
           </div>
 
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button className={`${currentTheme.primary} ${currentTheme.text} flex items-center gap-2`}>
+              <Button className={`${currentTheme.primary} text-white flex items-center gap-2 whitespace-nowrap`}>
                 <Plus className="h-4 w-4" />
                 New Post
               </Button>
             </DialogTrigger>
-            <DialogContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+            <DialogContent className={`${currentTheme.cardBg} border ${currentTheme.border} max-w-2xl max-h-[90vh] overflow-y-auto`}>
               <DialogHeader>
                 <DialogTitle className={currentTheme.text}>Create New Post</DialogTitle>
                 <DialogDescription className={currentTheme.muted}>
@@ -154,11 +156,11 @@ const Forum = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-2">
                   <Button
                     onClick={handleCreatePost}
                     disabled={isCreating || !newPost.title.trim() || !newPost.content.trim()}
-                    className={`${currentTheme.primary} ${currentTheme.text} flex-1`}
+                    className={`${currentTheme.primary} text-white flex-1`}
                   >
                     {isCreating ? 'Creating...' : 'Create Post'}
                   </Button>
@@ -255,58 +257,72 @@ const ForumPostCard = ({ post, onLike, getUserDisplayName, currentTheme, selecte
     setIsCommenting(false);
   };
 
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      general: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+      javascript: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      python: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      react: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+      help: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      showcase: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    };
+    return colors[category as keyof typeof colors] || colors.general;
+  };
+
   return (
-    <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-      <CardHeader>
+    <Card className={`${currentTheme.cardBg} border ${currentTheme.border} hover:shadow-md transition-shadow`}>
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-3 mb-3">
               <UserProfileCard userId={post.user_id}>
                 <div className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
-                  <User className={`h-4 w-4 ${currentTheme.muted}`} />
-                  <span className={`text-sm ${currentTheme.muted} hover:${currentTheme.text} transition-colors`}>
+                  <div className={`w-8 h-8 rounded-full ${currentTheme.secondary} flex items-center justify-center`}>
+                    <User className={`h-4 w-4 ${currentTheme.text}`} />
+                  </div>
+                  <span className={`text-sm font-medium ${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
                     {getUserDisplayName(post.user_id)}
                   </span>
                 </div>
               </UserProfileCard>
-              <span className={`px-2 py-1 text-xs rounded-full ${currentTheme.secondary} ${currentTheme.text}`}>
+              <span className={`px-2 py-1 text-xs rounded-full font-medium ${getCategoryColor(post.category)}`}>
                 {post.category}
               </span>
             </div>
-            <CardTitle className={`${currentTheme.text} text-xl mb-2`}>
+            <CardTitle className={`${currentTheme.text} text-lg mb-2 leading-tight`}>
               {post.title}
             </CardTitle>
             <CardDescription className={`${currentTheme.muted} text-sm`}>
-              {new Date(post.created_at).toLocaleDateString()} • {new Date(post.created_at).toLocaleTimeString()}
+              {new Date(post.created_at).toLocaleDateString()} • {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="space-y-4">
-          <p className={`${currentTheme.text} whitespace-pre-wrap`}>{post.content}</p>
+          <p className={`${currentTheme.text} whitespace-pre-wrap leading-relaxed`}>{post.content}</p>
           
           {post.code_snippet && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Code className={`h-4 w-4 ${currentTheme.accent}`} />
                 <span className={`text-sm font-medium ${currentTheme.text}`}>Code Snippet</span>
               </div>
-              <pre className={`${currentTheme.secondary} p-4 rounded-lg overflow-x-auto text-sm`}>
+              <pre className={`${currentTheme.secondary} p-4 rounded-lg overflow-x-auto text-sm border ${currentTheme.border}`}>
                 <code className={currentTheme.text}>{post.code_snippet}</code>
               </pre>
             </div>
           )}
 
-          <div className="flex items-center gap-4 pt-2">
+          <div className="flex items-center gap-6 pt-3 border-t border-gray-100 dark:border-gray-800">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onLike(post.id)}
-              className="flex items-center gap-2 hover:bg-transparent"
+              className="flex items-center gap-2 hover:bg-transparent p-0 h-auto"
             >
               <Heart className={`h-4 w-4 ${currentTheme.accent}`} />
-              <span className={`${currentTheme.text} text-sm`}>{post.likes_count}</span>
+              <span className={`${currentTheme.text} text-sm font-medium`}>{post.likes_count}</span>
             </Button>
             <div className="flex items-center gap-2">
               <Eye className={`h-4 w-4 ${currentTheme.muted}`} />
@@ -316,10 +332,10 @@ const ForumPostCard = ({ post, onLike, getUserDisplayName, currentTheme, selecte
               variant="ghost"
               size="sm"
               onClick={handleShowComments}
-              className="flex items-center gap-2 hover:bg-transparent"
+              className="flex items-center gap-2 hover:bg-transparent p-0 h-auto"
             >
               <MessageCircle className={`h-4 w-4 ${currentTheme.accent}`} />
-              <span className={`${currentTheme.text} text-sm`}>
+              <span className={`${currentTheme.text} text-sm font-medium`}>
                 {showComments ? 'Hide Comments' : 'Comments'}
               </span>
             </Button>
@@ -327,14 +343,14 @@ const ForumPostCard = ({ post, onLike, getUserDisplayName, currentTheme, selecte
 
           {/* Comments Section */}
           {showComments && (
-            <div className={`border-t ${currentTheme.border} pt-4 space-y-4`}>
+            <div className={`border-t ${currentTheme.border} pt-6 space-y-4`}>
               {/* Add Comment */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  rows={2}
+                  rows={3}
                   className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
                 />
                 <Button
@@ -348,25 +364,30 @@ const ForumPostCard = ({ post, onLike, getUserDisplayName, currentTheme, selecte
               </div>
 
               {/* Comments List */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {commentsLoading ? (
-                  <div className={`text-center py-4 ${currentTheme.muted}`}>Loading comments...</div>
+                  <div className={`text-center py-6 ${currentTheme.muted}`}>Loading comments...</div>
                 ) : comments.length === 0 ? (
-                  <div className={`text-center py-4 ${currentTheme.muted}`}>No comments yet. Be the first to comment!</div>
+                  <div className={`text-center py-6 ${currentTheme.muted}`}>No comments yet. Be the first to comment!</div>
                 ) : (
                   comments.map((comment) => (
-                    <div key={comment.id} className={`${currentTheme.secondary} p-3 rounded-lg`}>
-                      <div className="flex items-center gap-2 mb-2">
+                    <div key={comment.id} className={`${currentTheme.secondary} p-4 rounded-lg border ${currentTheme.border}`}>
+                      <div className="flex items-center gap-3 mb-3">
                         <UserProfileCard userId={comment.user_id}>
-                          <span className={`text-sm font-medium ${currentTheme.text} hover:opacity-80 cursor-pointer`}>
-                            {getCommentUserName(comment.user_id)}
-                          </span>
+                          <div className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
+                            <div className={`w-6 h-6 rounded-full ${currentTheme.bg} flex items-center justify-center`}>
+                              <User className={`h-3 w-3 ${currentTheme.text}`} />
+                            </div>
+                            <span className={`text-sm font-medium ${currentTheme.text} hover:${currentTheme.accent} transition-colors`}>
+                              {getCommentUserName(comment.user_id)}
+                            </span>
+                          </div>
                         </UserProfileCard>
                         <span className={`text-xs ${currentTheme.muted}`}>
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className={`${currentTheme.text} text-sm`}>{comment.content}</p>
+                      <p className={`${currentTheme.text} text-sm leading-relaxed`}>{comment.content}</p>
                     </div>
                   ))
                 )}

@@ -38,6 +38,20 @@ const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
   const profile = profiles[userId];
   const isOwnProfile = user?.id === userId;
 
+  const getDisplayName = () => {
+    if (profile?.username) {
+      return profile.username;
+    }
+    return `User ${userId.slice(0, 8)}`;
+  };
+
+  const getJoinDate = () => {
+    if (profile?.created_at) {
+      return new Date(profile.created_at).toLocaleDateString();
+    }
+    return 'Recently';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild onClick={handleOpenProfile}>
@@ -45,7 +59,7 @@ const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
           {children}
         </div>
       </DialogTrigger>
-      <DialogContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+      <DialogContent className={`${currentTheme.cardBg} border ${currentTheme.border} max-w-md`}>
         <DialogHeader>
           <DialogTitle className={currentTheme.text}>User Profile</DialogTitle>
         </DialogHeader>
@@ -55,10 +69,10 @@ const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
             <div className={`${currentTheme.text}`}>Loading profile...</div>
           </div>
         ) : (
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-            <CardHeader>
+          <Card className={`${currentTheme.cardBg} border-0 shadow-none`}>
+            <CardHeader className="pb-4">
               <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 rounded-full ${currentTheme.secondary} flex items-center justify-center`}>
+                <div className={`w-16 h-16 rounded-full ${currentTheme.secondary} flex items-center justify-center flex-shrink-0`}>
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -66,39 +80,39 @@ const UserProfileCard = ({ userId, children }: UserProfileCardProps) => {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <User className={`h-6 w-6 ${currentTheme.text}`} />
+                    <User className={`h-8 w-8 ${currentTheme.text}`} />
                   )}
                 </div>
-                <div>
-                  <h3 className={`text-lg font-semibold ${currentTheme.text}`}>
-                    {profile?.username || `User ${userId.slice(0, 8)}`}
+                <div className="flex-1 min-w-0">
+                  <h3 className={`text-xl font-semibold ${currentTheme.text} truncate`}>
+                    {getDisplayName()}
                   </h3>
                   <p className={`text-sm ${currentTheme.muted}`}>
-                    Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Recently'}
+                    Member since {getJoinDate()}
                   </p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {profile?.bio && (
-                <div className="mb-4">
-                  <h4 className={`text-sm font-medium ${currentTheme.text} mb-2`}>Bio</h4>
-                  <p className={`text-sm ${currentTheme.muted}`}>{profile.bio}</p>
+                <div className="mb-6">
+                  <h4 className={`text-sm font-medium ${currentTheme.text} mb-2`}>About</h4>
+                  <p className={`text-sm ${currentTheme.muted} leading-relaxed`}>{profile.bio}</p>
                 </div>
               )}
               
               {!isOwnProfile && (
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <Button
                     onClick={handleSendFriendRequest}
-                    className={`${currentTheme.primary} text-white flex items-center gap-2`}
+                    className={`${currentTheme.primary} text-white flex items-center gap-2 flex-1`}
                   >
                     <UserPlus className="h-4 w-4" />
                     Add Friend
                   </Button>
                   <Button
                     variant="outline"
-                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} flex items-center gap-2 flex-1`}
                   >
                     <MessageCircle className="h-4 w-4" />
                     Message

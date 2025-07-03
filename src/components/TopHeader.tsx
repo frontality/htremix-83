@@ -38,11 +38,11 @@ const TopHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">SH</span>
             </div>
-            <span className={`font-bold text-lg ${currentTheme.text} hidden sm:block`}>
+            <span className={`font-bold text-xl ${currentTheme.text} hidden sm:block tracking-tight`}>
               SKID HAVEN
             </span>
           </Link>
@@ -55,28 +55,29 @@ const TopHeader = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                     isActive(item.path)
                       ? `${currentTheme.primary} text-white`
                       : `${currentTheme.text} hover:${currentTheme.secondary}`
                   }`}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center space-x-2">
-            <div className="hidden sm:flex items-center space-x-2 relative">
+          <div className="flex items-center space-x-3">
+            {/* Theme and Language selectors - desktop only */}
+            <div className="hidden lg:flex items-center space-x-2">
               <div className="relative">
                 <Button
                   onClick={() => setShowThemeSelector(!showThemeSelector)}
                   variant="ghost"
                   size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm`}
                 >
                   Theme
                 </Button>
@@ -91,7 +92,7 @@ const TopHeader = () => {
                   onClick={() => setShowLanguageSelector(!showLanguageSelector)}
                   variant="ghost"
                   size="sm"
-                  className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  className={`${currentTheme.text} hover:${currentTheme.secondary} text-sm`}
                 >
                   Language
                 </Button>
@@ -171,7 +172,9 @@ const TopHeader = () => {
                   </Link>
                 );
               })}
-              <div className="flex items-center space-x-2 px-4 pt-2">
+              
+              {/* Mobile Theme and Language selectors */}
+              <div className="flex items-center space-x-2 px-4 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="relative">
                   <Button
                     onClick={() => setShowThemeSelector(!showThemeSelector)}
