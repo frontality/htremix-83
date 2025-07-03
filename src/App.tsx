@@ -25,6 +25,7 @@ import TopHeader from "./components/TopHeader";
 import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
 import Forum from "./pages/Forum";
+import ForumPost from "./pages/ForumPost";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,7 @@ const App = () => (
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/forum" element={<Forum />} />
+                  <Route path="/forum/post/:postId" element={<ForumPost />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <FixedUserSearch />

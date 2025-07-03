@@ -1,12 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface ForumPost {
   id: string;
   title: string;
   author: string;
+  authorId: string;
   authorAvatar: string;
   content: string;
   category: string;
@@ -32,13 +37,21 @@ interface ForumCategory {
 
 const Forum = () => {
   const { currentTheme } = useTheme();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
+
   const categories: ForumCategory[] = [
     {
       id: 'general',
       name: 'General Discussion',
       description: 'General chat and discussions',
-      postCount: 245,
+      postCount: posts.filter(p => p.category === 'general').length,
       icon: MessageCircle,
       color: 'text-blue-400'
     },
@@ -46,7 +59,7 @@ const Forum = () => {
       id: 'trading',
       name: 'Trading & Market',
       description: 'Discuss trading strategies and market trends',
-      postCount: 189,
+      postCount: posts.filter(p => p.category === 'trading').length,
       icon: Users,
       color: 'text-green-400'
     },
@@ -54,71 +67,81 @@ const Forum = () => {
       id: 'support',
       name: 'Support & Help',
       description: 'Get help and support from the community',
-      postCount: 67,
+      postCount: posts.filter(p => p.category === 'support').length,
       icon: Reply,
       color: 'text-yellow-400'
     }
   ];
 
-  const posts: ForumPost[] = [
-    {
-      id: '1',
-      title: 'Welcome to $KID HAVEN Forum',
-      author: 'Admin',
-      authorAvatar: '/placeholder.svg',
-      content: 'Welcome to our community forum! Please read the rules before posting.',
-      category: 'general',
-      replies: 23,
-      views: 156,
-      likes: 45,
-      createdAt: '2024-01-15',
-      isPinned: true,
-      lastReply: {
-        author: 'User123',
-        time: '2 hours ago'
-      }
-    },
-    {
-      id: '2',
-      title: 'Best trading strategies for beginners',
-      author: 'TraderPro',
-      authorAvatar: '/placeholder.svg',
-      content: 'Sharing some effective trading strategies for newcomers...',
-      category: 'trading',
-      replies: 34,
-      views: 289,
-      likes: 67,
-      createdAt: '2024-01-14',
-      isPinned: false,
-      lastReply: {
-        author: 'NewTrader',
-        time: '1 hour ago'
-      }
-    },
-    {
-      id: '3',
-      title: 'How to set up 2FA?',
-      author: 'SecurityGuy',
-      authorAvatar: '/placeholder.svg',
-      content: 'Need help setting up two-factor authentication...',
-      category: 'support',
-      replies: 12,
-      views: 78,
-      likes: 15,
-      createdAt: '2024-01-13',
-      isPinned: false,
-      lastReply: {
-        author: 'Helper',
-        time: '30 minutes ago'
-      }
+  useEffect(() => {
+    // Load posts from localStorage
+    const savedPosts = localStorage.getItem('forum_posts');
+    if (savedPosts) {
+      setPosts(JSON.parse(savedPosts));
     }
-  ];
-
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  }, []);
 
   const filteredPosts = selectedCategory 
     ? posts.filter(post => post.category === selectedCategory)
     : posts;
+
+  const handleCreatePost = () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to create a post.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!newPost.title.trim() || !newPost.content.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in both title and content.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const post: ForumPost = {
+      id: Date.now().toString(),
+      title: newPost.title,
+      author: user.email?.split('@')[0] || 'Anonymous',
+      authorId: user.id,
+      authorAvatar: '/placeholder.svg',
+      content: newPost.content,
+      category: newPost.category,
+      replies: 0,
+      views: 0,
+      likes: 0,
+      createdAt: new Date().toLocaleDateString(),
+      isPinned: false
+    };
+
+    const updatedPosts = [post, ...posts];
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+
+    setNewPost({ title: '', content: '', category: 'general' });
+    setShowNewPostForm(false);
+
+    toast({
+      title: "Post Created! 🎉",
+      description: "Your post has been published successfully."
+    });
+  };
+
+  const handlePostClick = (postId: string) => {
+    // Increment view count
+    const updatedPosts = posts.map(post => 
+      post.id === postId ? { ...post, views: post.views + 1 } : post
+    );
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+    
+    navigate(`/forum/post/${postId}`);
+  };
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
@@ -165,77 +188,140 @@ const Forum = () => {
           </div>
         )}
 
-        {/* Posts */}
-        <div className="space-y-4">
-          {filteredPosts.map((post) => (
-            <div
-              key={post.id}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 hover:border-purple-500/50 transition-all`}
-            >
-              <div className="flex items-start space-x-4">
-                <img
-                  src={post.authorAvatar}
-                  alt={post.author}
-                  className="w-10 h-10 rounded-full"
+        {/* New Post Form */}
+        {showNewPostForm && (
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6`}>
+            <h3 className="text-xl font-semibold mb-4">Create New Post</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <select 
+                  value={newPost.category}
+                  onChange={(e) => setNewPost({...newPost, category: e.target.value})}
+                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border}`}
+                >
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Title</label>
+                <input
+                  type="text"
+                  value={newPost.title}
+                  onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border}`}
+                  placeholder="Enter post title..."
                 />
-                
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    {post.isPinned && (
-                      <Pin className="w-4 h-4 text-yellow-400" />
-                    )}
-                    <h3 className="font-semibold text-lg hover:text-purple-400 cursor-pointer">
-                      {post.title}
-                    </h3>
-                  </div>
-                  
-                  <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
-                      <span>by {post.author}</span>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{post.createdAt}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
-                      <div className="flex items-center space-x-1">
-                        <Reply className="w-4 h-4" />
-                        <span>{post.replies}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{post.views}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{post.likes}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {post.lastReply && (
-                    <div className="mt-2 pt-2 border-t border-gray-700">
-                      <p className="text-xs text-gray-500">
-                        Last reply by <span className="text-purple-400">{post.lastReply.author}</span> {post.lastReply.time}
-                      </p>
-                    </div>
-                  )}
-                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Content</label>
+                <textarea
+                  value={newPost.content}
+                  onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32`}
+                  placeholder="Write your post content..."
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button onClick={handleCreatePost}>Create Post</Button>
+                <Button variant="outline" onClick={() => setShowNewPostForm(false)}>Cancel</Button>
               </div>
             </div>
-          ))}
+          </div>
+        )}
+
+        {/* Posts */}
+        <div className="space-y-4">
+          {filteredPosts.length === 0 ? (
+            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8 text-center`}>
+              <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
+              <p className="text-gray-400 mb-4">Be the first to start a discussion!</p>
+              {user && (
+                <Button onClick={() => setShowNewPostForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Post
+                </Button>
+              )}
+            </div>
+          ) : (
+            filteredPosts.map((post) => (
+              <div
+                key={post.id}
+                onClick={() => handlePostClick(post.id)}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 hover:border-purple-500/50 transition-all cursor-pointer`}
+              >
+                <div className="flex items-start space-x-4">
+                  <img
+                    src={post.authorAvatar}
+                    alt={post.author}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {post.isPinned && (
+                        <Pin className="w-4 h-4 text-yellow-400" />
+                      )}
+                      <h3 className="font-semibold text-lg hover:text-purple-400">
+                        {post.title}
+                      </h3>
+                    </div>
+                    
+                    <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 text-sm text-gray-400">
+                        <span>by {post.author}</span>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{post.createdAt}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4 text-sm text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <Reply className="w-4 h-4" />
+                          <span>{post.replies}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Eye className="w-4 h-4" />
+                          <span>{post.views}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <ThumbsUp className="w-4 h-4" />
+                          <span>{post.likes}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* New Post Button */}
-        <div className="fixed bottom-6 right-6">
-          <button className={`${currentTheme.primary} text-white px-6 py-3 rounded-full shadow-lg hover:opacity-80 transition-all flex items-center space-x-2`}>
-            <MessageCircle className="w-5 h-5" />
-            <span>New Post</span>
-          </button>
-        </div>
+        {user && !showNewPostForm && (
+          <div className="fixed bottom-6 right-6">
+            <Button 
+              onClick={() => setShowNewPostForm(true)}
+              className={`${currentTheme.primary} text-white px-6 py-3 rounded-full shadow-lg hover:opacity-80 transition-all flex items-center space-x-2`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>New Post</span>
+            </Button>
+          </div>
+        )}
+
+        {!user && (
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 text-center mt-8`}>
+            <p className="text-gray-400 mb-4">Please log in to create posts and interact with the community.</p>
+            <Button onClick={() => navigate('/login')}>Login</Button>
+          </div>
+        )}
       </div>
     </div>
   );
