@@ -14,6 +14,8 @@ const TopHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -68,9 +70,37 @@ const TopHeader = () => {
 
           {/* Right side */}
           <div className="flex items-center space-x-2">
-            <div className="hidden sm:flex items-center space-x-2">
-              <ThemeSelector />
-              <LanguageSelector />
+            <div className="hidden sm:flex items-center space-x-2 relative">
+              <div className="relative">
+                <Button
+                  onClick={() => setShowThemeSelector(!showThemeSelector)}
+                  variant="ghost"
+                  size="sm"
+                  className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                >
+                  Theme
+                </Button>
+                {showThemeSelector && (
+                  <div className="absolute top-full right-0 mt-2 z-50">
+                    <ThemeSelector onClose={() => setShowThemeSelector(false)} />
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <Button
+                  onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                  variant="ghost"
+                  size="sm"
+                  className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                >
+                  Language
+                </Button>
+                {showLanguageSelector && (
+                  <div className="absolute top-full right-0 mt-2 z-50">
+                    <LanguageSelector onClose={() => setShowLanguageSelector(false)} />
+                  </div>
+                )}
+              </div>
             </div>
 
             {user ? (
@@ -142,8 +172,36 @@ const TopHeader = () => {
                 );
               })}
               <div className="flex items-center space-x-2 px-4 pt-2">
-                <ThemeSelector />
-                <LanguageSelector />
+                <div className="relative">
+                  <Button
+                    onClick={() => setShowThemeSelector(!showThemeSelector)}
+                    variant="ghost"
+                    size="sm"
+                    className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  >
+                    Theme
+                  </Button>
+                  {showThemeSelector && (
+                    <div className="absolute top-full left-0 mt-2 z-50">
+                      <ThemeSelector onClose={() => setShowThemeSelector(false)} />
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <Button
+                    onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                    variant="ghost"
+                    size="sm"
+                    className={`${currentTheme.text} hover:${currentTheme.secondary}`}
+                  >
+                    Language
+                  </Button>
+                  {showLanguageSelector && (
+                    <div className="absolute top-full left-0 mt-2 z-50">
+                      <LanguageSelector onClose={() => setShowLanguageSelector(false)} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
