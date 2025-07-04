@@ -62,7 +62,10 @@ const Messages = () => {
   };
 
   const handleUserClick = (participant: any) => {
+    console.log('Clicking user:', participant);
+    console.log('Current user:', user?.id);
     if (participant?.id && participant.id !== user?.id) {
+      console.log('Navigating to profile:', participant.id);
       navigate(`/profile?userId=${participant.id}`);
     }
   };
@@ -144,6 +147,7 @@ const Messages = () => {
                   ) : (
                     conversations.map((conversation) => {
                       const participant = getOtherParticipant(conversation);
+                      console.log('Chat list participant:', participant);
                       return (
                         <button
                           key={conversation.id}
@@ -221,8 +225,8 @@ const Messages = () => {
                   </div>
 
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-8">
+                  <ScrollArea className="flex-1 p-8">
+                    <div className="space-y-12">
                       {messages.length === 0 ? (
                         <div className="text-center py-12">
                           <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
@@ -235,37 +239,37 @@ const Messages = () => {
                             key={message.id}
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className="flex items-end space-x-3 max-w-lg">
+                            <div className="flex items-end space-x-4 max-w-2xl">
                               {message.sender_id !== user?.id && (
-                                <Avatar className="h-10 w-10 mb-1">
+                                <Avatar className="h-12 w-12 mb-2">
                                   <AvatarImage
                                     src={otherParticipant?.avatar_url}
                                     alt={otherParticipant?.username || "User"}
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-sm">
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
                                     {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
                                   </AvatarFallback>
                                 </Avatar>
                               )}
                               <div
-                                className={`px-5 py-4 rounded-2xl ${
+                                className={`px-6 py-5 rounded-2xl ${
                                   message.sender_id === user?.id
                                     ? `${currentTheme.primary} text-white ml-auto`
                                     : `${currentTheme.secondary} ${currentTheme.text}`
                                 }`}
                               >
-                                <p className="text-base leading-relaxed">{message.content}</p>
-                                <p className="text-xs mt-2 opacity-70">
+                                <p className="text-lg leading-relaxed">{message.content}</p>
+                                <p className="text-sm mt-3 opacity-70">
                                   {new Date(message.created_at).toLocaleTimeString()}
                                 </p>
                               </div>
                               {message.sender_id === user?.id && (
-                                <Avatar className="h-10 w-10 mb-1">
+                                <Avatar className="h-12 w-12 mb-2">
                                   <AvatarImage
                                     src={user?.user_metadata?.avatar_url}
                                     alt="You"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm">
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white">
                                     {user?.email?.charAt(0)?.toUpperCase() || "Y"}
                                   </AvatarFallback>
                                 </Avatar>
