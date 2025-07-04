@@ -393,7 +393,7 @@ const Forum = () => {
                         {categories.find(cat => cat.id === post.category)?.name}
                       </span>
                       {post.code && (
-                        <Code className="w-4 h-4 text-green-400" title="Contains code" />
+                        <Code className="w-4 h-4 text-green-400" />
                       )}
                     </div>
                     
