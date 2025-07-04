@@ -33,7 +33,6 @@ const Messages = () => {
   };
 
   const handleSelectUser = async (userId: string) => {
-    // Check if conversation already exists
     const existingConversation = conversations.find(conv => 
       (conv.participant1_id === user?.id && conv.participant2_id === userId) ||
       (conv.participant2_id === user?.id && conv.participant1_id === userId)
@@ -42,7 +41,6 @@ const Messages = () => {
     if (existingConversation) {
       handleSelectChat(existingConversation.id);
     } else {
-      // Create new conversation
       const conversationId = await createConversation(userId);
       if (conversationId) {
         handleSelectChat(conversationId);
@@ -58,10 +56,7 @@ const Messages = () => {
   };
 
   const handleUserClick = (participant: any) => {
-    console.log('Clicking user:', participant);
-    console.log('Current user:', user?.id);
     if (participant?.id && participant.id !== user?.id) {
-      console.log('Navigating to profile:', participant.id);
       navigate(`/profile?userId=${participant.id}`);
     }
   };
@@ -72,51 +67,41 @@ const Messages = () => {
   if (loading) {
     return (
       <div className={`min-h-screen ${currentTheme.bg}`}>
+        <SkidHavenHeader />
         <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 200px)' }}>
           <div className="text-center">
             <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
             <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
           </div>
         </div>
+        <SkidHavenFooter />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg}`}>
+    <div className={`min-h-screen ${currentTheme.bg} flex flex-col`}>
       <SkidHavenHeader />
       
-      <div className="container py-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className={`text-3xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
-            <MessageCircle className="h-8 w-8" />
-            Messages
-          </h1>
-          <p className={`${currentTheme.muted}`}>
-            Connect with people around the world
-          </p>
-        </div>
+      {/* Telegram-style layout - full height container */}
+      <div className="flex-1 flex">
+        <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex h-full`} style={{ height: 'calc(100vh - 140px)' }}>
+          <MessagesList
+            conversations={conversations}
+            selectedChat={selectedChat}
+            onSelectChat={handleSelectChat}
+            onSelectUser={handleSelectUser}
+          />
 
-        <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} overflow-hidden shadow-lg`} style={{ height: 'calc(100vh - 280px)' }}>
-          <div className="flex h-full">
-            <MessagesList
-              conversations={conversations}
-              selectedChat={selectedChat}
-              onSelectChat={handleSelectChat}
-              onSelectUser={handleSelectUser}
-            />
-
-            <ChatWindow
-              selectedChatData={selectedChatData}
-              otherParticipant={otherParticipant}
-              messages={messages}
-              messageInput={messageInput}
-              onMessageChange={setMessageInput}
-              onSendMessage={handleSendMessage}
-              onUserClick={handleUserClick}
-            />
-          </div>
+          <ChatWindow
+            selectedChatData={selectedChatData}
+            otherParticipant={otherParticipant}
+            messages={messages}
+            messageInput={messageInput}
+            onMessageChange={setMessageInput}
+            onSendMessage={handleSendMessage}
+            onUserClick={handleUserClick}
+          />
         </div>
       </div>
 
