@@ -4,16 +4,19 @@ import { MessageCircle, Search, Send, User, Phone, Video, Plus } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import UserSearch from "@/components/UserSearch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Messages = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { conversations, messages, loading, fetchMessages, sendMessage, createConversation } = useMessages();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
@@ -58,6 +61,12 @@ const Messages = () => {
       : conversation.participant1;
   };
 
+  const handleUserClick = (participant: any) => {
+    if (participant?.id) {
+      navigate(`/profile?userId=${participant.id}`);
+    }
+  };
+
   const selectedChatData = conversations.find(chat => chat.id === selectedChat);
   const otherParticipant = selectedChatData ? getOtherParticipant(selectedChatData) : null;
 
@@ -78,9 +87,9 @@ const Messages = () => {
     <div className={`min-h-screen ${currentTheme.bg}`}>
       <SkidHavenHeader />
       
-      <div className="container py-4">
+      <div className="container py-6">
         {/* Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-8">
           <h1 className={`text-3xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
             <MessageCircle className="h-8 w-8" />
             Messages
@@ -90,12 +99,12 @@ const Messages = () => {
           </p>
         </div>
 
-        <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} overflow-hidden shadow-lg`} style={{ height: 'calc(100vh - 250px)' }}>
+        <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} overflow-hidden shadow-lg`} style={{ height: 'calc(100vh - 280px)' }}>
           <div className="flex h-full">
             {/* Chat List */}
             <div className={`w-1/3 border-r ${currentTheme.border} flex flex-col`}>
-              <div className="p-4 border-b border-gray-700">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="p-6 border-b border-gray-700">
+                <div className="flex items-center gap-2 mb-4">
                   <Button
                     onClick={() => setShowUserSearch(!showUserSearch)}
                     className={`${currentTheme.primary} text-white flex items-center gap-2`}
@@ -107,7 +116,7 @@ const Messages = () => {
                 </div>
                 
                 {showUserSearch && (
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <UserSearch 
                       onSelectUser={handleSelectUser}
                       onClose={() => setShowUserSearch(false)}
@@ -125,7 +134,7 @@ const Messages = () => {
               </div>
               
               <ScrollArea className="flex-1">
-                <div className="p-2">
+                <div className="p-3">
                   {conversations.length === 0 ? (
                     <div className="p-8 text-center">
                       <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
@@ -139,20 +148,24 @@ const Messages = () => {
                         <button
                           key={conversation.id}
                           onClick={() => handleSelectChat(conversation.id)}
-                          className={`w-full p-3 rounded-lg mb-2 text-left transition-all ${
+                          className={`w-full p-4 rounded-lg mb-3 text-left transition-all ${
                             selectedChat === conversation.id 
                               ? `${currentTheme.secondary} ring-2 ring-blue-400` 
                               : `hover:${currentTheme.secondary} ${currentTheme.text}`
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <img
-                              src={participant?.avatar_url || "/placeholder.svg"}
-                              alt={participant?.username || "User"}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage
+                                src={participant?.avatar_url}
+                                alt={participant?.username || "User"}
+                              />
+                              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                                {participant?.username?.charAt(0)?.toUpperCase() || "U"}
+                              </AvatarFallback>
+                            </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">
+                              <p className="font-medium truncate text-base">
                                 {participant?.username || "Anonymous User"}
                               </p>
                               <p className="text-sm opacity-70 truncate">
@@ -173,15 +186,25 @@ const Messages = () => {
               {selectedChatData && otherParticipant ? (
                 <>
                   {/* Chat Header */}
-                  <div className={`p-4 border-b ${currentTheme.border} flex items-center justify-between`}>
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={otherParticipant.avatar_url || "/placeholder.svg"}
-                        alt={otherParticipant.username || "User"}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
+                  <div className={`p-6 border-b ${currentTheme.border} flex items-center justify-between`}>
+                    <div className="flex items-center space-x-4">
+                      <Avatar 
+                        className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                        onClick={() => handleUserClick(otherParticipant)}
+                      >
+                        <AvatarImage
+                          src={otherParticipant.avatar_url}
+                          alt={otherParticipant.username || "User"}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                          {otherParticipant.username?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        <h3 className={`font-semibold ${currentTheme.text}`}>
+                        <h3 
+                          className={`font-semibold ${currentTheme.text} cursor-pointer hover:text-blue-400 transition-colors`}
+                          onClick={() => handleUserClick(otherParticipant)}
+                        >
                           {otherParticipant.username || "Anonymous User"}
                         </h3>
                         <p className={`text-sm ${currentTheme.muted}`}>Online</p>
@@ -199,8 +222,8 @@ const Messages = () => {
                   </div>
 
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-4">
+                  <ScrollArea className="flex-1 p-6">
+                    <div className="space-y-6">
                       {messages.length === 0 ? (
                         <div className="text-center py-12">
                           <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
@@ -213,17 +236,41 @@ const Messages = () => {
                             key={message.id}
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div
-                              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                                message.sender_id === user?.id
-                                  ? `${currentTheme.primary} text-white`
-                                  : `${currentTheme.secondary} ${currentTheme.text}`
-                              }`}
-                            >
-                              <p className="text-sm">{message.content}</p>
-                              <p className="text-xs mt-2 opacity-70">
-                                {new Date(message.created_at).toLocaleTimeString()}
-                              </p>
+                            <div className="flex items-end space-x-3 max-w-xs lg:max-w-md">
+                              {message.sender_id !== user?.id && (
+                                <Avatar className="h-8 w-8 mb-1">
+                                  <AvatarImage
+                                    src={otherParticipant?.avatar_url}
+                                    alt={otherParticipant?.username || "User"}
+                                  />
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs">
+                                    {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              <div
+                                className={`px-4 py-3 rounded-2xl ${
+                                  message.sender_id === user?.id
+                                    ? `${currentTheme.primary} text-white ml-auto`
+                                    : `${currentTheme.secondary} ${currentTheme.text}`
+                                }`}
+                              >
+                                <p className="text-sm leading-relaxed">{message.content}</p>
+                                <p className="text-xs mt-2 opacity-70">
+                                  {new Date(message.created_at).toLocaleTimeString()}
+                                </p>
+                              </div>
+                              {message.sender_id === user?.id && (
+                                <Avatar className="h-8 w-8 mb-1">
+                                  <AvatarImage
+                                    src={user?.user_metadata?.avatar_url}
+                                    alt="You"
+                                  />
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-xs">
+                                    {user?.email?.charAt(0)?.toUpperCase() || "Y"}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
                             </div>
                           </div>
                         ))
@@ -232,21 +279,21 @@ const Messages = () => {
                   </ScrollArea>
 
                   {/* Message Input */}
-                  <div className={`p-4 border-t ${currentTheme.border}`}>
-                    <div className="flex items-center space-x-3">
+                  <div className={`p-6 border-t ${currentTheme.border}`}>
+                    <div className="flex items-center space-x-4">
                       <Input
                         placeholder="Type a message..."
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full px-4`}
+                        className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full px-6 py-3`}
                       />
                       <Button 
                         onClick={handleSendMessage}
                         disabled={!messageInput.trim()}
-                        className={`${currentTheme.primary} text-white rounded-full w-10 h-10`}
+                        className={`${currentTheme.primary} text-white rounded-full w-12 h-12`}
                       >
-                        <Send className="h-4 w-4" />
+                        <Send className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
