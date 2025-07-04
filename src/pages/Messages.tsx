@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
-import SkidHavenHeader from "@/components/SkidHavenHeader";
-import SkidHavenFooter from "@/components/SkidHavenFooter";
 import MessagesList from "@/components/MessagesList";
 import ChatWindow from "@/components/ChatWindow";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -66,46 +64,35 @@ const Messages = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${currentTheme.bg}`}>
-        <SkidHavenHeader />
-        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 200px)' }}>
-          <div className="text-center">
-            <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
-            <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
-          </div>
+      <div className={`h-screen ${currentTheme.bg} flex items-center justify-center`}>
+        <div className="text-center">
+          <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
+          <p className={`${currentTheme.text} text-lg`}>Loading your conversations...</p>
         </div>
-        <SkidHavenFooter />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} flex flex-col`}>
-      <SkidHavenHeader />
-      
-      {/* Telegram-style layout - full height container */}
-      <div className="flex-1 flex">
-        <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex h-full`} style={{ height: 'calc(100vh - 140px)' }}>
-          <MessagesList
-            conversations={conversations}
-            selectedChat={selectedChat}
-            onSelectChat={handleSelectChat}
-            onSelectUser={handleSelectUser}
-          />
+    <div className={`h-screen ${currentTheme.bg} flex overflow-hidden`}>
+      <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex h-full`}>
+        <MessagesList
+          conversations={conversations}
+          selectedChat={selectedChat}
+          onSelectChat={handleSelectChat}
+          onSelectUser={handleSelectUser}
+        />
 
-          <ChatWindow
-            selectedChatData={selectedChatData}
-            otherParticipant={otherParticipant}
-            messages={messages}
-            messageInput={messageInput}
-            onMessageChange={setMessageInput}
-            onSendMessage={handleSendMessage}
-            onUserClick={handleUserClick}
-          />
-        </div>
+        <ChatWindow
+          selectedChatData={selectedChatData}
+          otherParticipant={otherParticipant}
+          messages={messages}
+          messageInput={messageInput}
+          onMessageChange={setMessageInput}
+          onSendMessage={handleSendMessage}
+          onUserClick={handleUserClick}
+        />
       </div>
-
-      <SkidHavenFooter />
     </div>
   );
 };
