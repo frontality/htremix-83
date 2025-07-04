@@ -224,11 +224,11 @@ const Messages = () => {
                     </div>
                   </div>
 
-                  {/* Messages - Full screen with better spacing */}
-                  <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-6 max-w-4xl mx-auto">
+                  {/* Messages Area - Full height with better proportions */}
+                  <ScrollArea className="flex-1 p-4">
+                    <div className="space-y-4 max-w-full">
                       {messages.length === 0 ? (
-                        <div className="text-center py-16">
+                        <div className="text-center py-20">
                           <MessageCircle className={`h-16 w-16 ${currentTheme.muted} mx-auto mb-6`} />
                           <p className={`${currentTheme.text} font-medium mb-2 text-xl`}>Start the conversation!</p>
                           <p className={`${currentTheme.muted}`}>Send a message to break the ice</p>
@@ -239,14 +239,14 @@ const Messages = () => {
                             key={message.id}
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className="flex items-end space-x-3 max-w-3xl">
+                            <div className="flex items-end space-x-3 max-w-[70%]">
                               {message.sender_id !== user?.id && (
-                                <Avatar className="h-10 w-10 mb-1 flex-shrink-0">
+                                <Avatar className="h-8 w-8 mb-1 flex-shrink-0">
                                   <AvatarImage
                                     src={otherParticipant?.avatar_url}
                                     alt={otherParticipant?.username || "User"}
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-sm">
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs">
                                     {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
                                   </AvatarFallback>
                                 </Avatar>
@@ -264,12 +264,12 @@ const Messages = () => {
                                 </p>
                               </div>
                               {message.sender_id === user?.id && (
-                                <Avatar className="h-10 w-10 mb-1 flex-shrink-0">
+                                <Avatar className="h-8 w-8 mb-1 flex-shrink-0">
                                   <AvatarImage
                                     src={user?.user_metadata?.avatar_url}
                                     alt="You"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm">
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-xs">
                                     {user?.user_metadata?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "Y"}
                                   </AvatarFallback>
                                 </Avatar>
