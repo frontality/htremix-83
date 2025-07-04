@@ -56,14 +56,14 @@ const Index = () => {
         <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow" style={{animationDelay: '2s'}}></div>
       </div>
 
-      {/* Main Container - Single Viewport */}
-      <div className="relative z-10 min-h-screen flex flex-col justify-center py-4 px-4">
+      {/* Main Container */}
+      <div className="relative z-10 min-h-screen flex flex-col justify-center py-12 px-4">
         <div className="container mx-auto max-w-7xl">
           
-          {/* Hero Section - Compact */}
-          <div className={`text-center mb-8 transition-all duration-1000 ${isVisible ? animationClasses.fadeIn : 'opacity-0'}`}>
-            <div className="flex items-center justify-center mb-4">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold flex items-center gap-3 hover:scale-105 transition-transform duration-300">
+          {/* Hero Section */}
+          <div className={`text-center mb-16 transition-all duration-1000 ${isVisible ? animationClasses.fadeIn : 'opacity-0'}`}>
+            <div className="flex items-center justify-center mb-6">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold flex items-center gap-4 hover:scale-105 transition-transform duration-300">
                 <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent animate-pulse-slow">
                   SKID
                 </span>
@@ -71,7 +71,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/2a21bfaa-d803-4e5a-aa4e-e377ae6c835f.png" 
                     alt="Volcano Logo" 
-                    className="w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain hover:rotate-12 transition-transform duration-300"
+                    className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain hover:rotate-12 transition-transform duration-300"
                   />
                 </div>
                 <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent animate-pulse-slow">
@@ -79,52 +79,52 @@ const Index = () => {
                 </span>
               </h1>
             </div>
-            <p className={`text-base md:text-lg lg:text-xl ${currentTheme.muted} mb-6 max-w-3xl mx-auto leading-relaxed`}>
+            <p className={`text-lg md:text-xl lg:text-2xl ${currentTheme.muted} mb-8 max-w-4xl mx-auto leading-relaxed`}>
               {t("The premier digital marketplace for gift cards, game accounts, and premium subscriptions")}
             </p>
             
-            {/* CTA Buttons - Compact */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link to="/marketplace">
-                <Button className={`${currentTheme.primary} text-white px-6 py-2.5 text-base font-semibold ${hoverClasses.scale} transition-all duration-300 shadow-lg hover:shadow-xl`}>
-                  <ShoppingBag className="mr-2 h-4 w-4" />
+                <Button className={`${currentTheme.primary} text-white px-8 py-3 text-lg font-semibold ${hoverClasses.scale} transition-all duration-300 shadow-lg hover:shadow-xl`}>
+                  <ShoppingBag className="mr-2 h-5 w-5" />
                   {t("Browse Marketplace")}
                 </Button>
               </Link>
               <Link to="/sell">
-                <Button variant="outline" className={`${currentTheme.text} border-2 px-6 py-2.5 text-base font-semibold ${hoverClasses.scale} transition-all duration-300`}>
-                  <DollarSign className="mr-2 h-4 w-4" />
+                <Button variant="outline" className={`${currentTheme.text} border-2 px-8 py-3 text-lg font-semibold ${hoverClasses.scale} transition-all duration-300`}>
+                  <DollarSign className="mr-2 h-5 w-5" />
                   {t("Start Selling")}
                 </Button>
               </Link>
             </div>
 
-            {/* Search Bar - Compact */}
-            <div className="relative max-w-xl mx-auto mb-8">
-              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${currentTheme.muted}`} />
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto mb-16">
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${currentTheme.muted}`} />
               <Input
                 placeholder={t("Search digital items...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 py-2.5 text-sm ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full shadow-md hover:shadow-lg transition-all duration-300`}
+                className={`pl-12 py-4 text-lg ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-full shadow-md hover:shadow-lg transition-all duration-300`}
               />
             </div>
           </div>
 
-          {/* Content Grid - Optimized Layout */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          {/* Content Grid */}
+          <div className="grid lg:grid-cols-2 gap-12 mb-16">
             
             {/* Features Grid */}
             <div>
-              <h2 className={`text-xl md:text-2xl font-bold ${currentTheme.text} mb-4 text-center lg:text-left`}>
+              <h2 className={`text-2xl md:text-3xl font-bold ${currentTheme.text} mb-8 text-center lg:text-left`}>
                 {t("Why Choose SKID HAVEN?")}
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {features.map((feature, index) => (
-                  <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center ${hoverClasses.scale} transition-all duration-300 hover:shadow-lg group`}>
-                    <feature.icon className={`h-8 w-8 mx-auto mb-2 ${feature.color} group-hover:scale-110 transition-all duration-300`} />
-                    <h3 className={`text-sm font-semibold ${currentTheme.text} mb-1`}>{feature.title}</h3>
-                    <p className={`text-xs ${currentTheme.muted}`}>{feature.description}</p>
+                  <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} transition-all duration-300 hover:shadow-lg group`}>
+                    <feature.icon className={`h-12 w-12 mx-auto mb-4 ${feature.color} group-hover:scale-110 transition-all duration-300`} />
+                    <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>{feature.title}</h3>
+                    <p className={`text-sm ${currentTheme.muted}`}>{feature.description}</p>
                   </Card>
                 ))}
               </div>
@@ -132,36 +132,36 @@ const Index = () => {
 
             {/* Categories & CTA */}
             <div>
-              <h2 className={`text-xl md:text-2xl font-bold ${currentTheme.text} mb-4 text-center lg:text-left`}>
+              <h2 className={`text-2xl md:text-3xl font-bold ${currentTheme.text} mb-8 text-center lg:text-left`}>
                 {t("Popular Categories")}
               </h2>
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-6 mb-8">
                 {categories.map((category, index) => (
-                  <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center ${hoverClasses.scale} transition-all duration-300 cursor-pointer group hover:shadow-lg`}>
-                    <category.icon className={`h-8 w-8 mx-auto mb-2 ${category.color} group-hover:scale-110 transition-all duration-300`} />
-                    <h3 className={`text-sm font-semibold ${currentTheme.text} mb-1`}>{category.name}</h3>
-                    <p className={`text-xs ${currentTheme.muted}`}>{category.count}</p>
+                  <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} transition-all duration-300 cursor-pointer group hover:shadow-lg`}>
+                    <category.icon className={`h-12 w-12 mx-auto mb-4 ${category.color} group-hover:scale-110 transition-all duration-300`} />
+                    <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>{category.name}</h3>
+                    <p className={`text-sm ${currentTheme.muted}`}>{category.count}</p>
                   </Card>
                 ))}
               </div>
 
               {/* Final CTA */}
-              <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center`}>
-                <h3 className={`text-lg font-bold ${currentTheme.text} mb-2`}>
+              <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 text-center`}>
+                <h3 className={`text-xl font-bold ${currentTheme.text} mb-3`}>
                   {t("Ready to Start Trading?")}
                 </h3>
-                <p className={`text-sm ${currentTheme.muted} mb-4`}>
+                <p className={`${currentTheme.muted} mb-6`}>
                   {t("Join our community of digital traders")}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link to="/signup">
-                    <Button className={`${currentTheme.primary} text-white px-4 py-2 text-sm font-semibold ${hoverClasses.scale} transition-all duration-300`}>
+                    <Button className={`${currentTheme.primary} text-white px-6 py-2 font-semibold ${hoverClasses.scale} transition-all duration-300`}>
                       <Heart className="mr-2 h-4 w-4" />
                       {t("Join Community")}
                     </Button>
                   </Link>
                   <Link to="/messages">
-                    <Button variant="outline" className={`${currentTheme.text} border-2 px-4 py-2 text-sm font-semibold ${hoverClasses.scale} transition-all duration-300`}>
+                    <Button variant="outline" className={`${currentTheme.text} border-2 px-6 py-2 font-semibold ${hoverClasses.scale} transition-all duration-300`}>
                       <MessageCircle className="mr-2 h-4 w-4" />
                       {t("Start Chatting")}
                     </Button>
@@ -171,18 +171,18 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Stats Bar - Bottom */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { label: t("Active Users"), value: "0", icon: Users },
               { label: t("Items Sold"), value: "0", icon: ShoppingBag },
               { label: t("Transactions"), value: "0", icon: DollarSign },
               { label: t("Success Rate"), value: "100%", icon: Trophy }
             ].map((stat, index) => (
-              <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-3 text-center ${hoverClasses.scale} transition-all duration-300`}>
-                <stat.icon className={`h-5 w-5 mx-auto mb-1 ${currentTheme.accent}`} />
-                <div className={`text-lg font-bold ${currentTheme.text}`}>{stat.value}</div>
-                <div className={`text-xs ${currentTheme.muted}`}>{stat.label}</div>
+              <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} transition-all duration-300`}>
+                <stat.icon className={`h-8 w-8 mx-auto mb-3 ${currentTheme.accent}`} />
+                <div className={`text-2xl font-bold ${currentTheme.text} mb-1`}>{stat.value}</div>
+                <div className={`text-sm ${currentTheme.muted}`}>{stat.label}</div>
               </Card>
             ))}
           </div>
