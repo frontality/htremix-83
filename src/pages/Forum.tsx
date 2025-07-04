@@ -100,45 +100,44 @@ const Forum = () => {
     }
   ];
 
-  useEffect(() => {
-    // Load ALL posts from localStorage with debugging
-    const loadPosts = () => {
-      try {
-        const savedPosts = localStorage.getItem('forum_posts');
-        console.log('Raw localStorage data:', savedPosts);
-        
-        if (savedPosts && savedPosts !== 'null' && savedPosts !== 'undefined') {
-          const allPosts = JSON.parse(savedPosts);
-          console.log('All posts loaded:', allPosts);
-          console.log('Number of posts:', allPosts.length);
-          
-          // Ensure we have an array
-          if (Array.isArray(allPosts)) {
-            setPosts(allPosts);
-            console.log('Posts set successfully:', allPosts.length);
-          } else {
-            console.error('Posts data is not an array:', allPosts);
-            setPosts([]);
-          }
-        } else {
-          console.log('No posts found in localStorage, setting empty array');
-          setPosts([]);
+  // Function to safely load posts from localStorage
+  const loadPostsFromStorage = () => {
+    try {
+      const savedPosts = localStorage.getItem('forum_posts');
+      console.log('Loading posts from localStorage:', savedPosts);
+      
+      if (savedPosts && savedPosts !== 'null' && savedPosts !== 'undefined') {
+        const parsedPosts = JSON.parse(savedPosts);
+        if (Array.isArray(parsedPosts)) {
+          console.log('Successfully loaded posts:', parsedPosts.length);
+          return parsedPosts;
         }
-      } catch (error) {
-        console.error('Error loading posts:', error);
-        setPosts([]);
       }
-    };
+      
+      console.log('No valid posts found, returning empty array');
+      return [];
+    } catch (error) {
+      console.error('Error loading posts from localStorage:', error);
+      return [];
+    }
+  };
 
-    loadPosts();
+  // Function to safely save posts to localStorage
+  const savePostsToStorage = (postsToSave: ForumPost[]) => {
+    try {
+      const postsJson = JSON.stringify(postsToSave);
+      localStorage.setItem('forum_posts', postsJson);
+      console.log('Posts saved to localStorage:', postsToSave.length);
+      return true;
+    } catch (error) {
+      console.error('Error saving posts to localStorage:', error);
+      return false;
+    }
+  };
 
-    // Set up an interval to refresh posts every 3 seconds
-    const interval = setInterval(() => {
-      console.log('Refreshing posts...');
-      loadPosts();
-    }, 3000);
-
-    return () => clearInterval(interval);
+  useEffect(() => {
+    const loadedPosts = loadPostsFromStorage();
+    setPosts(loadedPosts);
   }, []);
 
   const filteredPosts = selectedCategory 
@@ -184,36 +183,11 @@ const Forum = () => {
       isPinned: false
     };
 
-    try {
-      // Get existing posts from localStorage
-      const existingPostsData = localStorage.getItem('forum_posts');
-      let allPosts = [];
-      
-      if (existingPostsData && existingPostsData !== 'null') {
-        allPosts = JSON.parse(existingPostsData);
-      }
-      
-      // Ensure allPosts is an array
-      if (!Array.isArray(allPosts)) {
-        allPosts = [];
-      }
-      
-      // Add new post to the beginning
-      const updatedPosts = [post, ...allPosts];
-      
-      console.log('Creating new post:', post);
-      console.log('All posts before save:', updatedPosts);
-      
-      // Save to localStorage
-      localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
-      
-      // Verify it was saved
-      const verifyPosts = localStorage.getItem('forum_posts');
-      console.log('Verified saved posts:', verifyPosts);
-      
-      // Update local state
+    const currentPosts = loadPostsFromStorage();
+    const updatedPosts = [post, ...currentPosts];
+    
+    if (savePostsToStorage(updatedPosts)) {
       setPosts(updatedPosts);
-
       setNewPost({ title: '', content: '', code: '', category: 'general' });
       setShowNewPostForm(false);
 
@@ -221,8 +195,7 @@ const Forum = () => {
         title: "Post Created! 🎉",
         description: "Your post has been published successfully."
       });
-    } catch (error) {
-      console.error('Error creating post:', error);
+    } else {
       toast({
         title: "Error",
         description: "Failed to create post. Please try again.",
@@ -232,12 +205,11 @@ const Forum = () => {
   };
 
   const handlePostClick = (postId: string) => {
-    // Increment view count
     const updatedPosts = posts.map(post => 
       post.id === postId ? { ...post, views: post.views + 1 } : post
     );
     setPosts(updatedPosts);
-    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+    savePostsToStorage(updatedPosts);
     
     navigate(`/forum/post/${postId}`);
   };

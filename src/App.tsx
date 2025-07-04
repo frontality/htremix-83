@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +23,6 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
-import FixedUserSearch from "./components/FixedUserSearch";
 import Settings from "./pages/Settings";
 import Forum from "./pages/Forum";
 import ForumPost from "./pages/ForumPost";
@@ -68,7 +68,6 @@ const App = () => (
                   <Route path="/forum/post/:postId" element={<ForumPost />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <FixedUserSearch />
               </div>
             </div>
           </TooltipProvider>
