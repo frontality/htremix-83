@@ -173,16 +173,3 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.7);
 }
-
-/* Remove any potential margin/padding that could cause extra space */
-.container {
-  @apply px-4 mx-auto;
-  max-width: 100%;
-}
-
-/* Ensure no extra spacing in main containers */
-main, section, div[class*="container"] {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
