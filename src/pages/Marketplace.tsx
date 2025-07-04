@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Search, Filter, Grid, List, SlidersHorizontal, Gift } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Filter, Grid, List, SlidersHorizontal, Gift, DollarSign, User, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,20 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Link } from "react-router-dom";
 
+interface MarketplaceItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  deliveryMethod: string;
+  seller: string;
+  sellerId: string;
+  images: string[];
+  createdAt: string;
+  views: number;
+}
+
 const Marketplace = () => {
   const { currentTheme } = useTheme();
   const { t } = useLanguage();
@@ -17,6 +31,7 @@ const Marketplace = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [items, setItems] = useState<MarketplaceItem[]>([]);
 
   const categories = [
     { value: "all", label: t("All Categories") },
@@ -27,6 +42,73 @@ const Marketplace = () => {
     { value: "streaming", label: t("Streaming Services") },
     { value: "digital-content", label: t("Digital Content") }
   ];
+
+  // Load items from localStorage on component mount
+  useEffect(() => {
+    const loadItems = () => {
+      try {
+        const savedItems = localStorage.getItem('marketplace_items');
+        console.log('Loading marketplace items:', savedItems);
+        
+        if (savedItems) {
+          const parsedItems = JSON.parse(savedItems);
+          if (Array.isArray(parsedItems)) {
+            console.log('Loaded marketplace items successfully:', parsedItems.length);
+            setItems(parsedItems);
+            return;
+          }
+        }
+        
+        console.log('No marketplace items found');
+        setItems([]);
+      } catch (error) {
+        console.error('Error loading marketplace items:', error);
+        setItems([]);
+      }
+    };
+
+    loadItems();
+  }, []);
+
+  // Filter and sort items
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === "all" || item.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return a.price - b.price;
+      case "price-high":
+        return b.price - a.price;
+      case "popular":
+        return b.views - a.views;
+      case "newest":
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
+  const handleItemClick = (itemId: string) => {
+    // Update view count
+    const updatedItems = items.map(item =>
+      item.id === itemId ? { ...item, views: item.views + 1 } : item
+    );
+    setItems(updatedItems);
+    localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "gift-cards":
+        return <Gift className="h-4 w-4" />;
+      default:
+        return <Gift className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className={`min-h-screen ${currentTheme.bg}`}>
@@ -102,42 +184,173 @@ const Marketplace = () => {
           </div>
         </div>
 
-        {/* No Items Message */}
-        <div className="text-center py-16">
-          <Gift className={`h-24 w-24 ${currentTheme.muted} mx-auto mb-6`} />
-          <h2 className={`text-2xl font-semibold ${currentTheme.text} mb-4`}>
-            {t("No Items Listed Yet")}
-          </h2>
-          <p className={`text-lg ${currentTheme.muted} mb-8 max-w-2xl mx-auto`}>
-            {t("The marketplace is waiting for amazing digital items! Be the first to list your gift cards, game accounts, or premium subscriptions.")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/sell">
-              <Button className={`${currentTheme.primary} text-white px-8 py-3 text-lg font-semibold hover:scale-105 transition-transform`}>
-                {t("List Your Items")}
-              </Button>
-            </Link>
-            <Link to="/">
-              <Button variant="outline" className={`${currentTheme.text} border-2 px-8 py-3 text-lg font-semibold hover:scale-105 transition-transform`}>
-                {t("Back to Home")}
-              </Button>
-            </Link>
+        {/* Items Grid/List */}
+        {sortedItems.length > 0 ? (
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
+            {sortedItems.map((item) => (
+              <Card 
+                key={item.id} 
+                className={`${currentTheme.cardBg} border ${currentTheme.border} hover:border-purple-500/50 transition-all cursor-pointer ${
+                  viewMode === "list" ? "p-4" : "overflow-hidden"
+                }`}
+                onClick={() => handleItemClick(item.id)}
+              >
+                {viewMode === "grid" ? (
+                  <>
+                    {/* Image */}
+                    <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                      {item.images && item.images.length > 0 ? (
+                        <img 
+                          src={item.images[0]} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center">
+                          {getCategoryIcon(item.category)}
+                          <p className={`text-sm ${currentTheme.muted} mt-2`}>No Image</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {categories.find(c => c.value === item.category)?.label || item.category}
+                        </Badge>
+                        <div className="flex items-center text-xs text-gray-400">
+                          <Eye className="h-3 w-3 mr-1" />
+                          {item.views}
+                        </div>
+                      </div>
+                      
+                      <h3 className={`font-semibold ${currentTheme.text} mb-2 line-clamp-2`}>
+                        {item.title}
+                      </h3>
+                      
+                      <p className={`text-sm ${currentTheme.muted} mb-3 line-clamp-2`}>
+                        {item.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-lg font-bold text-green-400">
+                          <DollarSign className="h-4 w-4" />
+                          {item.price.toFixed(2)}
+                        </div>
+                        <div className="flex items-center text-xs text-gray-400">
+                          <User className="h-3 w-3 mr-1" />
+                          {item.seller}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex space-x-4">
+                    <div className="w-24 h-24 bg-gray-800 rounded flex items-center justify-center flex-shrink-0">
+                      {item.images && item.images.length > 0 ? (
+                        <img 
+                          src={item.images[0]} 
+                          alt={item.title}
+                          className="w-full h-full object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      ) : (
+                        getCategoryIcon(item.category)
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className={`font-semibold ${currentTheme.text}`}>
+                          {item.title}
+                        </h3>
+                        <div className="flex items-center text-lg font-bold text-green-400">
+                          <DollarSign className="h-4 w-4" />
+                          {item.price.toFixed(2)}
+                        </div>
+                      </div>
+                      
+                      <p className={`text-sm ${currentTheme.muted} mb-2`}>
+                        {item.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                        <div className="flex items-center space-x-4">
+                          <Badge variant="secondary" className="text-xs">
+                            {categories.find(c => c.value === item.category)?.label || item.category}
+                          </Badge>
+                          <div className="flex items-center">
+                            <User className="h-3 w-3 mr-1" />
+                            {item.seller}
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <Eye className="h-3 w-3 mr-1" />
+                          {item.views}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
-        </div>
+        ) : (
+          /* No Items Message */
+          <div className="text-center py-16">
+            <Gift className={`h-24 w-24 ${currentTheme.muted} mx-auto mb-6`} />
+            <h2 className={`text-2xl font-semibold ${currentTheme.text} mb-4`}>
+              {sortedItems.length === 0 && items.length > 0 
+                ? t("No items match your search")
+                : t("No Items Listed Yet")
+              }
+            </h2>
+            <p className={`text-lg ${currentTheme.muted} mb-8 max-w-2xl mx-auto`}>
+              {sortedItems.length === 0 && items.length > 0
+                ? t("Try adjusting your search or filters to find what you're looking for.")
+                : t("The marketplace is waiting for amazing digital items! Be the first to list your gift cards, game accounts, or premium subscriptions.")
+              }
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/sell">
+                <Button className={`${currentTheme.primary} text-white px-8 py-3 text-lg font-semibold hover:scale-105 transition-transform`}>
+                  {t("List Your Items")}
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button variant="outline" className={`${currentTheme.text} border-2 px-8 py-3 text-lg font-semibold hover:scale-105 transition-transform`}>
+                  {t("Back to Home")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Categories Preview */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-12">
-          {categories.slice(1).map((category, index) => (
-            <Card key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center hover:scale-105 transition-transform cursor-pointer`}>
-              <Gift className={`h-8 w-8 mx-auto mb-3 ${currentTheme.accent}`} />
-              <h3 className={`font-medium ${currentTheme.text} text-sm mb-1`}>
-                {category.label}
-              </h3>
-              <p className={`text-xs ${currentTheme.muted}`}>
-                {t("0 items")}
-              </p>
-            </Card>
-          ))}
+          {categories.slice(1).map((category, index) => {
+            const categoryItemCount = items.filter(item => item.category === category.value).length;
+            return (
+              <Card 
+                key={index} 
+                className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center hover:scale-105 transition-transform cursor-pointer`}
+                onClick={() => setFilterCategory(category.value)}
+              >
+                <Gift className={`h-8 w-8 mx-auto mb-3 ${currentTheme.accent}`} />
+                <h3 className={`font-medium ${currentTheme.text} text-sm mb-1`}>
+                  {category.label}
+                </h3>
+                <p className={`text-xs ${currentTheme.muted}`}>
+                  {categoryItemCount} {t("items")}
+                </p>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

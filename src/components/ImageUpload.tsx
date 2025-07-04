@@ -10,9 +10,16 @@ interface ImageUploadProps {
   onImageUpload: (imageUrl: string) => void;
   className?: string;
   bucket?: string;
+  variant?: "avatar" | "marketplace";
 }
 
-const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "avatars" }: ImageUploadProps) => {
+const ImageUpload = ({ 
+  currentImage, 
+  onImageUpload, 
+  className = "", 
+  bucket = "avatars", 
+  variant = "avatar" 
+}: ImageUploadProps) => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -59,8 +66,10 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
         const imageKey = `uploaded_image_${Date.now()}_${file.name}`;
         localStorage.setItem(imageKey, base64String);
         
-        // Also save as current avatar for persistence
-        localStorage.setItem('current_avatar', base64String);
+        // Also save as current avatar for persistence if it's avatar variant
+        if (variant === "avatar") {
+          localStorage.setItem('current_avatar', base64String);
+        }
         
         onImageUpload(base64String);
         
@@ -97,60 +106,94 @@ const ImageUpload = ({ currentImage, onImageUpload, className = "", bucket = "av
   };
 
   const handleRemoveImage = () => {
-    localStorage.removeItem('current_avatar');
-    onImageUpload("/placeholder.svg");
-    toast({
-      title: "Image removed",
-      description: "Profile image has been reset to default",
-    });
+    if (variant === "avatar") {
+      localStorage.removeItem('current_avatar');
+      onImageUpload("/placeholder.svg");
+      toast({
+        title: "Image removed",
+        description: "Profile image has been reset to default",
+      });
+    }
   };
 
-  return (
-    <div className={`relative group ${className}`}>
-      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105 bg-gray-800">
-        <img
-          src={currentImage || "/placeholder.svg"}
-          alt="Upload preview"
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            console.log('Image load error, using placeholder');
-            (e.target as HTMLImageElement).src = "/placeholder.svg";
-          }}
+  // Avatar variant (existing functionality)
+  if (variant === "avatar") {
+    return (
+      <div className={`relative group ${className}`}>
+        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 shadow-lg transition-transform group-hover:scale-105 bg-gray-800">
+          <img
+            src={currentImage || "/placeholder.svg"}
+            alt="Upload preview"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.log('Image load error, using placeholder');
+              (e.target as HTMLImageElement).src = "/placeholder.svg";
+            }}
+          />
+        </div>
+        
+        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          <label htmlFor="image-upload" className="cursor-pointer">
+            <Button
+              type="button"
+              size="sm"
+              className={`${currentTheme.primary} text-white shadow-lg hover:scale-110 transition-transform flex items-center gap-2 pointer-events-none`}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : uploadSuccess ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+              {uploading ? 'Uploading...' : uploadSuccess ? 'Success!' : 'Change'}
+            </Button>
+          </label>
+        </div>
+        
+        {/* Remove button */}
+        {currentImage && currentImage !== "/placeholder.svg" && (
+          <button
+            onClick={handleRemoveImage}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+          >
+            <X className="h-3 w-3 text-white" />
+          </button>
+        )}
+        
+        <input
+          id="image-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+          disabled={uploading}
         />
       </div>
-      
-      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-        <label htmlFor="image-upload" className="cursor-pointer">
-          <Button
-            type="button"
-            size="sm"
-            className={`${currentTheme.primary} text-white shadow-lg hover:scale-110 transition-transform flex items-center gap-2 pointer-events-none`}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : uploadSuccess ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Camera className="h-4 w-4" />
-            )}
-            {uploading ? 'Uploading...' : uploadSuccess ? 'Success!' : 'Change'}
-          </Button>
-        </label>
-      </div>
-      
-      {/* Remove button */}
-      {currentImage && currentImage !== "/placeholder.svg" && (
-        <button
-          onClick={handleRemoveImage}
-          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
-        >
-          <X className="h-3 w-3 text-white" />
-        </button>
-      )}
+    );
+  }
+
+  // Marketplace variant (new functionality)
+  return (
+    <div className={`relative ${className}`}>
+      <label htmlFor={`marketplace-upload-${Math.random()}`} className="cursor-pointer block">
+        <div className="w-full h-full border-2 border-dashed border-gray-500 rounded flex flex-col items-center justify-center p-4 hover:border-purple-500 transition-colors">
+          {uploading ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-2"></div>
+          ) : uploadSuccess ? (
+            <Check className="h-8 w-8 text-green-500 mb-2" />
+          ) : (
+            <Upload className="h-8 w-8 text-gray-400 mb-2" />
+          )}
+          <span className="text-sm text-gray-400 text-center">
+            {uploading ? 'Uploading...' : uploadSuccess ? 'Added!' : 'Add Image'}
+          </span>
+        </div>
+      </label>
       
       <input
-        id="image-upload"
+        id={`marketplace-upload-${Math.random()}`}
         type="file"
         accept="image/*"
         onChange={handleFileUpload}

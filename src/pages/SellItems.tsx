@@ -10,11 +10,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import ImageUpload from "@/components/ImageUpload";
+
+interface MarketplaceItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  deliveryMethod: string;
+  seller: string;
+  sellerId: string;
+  images: string[];
+  createdAt: string;
+  views: number;
+}
 
 const SellItems = () => {
   const { currentTheme } = useTheme();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     title: "",
@@ -22,7 +41,7 @@ const SellItems = () => {
     category: "",
     price: "",
     deliveryMethod: "",
-    images: [] as File[]
+    images: [] as string[]
   });
 
   const categories = [
@@ -44,25 +63,103 @@ const SellItems = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulate listing creation
-    toast({
-      title: t("Item Listed Successfully!"),
-      description: t("Your digital item has been added to the marketplace."),
-    });
-    
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      category: "",
-      price: "",
-      deliveryMethod: "",
-      images: []
-    });
+    if (!user) {
+      toast({
+        title: t("Login Required"),
+        description: t("Please log in to list items."),
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!formData.title || !formData.description || !formData.category || !formData.price || !formData.deliveryMethod) {
+      toast({
+        title: t("Missing Information"),
+        description: t("Please fill in all required fields."),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const newItem: MarketplaceItem = {
+        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        deliveryMethod: formData.deliveryMethod,
+        seller: user.email?.split('@')[0] || 'Anonymous',
+        sellerId: user.id,
+        images: formData.images,
+        createdAt: new Date().toISOString(),
+        views: 0
+      };
+
+      // Load existing items
+      const existingItems = localStorage.getItem('marketplace_items');
+      const items = existingItems ? JSON.parse(existingItems) : [];
+      
+      // Add new item
+      items.push(newItem);
+      
+      // Save back to localStorage
+      localStorage.setItem('marketplace_items', JSON.stringify(items));
+      
+      console.log('Item listed successfully:', newItem);
+      
+      toast({
+        title: t("Item Listed Successfully!"),
+        description: t("Your digital item has been added to the marketplace."),
+      });
+      
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        price: "",
+        deliveryMethod: "",
+        images: []
+      });
+
+      // Navigate to marketplace after a short delay
+      setTimeout(() => {
+        navigate('/marketplace');
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error listing item:', error);
+      toast({
+        title: t("Error"),
+        description: t("Failed to list item. Please try again."),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, imageUrl]
+    }));
+    
+    toast({
+      title: t("Image Added!"),
+      description: t("Image has been added to your listing."),
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -90,7 +187,7 @@ const SellItems = () => {
               <div className="space-y-6">
                 <div>
                   <Label className={`${currentTheme.text} text-sm font-medium`}>
-                    {t("Item Title")}
+                    {t("Item Title")} *
                   </Label>
                   <Input
                     placeholder={t("e.g., $50 Steam Gift Card, Netflix Premium Account, etc.")}
@@ -103,7 +200,7 @@ const SellItems = () => {
 
                 <div>
                   <Label className={`${currentTheme.text} text-sm font-medium`}>
-                    {t("Category")}
+                    {t("Category")} *
                   </Label>
                   <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
                     <SelectTrigger className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}>
@@ -124,7 +221,7 @@ const SellItems = () => {
 
                 <div>
                   <Label className={`${currentTheme.text} text-sm font-medium`}>
-                    {t("Description")}
+                    {t("Description")} *
                   </Label>
                   <Textarea
                     placeholder={t("Describe your digital item in detail. Include any important information about delivery, validity, region restrictions, etc.")}
@@ -147,7 +244,7 @@ const SellItems = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label className={`${currentTheme.text} text-sm font-medium`}>
-                    {t("Price (USD)")}
+                    {t("Price (USD)")} *
                   </Label>
                   <Input
                     type="number"
@@ -163,7 +260,7 @@ const SellItems = () => {
 
                 <div>
                   <Label className={`${currentTheme.text} text-sm font-medium`}>
-                    {t("Delivery Method")}
+                    {t("Delivery Method")} *
                   </Label>
                   <Select value={formData.deliveryMethod} onValueChange={(value) => handleInputChange("deliveryMethod", value)}>
                     <SelectTrigger className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}>
@@ -188,17 +285,42 @@ const SellItems = () => {
                 {t("Images")}
               </h2>
               
-              <div className={`border-2 border-dashed ${currentTheme.border} rounded-lg p-8 text-center`}>
-                <Upload className={`h-12 w-12 mx-auto mb-4 ${currentTheme.muted}`} />
-                <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>
-                  {t("Upload Images")}
-                </h3>
-                <p className={`${currentTheme.muted} mb-4`}>
-                  {t("Add screenshots or images of your digital item (optional but recommended)")}
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={image} 
+                        alt={`Upload ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded border-2 border-purple-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/placeholder.svg";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {formData.images.length < 5 && (
+                    <div className="w-20 h-20 border-2 border-dashed border-gray-500 rounded flex items-center justify-center">
+                      <ImageUpload 
+                        onImageUpload={handleImageUpload}
+                        className="w-full h-full"
+                        currentImage={null}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <p className={`text-sm ${currentTheme.muted}`}>
+                  {t("Add up to 5 images of your digital item (optional but recommended)")}
                 </p>
-                <Button type="button" variant="outline" className={`${currentTheme.text} border-2`}>
-                  {t("Choose Files")}
-                </Button>
               </div>
             </Card>
 

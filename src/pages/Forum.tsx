@@ -100,44 +100,64 @@ const Forum = () => {
     }
   ];
 
-  // Function to safely load posts from localStorage
-  const loadPostsFromStorage = () => {
-    try {
-      const savedPosts = localStorage.getItem('forum_posts');
-      console.log('Loading posts from localStorage:', savedPosts);
-      
-      if (savedPosts && savedPosts !== 'null' && savedPosts !== 'undefined') {
-        const parsedPosts = JSON.parse(savedPosts);
-        if (Array.isArray(parsedPosts)) {
-          console.log('Successfully loaded posts:', parsedPosts.length);
-          return parsedPosts;
-        }
-      }
-      
-      console.log('No valid posts found, returning empty array');
-      return [];
-    } catch (error) {
-      console.error('Error loading posts from localStorage:', error);
-      return [];
-    }
-  };
-
-  // Function to safely save posts to localStorage
-  const savePostsToStorage = (postsToSave: ForumPost[]) => {
-    try {
-      const postsJson = JSON.stringify(postsToSave);
-      localStorage.setItem('forum_posts', postsJson);
-      console.log('Posts saved to localStorage:', postsToSave.length);
-      return true;
-    } catch (error) {
-      console.error('Error saving posts to localStorage:', error);
-      return false;
-    }
-  };
-
+  // Load posts on component mount
   useEffect(() => {
-    const loadedPosts = loadPostsFromStorage();
-    setPosts(loadedPosts);
+    const loadPosts = () => {
+      try {
+        const savedPosts = localStorage.getItem('forum_posts');
+        console.log('Loading forum posts:', savedPosts);
+        
+        if (savedPosts) {
+          const parsedPosts = JSON.parse(savedPosts);
+          if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
+            console.log('Loaded posts successfully:', parsedPosts.length);
+            setPosts(parsedPosts);
+            return;
+          }
+        }
+        
+        // Create some sample posts if none exist
+        const samplePosts: ForumPost[] = [
+          {
+            id: 'sample-1',
+            title: 'Welcome to the Forum!',
+            author: 'Admin',
+            authorId: 'admin',
+            authorAvatar: '/placeholder.svg',
+            content: 'Welcome to our community forum! Feel free to share your thoughts and connect with other members.',
+            category: 'general',
+            replies: 0,
+            views: 5,
+            likes: 2,
+            createdAt: new Date().toLocaleDateString(),
+            isPinned: true
+          },
+          {
+            id: 'sample-2',
+            title: 'Trading Tips and Strategies',
+            author: 'Trader123',
+            authorId: 'trader123',
+            authorAvatar: '/placeholder.svg',
+            content: 'Share your best trading strategies here! What has worked for you?',
+            category: 'trading',
+            replies: 0,
+            views: 3,
+            likes: 1,
+            createdAt: new Date().toLocaleDateString(),
+            isPinned: false
+          }
+        ];
+        
+        localStorage.setItem('forum_posts', JSON.stringify(samplePosts));
+        setPosts(samplePosts);
+        console.log('Created sample posts');
+      } catch (error) {
+        console.error('Error loading forum posts:', error);
+        setPosts([]);
+      }
+    };
+
+    loadPosts();
   }, []);
 
   const filteredPosts = selectedCategory 
@@ -183,11 +203,11 @@ const Forum = () => {
       isPinned: false
     };
 
-    const currentPosts = loadPostsFromStorage();
-    const updatedPosts = [post, ...currentPosts];
-    
-    if (savePostsToStorage(updatedPosts)) {
-      setPosts(updatedPosts);
+    try {
+      const currentPosts = [...posts, post];
+      localStorage.setItem('forum_posts', JSON.stringify(currentPosts));
+      setPosts(currentPosts);
+      
       setNewPost({ title: '', content: '', code: '', category: 'general' });
       setShowNewPostForm(false);
 
@@ -195,7 +215,10 @@ const Forum = () => {
         title: "Post Created! 🎉",
         description: "Your post has been published successfully."
       });
-    } else {
+      
+      console.log('Post created successfully:', post.id);
+    } catch (error) {
+      console.error('Error creating post:', error);
       toast({
         title: "Error",
         description: "Failed to create post. Please try again.",
@@ -209,7 +232,7 @@ const Forum = () => {
       post.id === postId ? { ...post, views: post.views + 1 } : post
     );
     setPosts(updatedPosts);
-    savePostsToStorage(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
     
     navigate(`/forum/post/${postId}`);
   };
@@ -319,11 +342,6 @@ const Forum = () => {
             </div>
           </div>
         )}
-
-        {/* Debug Info */}
-        <div className="mb-4 text-xs text-gray-500">
-          Debug: Total posts loaded: {posts.length} | Filtered posts: {filteredPosts.length}
-        </div>
 
         {/* Posts */}
         <div className="space-y-4">
