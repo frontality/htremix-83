@@ -1,4 +1,3 @@
-
 /* Import clean modern font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -54,9 +53,16 @@
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground font-inter;
     font-feature-settings: "rlig" 1, "calt" 1;
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: hidden;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -313,4 +319,33 @@
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* Fix scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Remove any potential margin/padding that could cause extra space */
+.container {
+  @apply px-4 mx-auto;
+  max-width: 100%;
+}
+
+/* Ensure no extra spacing in main containers */
+main, section, div[class*="container"] {
+  box-sizing: border-box;
 }

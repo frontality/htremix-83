@@ -23,6 +23,7 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
+import MainSidebar from "./components/MainSidebar";
 import Settings from "./pages/Settings";
 import Forum from "./pages/Forum";
 import ForumPost from "./pages/ForumPost";
@@ -45,29 +46,32 @@ const App = () => (
             <div className="min-h-screen relative">
               <CursorBackground />
               <TopHeader />
-              <div className="pt-14 relative z-10">
-                <Toaster />
-                <Sonner position="top-right" closeButton theme="dark" />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/sell" element={<SellItems />} />
-                  <Route path="/payment" element={<Payment />} />
-                  <Route path="/processing-payment" element={<ProcessingPayment />} />
-                  <Route path="/otp-verification" element={<OTPVerification />} />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-                  <Route path="/crypto-exchange" element={<CryptoExchange />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/forum" element={<Forum />} />
-                  <Route path="/forum/post/:postId" element={<ForumPost />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+              <div className="flex pt-14 relative z-10">
+                <div className="flex-1">
+                  <Toaster />
+                  <Sonner position="top-right" closeButton theme="dark" />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/marketplace" element={<Marketplace />} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
+                    <Route path="/sell" element={<SellItems />} />
+                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/processing-payment" element={<ProcessingPayment />} />
+                    <Route path="/otp-verification" element={<OTPVerification />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
+                    <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+                    <Route path="/crypto-exchange" element={<CryptoExchange />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/forum" element={<Forum />} />
+                    <Route path="/forum/post/:postId" element={<ForumPost />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+                <MainSidebar />
               </div>
             </div>
           </TooltipProvider>
