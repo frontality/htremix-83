@@ -224,14 +224,14 @@ const Messages = () => {
                     </div>
                   </div>
 
-                  {/* Messages */}
-                  <ScrollArea className="flex-1 p-8">
-                    <div className="space-y-12">
+                  {/* Messages - Full screen with better spacing */}
+                  <ScrollArea className="flex-1 p-6">
+                    <div className="space-y-6 max-w-4xl mx-auto">
                       {messages.length === 0 ? (
-                        <div className="text-center py-12">
-                          <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                          <p className={`${currentTheme.text} font-medium mb-2`}>Start the conversation!</p>
-                          <p className={`${currentTheme.muted} text-sm`}>Send a message to break the ice</p>
+                        <div className="text-center py-16">
+                          <MessageCircle className={`h-16 w-16 ${currentTheme.muted} mx-auto mb-6`} />
+                          <p className={`${currentTheme.text} font-medium mb-2 text-xl`}>Start the conversation!</p>
+                          <p className={`${currentTheme.muted}`}>Send a message to break the ice</p>
                         </div>
                       ) : (
                         messages.map((message) => (
@@ -239,38 +239,38 @@ const Messages = () => {
                             key={message.id}
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className="flex items-end space-x-4 max-w-2xl">
+                            <div className="flex items-end space-x-3 max-w-3xl">
                               {message.sender_id !== user?.id && (
-                                <Avatar className="h-12 w-12 mb-2">
+                                <Avatar className="h-10 w-10 mb-1 flex-shrink-0">
                                   <AvatarImage
                                     src={otherParticipant?.avatar_url}
                                     alt={otherParticipant?.username || "User"}
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-sm">
                                     {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
                                   </AvatarFallback>
                                 </Avatar>
                               )}
                               <div
-                                className={`px-6 py-5 rounded-2xl ${
+                                className={`px-4 py-3 rounded-2xl min-w-0 ${
                                   message.sender_id === user?.id
                                     ? `${currentTheme.primary} text-white ml-auto`
                                     : `${currentTheme.secondary} ${currentTheme.text}`
                                 }`}
                               >
-                                <p className="text-lg leading-relaxed">{message.content}</p>
-                                <p className="text-sm mt-3 opacity-70">
+                                <p className="text-base leading-relaxed break-words">{message.content}</p>
+                                <p className="text-xs mt-2 opacity-70">
                                   {new Date(message.created_at).toLocaleTimeString()}
                                 </p>
                               </div>
                               {message.sender_id === user?.id && (
-                                <Avatar className="h-12 w-12 mb-2">
+                                <Avatar className="h-10 w-10 mb-1 flex-shrink-0">
                                   <AvatarImage
                                     src={user?.user_metadata?.avatar_url}
                                     alt="You"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white">
-                                    {user?.email?.charAt(0)?.toUpperCase() || "Y"}
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm">
+                                    {user?.user_metadata?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "Y"}
                                   </AvatarFallback>
                                 </Avatar>
                               )}
