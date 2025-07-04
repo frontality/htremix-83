@@ -85,17 +85,17 @@ const Messages = () => {
   }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} relative overflow-hidden`}>
+    <div className={`h-screen ${currentTheme.bg} relative overflow-hidden`}>
       {/* Subtle Background Animation */}
       <div className="absolute inset-0 opacity-3">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse-slow" style={{animationDelay: '2s'}}></div>
       </div>
 
-      {/* Main Container - Full Viewport */}
-      <div className="relative z-10 h-screen flex">
-        {/* Messages List - Responsive Width */}
-        <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-full sm:w-80 md:w-96 lg:w-80 xl:w-96 shadow-xl backdrop-blur-sm`}>
+      {/* Main Container - Exactly viewport height */}
+      <div className="relative z-10 h-full flex">
+        {/* Messages List - Fixed width sidebar */}
+        <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl backdrop-blur-sm`}>
           <MessagesList
             conversations={conversations}
             selectedChat={selectedChat}
@@ -104,7 +104,7 @@ const Messages = () => {
           />
         </div>
 
-        {/* Chat Window - Takes Remaining Space */}
+        {/* Chat Window - Takes remaining space */}
         <div className="flex-1 min-w-0">
           <ChatWindow
             selectedChatData={selectedChatData}
