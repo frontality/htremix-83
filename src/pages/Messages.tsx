@@ -62,7 +62,7 @@ const Messages = () => {
   };
 
   const handleUserClick = (participant: any) => {
-    if (participant?.id) {
+    if (participant?.id && participant.id !== user?.id) {
       navigate(`/profile?userId=${participant.id}`);
     }
   };
@@ -202,12 +202,11 @@ const Messages = () => {
                       </Avatar>
                       <div>
                         <h3 
-                          className={`font-semibold ${currentTheme.text} cursor-pointer hover:text-blue-400 transition-colors`}
+                          className={`font-semibold ${currentTheme.text} cursor-pointer hover:text-blue-400 transition-colors text-lg`}
                           onClick={() => handleUserClick(otherParticipant)}
                         >
                           {otherParticipant.username || "Anonymous User"}
                         </h3>
-                        <p className={`text-sm ${currentTheme.muted}`}>Online</p>
                       </div>
                     </div>
                     
@@ -223,7 +222,7 @@ const Messages = () => {
 
                   {/* Messages */}
                   <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                       {messages.length === 0 ? (
                         <div className="text-center py-12">
                           <MessageCircle className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
@@ -236,37 +235,37 @@ const Messages = () => {
                             key={message.id}
                             className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className="flex items-end space-x-3 max-w-xs lg:max-w-md">
+                            <div className="flex items-end space-x-3 max-w-lg">
                               {message.sender_id !== user?.id && (
-                                <Avatar className="h-8 w-8 mb-1">
+                                <Avatar className="h-10 w-10 mb-1">
                                   <AvatarImage
                                     src={otherParticipant?.avatar_url}
                                     alt={otherParticipant?.username || "User"}
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs">
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-sm">
                                     {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
                                   </AvatarFallback>
                                 </Avatar>
                               )}
                               <div
-                                className={`px-4 py-3 rounded-2xl ${
+                                className={`px-5 py-4 rounded-2xl ${
                                   message.sender_id === user?.id
                                     ? `${currentTheme.primary} text-white ml-auto`
                                     : `${currentTheme.secondary} ${currentTheme.text}`
                                 }`}
                               >
-                                <p className="text-sm leading-relaxed">{message.content}</p>
+                                <p className="text-base leading-relaxed">{message.content}</p>
                                 <p className="text-xs mt-2 opacity-70">
                                   {new Date(message.created_at).toLocaleTimeString()}
                                 </p>
                               </div>
                               {message.sender_id === user?.id && (
-                                <Avatar className="h-8 w-8 mb-1">
+                                <Avatar className="h-10 w-10 mb-1">
                                   <AvatarImage
                                     src={user?.user_metadata?.avatar_url}
                                     alt="You"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-xs">
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm">
                                     {user?.email?.charAt(0)?.toUpperCase() || "Y"}
                                   </AvatarFallback>
                                 </Avatar>
