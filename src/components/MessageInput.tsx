@@ -1,5 +1,5 @@
 
-import { Send } from "lucide-react";
+import { Send, Paperclip, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -21,22 +21,40 @@ const MessageInput = ({ messageInput, onMessageChange, onSendMessage }: MessageI
   };
 
   return (
-    <div className={`p-4 border-t ${currentTheme.border}`}>
-      <div className="flex items-end space-x-3">
+    <div className={`p-6 border-t ${currentTheme.border} bg-gradient-to-r from-purple-500/5 to-pink-500/5 backdrop-blur-sm`}>
+      <div className="flex items-end space-x-4">
+        <div className="flex space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`${currentTheme.text} hover:${currentTheme.secondary} rounded-full w-10 h-10 p-0 transition-all duration-200 hover:scale-110`}
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`${currentTheme.text} hover:${currentTheme.secondary} rounded-full w-10 h-10 p-0 transition-all duration-200 hover:scale-110`}
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+        </div>
+        
         <Input
-          placeholder="Type a message..."
+          placeholder="Type your message..."
           value={messageInput}
           onChange={(e) => onMessageChange(e.target.value)}
           onKeyPress={handleKeyPress}
-          className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-3xl px-4 py-3 min-h-[48px] resize-none`}
-          style={{ minHeight: '48px' }}
+          className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0 rounded-3xl px-6 py-4 min-h-[52px] text-base shadow-inner backdrop-blur-sm border border-white/10 focus:ring-2 focus:ring-purple-500/50 transition-all duration-200`}
+          style={{ minHeight: '52px' }}
         />
+        
         <Button 
           onClick={onSendMessage}
           disabled={!messageInput.trim()}
-          className={`${currentTheme.primary} text-white rounded-full w-12 h-12 p-0 flex-shrink-0`}
+          className={`bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full w-14 h-14 p-0 flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
         >
-          <Send className="h-5 w-5" />
+          <Send className="h-6 w-6" />
         </Button>
       </div>
     </div>
