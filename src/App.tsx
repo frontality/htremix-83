@@ -45,7 +45,7 @@ const App = () => (
             <div className="min-h-screen relative">
               <CursorBackground />
               <TopHeader />
-              <div className="pt-14 relative z-10">
+              <div className="relative z-10">
                 <Toaster />
                 <Sonner position="top-right" closeButton theme="dark" />
                 <Routes>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, MessageCircle, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UserSearch from "@/components/UserSearch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MessagesListProps {
   conversations: any[];
@@ -21,6 +22,7 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
   const { user } = useAuth();
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userPresence, setUserPresence] = useState<Record<string, boolean>>({});
 
   const getOtherParticipant = (conversation: any) => {
     if (!user) return null;
@@ -28,6 +30,57 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
       ? conversation.participant2 
       : conversation.participant1;
   };
+
+  // Track user presence using Supabase realtime
+  useEffect(() => {
+    if (!conversations.length) return;
+
+    const participantIds = conversations.map(conv => {
+      const participant = getOtherParticipant(conv);
+      return participant?.id;
+    }).filter(Boolean);
+
+    if (participantIds.length === 0) return;
+
+    // Create a presence channel to track online users
+    const presenceChannel = supabase.channel('user-presence');
+
+    // Subscribe to presence changes
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const onlineUsers: Record<string, boolean> = {};
+        
+        // Mark all tracked users as offline initially
+        participantIds.forEach(id => {
+          onlineUsers[id] = false;
+        });
+
+        // Update status for users who are present
+        Object.keys(state).forEach(userId => {
+          if (participantIds.includes(userId)) {
+            onlineUsers[userId] = true;
+          }
+        });
+
+        setUserPresence(onlineUsers);
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        if (participantIds.includes(key)) {
+          setUserPresence(prev => ({ ...prev, [key]: true }));
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        if (participantIds.includes(key)) {
+          setUserPresence(prev => ({ ...prev, [key]: false }));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [conversations, user]);
 
   const filteredConversations = conversations.filter(conversation => {
     const participant = getOtherParticipant(conversation);
@@ -107,6 +160,7 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
             filteredConversations.map((conversation) => {
               const participant = getOtherParticipant(conversation);
               const isSelected = selectedChat === conversation.id;
+              const isOnline = userPresence[participant?.id] || false;
               
               return (
                 <button
@@ -129,18 +183,20 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
                           {participant?.username?.charAt(0)?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isSelected ? 'bg-green-400' : 'bg-green-500'}`}></div>
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                        isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      }`}></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`font-semibold truncate ${isSelected ? 'text-white' : currentTheme.text}`}>
                         {participant?.username || "Anonymous User"}
                       </p>
                       <p className={`text-sm truncate ${isSelected ? 'text-white/80' : currentTheme.muted}`}>
-                        Click to chat
+                        {isOnline ? 'Online' : 'Offline'} • Click to chat
                       </p>
                     </div>
                     <div className={`text-xs ${isSelected ? 'text-white/60' : currentTheme.muted}`}>
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                     </div>
                   </div>
                 </button>
