@@ -39,7 +39,7 @@ const defaultSettings: Settings = {
   developerMode: false,
   betaFeatures: false,
   showEmailToPublic: false, // Email hidden by default
-  hideEmail: true,
+  hideEmail: true, // Always hide emails
 };
 
 export const useSettings = () => {
@@ -57,6 +57,9 @@ export const useSettings = () => {
       const savedSettings = localStorage.getItem('kid-haven-settings');
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings);
+        // Always ensure emails are hidden
+        parsedSettings.hideEmail = true;
+        parsedSettings.showEmailToPublic = false;
         setSettings({ ...defaultSettings, ...parsedSettings });
         console.log('Settings loaded:', parsedSettings);
       } else {
@@ -79,6 +82,10 @@ export const useSettings = () => {
   const updateSettings = async (newSettings: Settings): Promise<boolean> => {
     try {
       console.log('Updating settings:', newSettings);
+      // Always ensure emails remain hidden
+      newSettings.hideEmail = true;
+      newSettings.showEmailToPublic = false;
+      
       localStorage.setItem('kid-haven-settings', JSON.stringify(newSettings));
       setSettings(newSettings);
       
@@ -109,17 +116,18 @@ export const useSettings = () => {
     });
   };
 
-  const shouldShowEmail = (userSettings?: Settings) => {
-    const targetSettings = userSettings || settings;
-    console.log('Checking email visibility:', {
-      showEmailToPublic: targetSettings.showEmailToPublic,
-      hideEmail: targetSettings.hideEmail
-    });
-    return targetSettings.showEmailToPublic && !targetSettings.hideEmail;
+  // Always return false for email visibility to ensure emails are never shown
+  const shouldShowEmail = () => {
+    return false;
   };
 
   const updateSingleSetting = async (key: keyof Settings, value: any): Promise<boolean> => {
     const newSettings = { ...settings, [key]: value };
+    // Prevent enabling email visibility
+    if (key === 'showEmailToPublic' || key === 'hideEmail') {
+      newSettings.showEmailToPublic = false;
+      newSettings.hideEmail = true;
+    }
     return await updateSettings(newSettings);
   };
 

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useSettings } from '@/hooks/useSettings';
 
 interface Profile {
   id: string;
@@ -18,7 +17,6 @@ interface Profile {
 export const useProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { shouldShowEmail } = useSettings();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -101,17 +99,9 @@ export const useProfile = () => {
     }
   };
 
-  const getDisplayEmail = (profileData?: Profile) => {
-    const targetProfile = profileData || profile;
-    if (!targetProfile || !user) return null;
-    
-    console.log('getDisplayEmail check:', {
-      profile: targetProfile,
-      shouldShowEmailResult: shouldShowEmail()
-    });
-    
-    // Only show email if settings allow it
-    return shouldShowEmail() ? user.email : null;
+  // Never display email addresses - always return null
+  const getDisplayEmail = () => {
+    return null;
   };
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { User, Mail, MessageCircle, Calendar, Shield, X } from "lucide-react";
+import { User, MessageCircle, Calendar, Shield, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
