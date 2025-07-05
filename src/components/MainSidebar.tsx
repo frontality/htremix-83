@@ -10,14 +10,13 @@ import {
   TrendingUp,
   Star,
   Menu,
-  X,
-  Users
+  X
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const MainSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const { currentTheme } = useTheme();
   const location = useLocation();
 
@@ -27,15 +26,13 @@ const MainSidebar = () => {
     { icon: TrendingUp, label: "Sell Items", path: "/sell" },
     { icon: DollarSign, label: "Crypto Exchange", path: "/crypto-exchange" },
     { icon: MessageCircle, label: "Messages", path: "/messages" },
-    { icon: Users, label: "Forum", path: "/forum" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
   return (
     <>
-      {/* Sidebar */}
-      <div className={`fixed right-0 top-14 h-[calc(100vh-3.5rem)] ${isOpen ? 'w-64' : 'w-16'} ${currentTheme.cardBg} border-l ${currentTheme.border} transition-all duration-300 z-40 backdrop-blur-sm bg-opacity-90`}>
+      <div className={`fixed right-0 top-0 h-full ${isOpen ? 'w-64' : 'w-16'} ${currentTheme.cardBg} border-l ${currentTheme.border} transition-all duration-300 z-40 backdrop-blur-sm bg-opacity-90`}>
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-gray-700">
             <button
@@ -46,7 +43,7 @@ const MainSidebar = () => {
             </button>
           </div>
           
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-2">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -77,7 +74,6 @@ const MainSidebar = () => {
         </div>
       </div>
       
-      {/* Content spacer */}
       <div className={`${isOpen ? 'mr-64' : 'mr-16'} transition-all duration-300`} />
     </>
   );
