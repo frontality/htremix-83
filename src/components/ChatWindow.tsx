@@ -14,6 +14,7 @@ interface ChatWindowProps {
   messageInput: string;
   onMessageChange: (value: string) => void;
   onSendMessage: () => void;
+  onSendImage?: (imageData: string) => void;
   onUserClick: (participant: any) => void;
 }
 
@@ -24,6 +25,7 @@ const ChatWindow = ({
   messageInput,
   onMessageChange,
   onSendMessage,
+  onSendImage,
   onUserClick
 }: ChatWindowProps) => {
   const { currentTheme } = useTheme();
@@ -110,6 +112,7 @@ const ChatWindow = ({
         messageInput={messageInput}
         onMessageChange={onMessageChange}
         onSendMessage={onSendMessage}
+        onSendImage={onSendImage}
       />
     </div>
   );

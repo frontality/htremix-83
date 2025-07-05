@@ -12,6 +12,10 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
   const isOwnMessage = message.sender_id === user?.id;
+  
+  // Check if message is an image
+  const isImageMessage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
+  const imageData = isImageMessage ? message.content.slice(7, -1) : null;
 
   return (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group`}>
@@ -30,15 +34,30 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
         
         <div className="flex flex-col min-w-0">
           <div
-            className={`px-5 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:shadow-xl ${
+            className={`rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:shadow-xl ${
               isOwnMessage
-                ? `bg-gradient-to-r from-purple-500 to-pink-500 text-white ml-auto rounded-br-md shadow-purple-500/25`
-                : `${currentTheme.secondary} ${currentTheme.text} rounded-bl-md border border-white/10`
+                ? `bg-gradient-to-r from-purple-500 to-pink-500 text-white ml-auto rounded-br-md shadow-purple-500/25 ${isImageMessage ? 'p-2' : 'px-5 py-3'}`
+                : `${currentTheme.secondary} ${currentTheme.text} rounded-bl-md border border-white/10 ${isImageMessage ? 'p-2' : 'px-5 py-3'}`
             }`}
           >
-            <p className="text-base leading-relaxed break-words whitespace-pre-wrap font-medium">
-              {message.content}
-            </p>
+            {isImageMessage ? (
+              <div className="max-w-xs">
+                <img
+                  src={imageData}
+                  alt="Shared image"
+                  className="rounded-xl max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(imageData, '_blank')}
+                  onError={(e) => {
+                    console.log('Image load error');
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-base leading-relaxed break-words whitespace-pre-wrap font-medium">
+                {message.content}
+              </p>
+            )}
           </div>
           <p className={`text-xs mt-2 opacity-70 ${isOwnMessage ? 'text-right' : 'text-left'} ${currentTheme.muted} font-medium`}>
             {new Date(message.created_at).toLocaleTimeString([], { 

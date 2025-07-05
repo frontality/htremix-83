@@ -3,18 +3,18 @@ import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import MessagesList from "@/components/MessagesList";
 import ChatWindow from "@/components/ChatWindow";
+import ProfileViewer from "@/components/ProfileViewer";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 const Messages = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { conversations, messages, loading, fetchMessages, sendMessage, createConversation } = useMessages();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [viewingProfile, setViewingProfile] = useState<string | null>(null);
 
   const handleSelectChat = async (conversationId: string) => {
     setSelectedChat(conversationId);
@@ -26,6 +26,15 @@ const Messages = () => {
       const success = await sendMessage(selectedChat, messageInput);
       if (success) {
         setMessageInput("");
+      }
+    }
+  };
+
+  const handleSendImage = async (imageData: string) => {
+    if (selectedChat) {
+      const success = await sendMessage(selectedChat, `[IMAGE:${imageData}]`);
+      if (success) {
+        console.log('Image sent successfully');
       }
     }
   };
@@ -55,7 +64,7 @@ const Messages = () => {
 
   const handleUserClick = (participant: any) => {
     if (participant?.id && participant.id !== user?.id) {
-      navigate(`/profile?userId=${participant.id}`);
+      setViewingProfile(participant.id);
     }
   };
 
@@ -74,30 +83,42 @@ const Messages = () => {
   }
 
   return (
-    <div className={`h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
-      {/* Messages List - Fixed width sidebar */}
-      <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl h-full`}>
-        <MessagesList
-          conversations={conversations}
-          selectedChat={selectedChat}
-          onSelectChat={handleSelectChat}
-          onSelectUser={handleSelectUser}
-        />
+    <>
+      <div className={`h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
+        {/* Messages List - Fixed width sidebar */}
+        <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl h-full`}>
+          <MessagesList
+            conversations={conversations}
+            selectedChat={selectedChat}
+            onSelectChat={handleSelectChat}
+            onSelectUser={handleSelectUser}
+          />
+        </div>
+
+        {/* Chat Window - Takes remaining space */}
+        <div className="flex-1 min-w-0 h-full">
+          <ChatWindow
+            selectedChatData={selectedChatData}
+            otherParticipant={otherParticipant}
+            messages={messages}
+            messageInput={messageInput}
+            onMessageChange={setMessageInput}
+            onSendMessage={handleSendMessage}
+            onSendImage={handleSendImage}
+            onUserClick={handleUserClick}
+          />
+        </div>
       </div>
 
-      {/* Chat Window - Takes remaining space */}
-      <div className="flex-1 min-w-0 h-full">
-        <ChatWindow
-          selectedChatData={selectedChatData}
-          otherParticipant={otherParticipant}
-          messages={messages}
-          messageInput={messageInput}
-          onMessageChange={setMessageInput}
-          onSendMessage={handleSendMessage}
-          onUserClick={handleUserClick}
+      {/* Profile Viewer Modal */}
+      {viewingProfile && (
+        <ProfileViewer
+          userId={viewingProfile}
+          onClose={() => setViewingProfile(null)}
+          onStartChat={handleSelectUser}
         />
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

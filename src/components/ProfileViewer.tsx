@@ -1,0 +1,180 @@
+
+import { useState, useEffect } from "react";
+import { User, Mail, MessageCircle, Calendar, Shield, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface ProfileViewerProps {
+  userId: string;
+  onClose: () => void;
+  onStartChat?: (userId: string) => void;
+}
+
+interface PublicProfile {
+  id: string;
+  username: string;
+  bio: string;
+  avatar_url: string;
+  created_at: string;
+}
+
+const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => {
+  const { currentTheme } = useTheme();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [userId]);
+
+  const fetchProfile = async () => {
+    try {
+      console.log('Fetching profile for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, bio, avatar_url, created_at')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartChat = () => {
+    if (onStartChat) {
+      onStartChat(userId);
+      onClose();
+    }
+  };
+
+  const getJoinDate = () => {
+    if (!profile?.created_at) return "Recently";
+    return new Date(profile.created_at).toLocaleDateString('en-US', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className={`${currentTheme.cardBg} rounded-xl p-8 max-w-md w-full mx-4`}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className={`${currentTheme.text}`}>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className={`${currentTheme.cardBg} rounded-xl p-8 max-w-md w-full mx-4`}>
+          <div className="text-center">
+            <User className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
+            <p className={`${currentTheme.text} mb-4`}>Profile not found</p>
+            <Button onClick={onClose} variant="outline">Close</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isOwnProfile = user?.id === userId;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className={`${currentTheme.cardBg} rounded-xl p-6 max-w-md w-full border ${currentTheme.border} shadow-2xl`}>
+        <div className="flex justify-between items-start mb-6">
+          <h2 className={`text-xl font-bold ${currentTheme.text}`}>Profile</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="rounded-full w-8 h-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="text-center mb-6">
+          <Avatar className="h-20 w-20 mx-auto mb-4 ring-4 ring-purple-500/20">
+            <AvatarImage
+              src={profile.avatar_url}
+              alt={profile.username || "User"}
+            />
+            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
+              {profile.username?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          
+          <h3 className={`text-xl font-bold ${currentTheme.text} mb-2`}>
+            {profile.username || "Anonymous User"}
+          </h3>
+          
+          {profile.bio && (
+            <p className={`${currentTheme.muted} text-sm mb-3`}>
+              {profile.bio}
+            </p>
+          )}
+          
+          <div className="flex items-center justify-center space-x-2 text-xs">
+            <Calendar className={`h-3 w-3 ${currentTheme.muted}`} />
+            <span className={`${currentTheme.muted}`}>
+              Member since {getJoinDate()}
+            </span>
+          </div>
+        </div>
+
+        {!isOwnProfile && (
+          <div className="space-y-3">
+            <Button
+              onClick={handleStartChat}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 flex items-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Send Message
+            </Button>
+            
+            <div className="flex items-center justify-center space-x-2 text-xs">
+              <Shield className={`h-3 w-3 ${currentTheme.muted}`} />
+              <span className={`${currentTheme.muted}`}>
+                Email addresses are kept private
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProfileViewer;
