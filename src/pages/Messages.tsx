@@ -74,9 +74,9 @@ const Messages = () => {
   }
 
   return (
-    <div className={`min-h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
+    <div className={`h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
       {/* Messages List - Fixed width sidebar */}
-      <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl`}>
+      <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl h-full`}>
         <MessagesList
           conversations={conversations}
           selectedChat={selectedChat}
@@ -86,7 +86,7 @@ const Messages = () => {
       </div>
 
       {/* Chat Window - Takes remaining space */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 h-full">
         <ChatWindow
           selectedChatData={selectedChatData}
           otherParticipant={otherParticipant}

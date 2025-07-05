@@ -88,7 +88,7 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
   });
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Compact Header */}
       <div className={`p-4 border-b ${currentTheme.border} bg-gradient-to-r from-purple-500/5 to-pink-500/5 backdrop-blur-sm flex-shrink-0`}>
         <div className="flex items-center justify-between mb-4">

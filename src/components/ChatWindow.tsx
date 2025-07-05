@@ -67,7 +67,7 @@ const ChatWindow = ({
   }
 
   return (
-    <div className="h-full flex flex-col backdrop-blur-sm">
+    <div className="h-full flex flex-col">
       <ChatHeader 
         otherParticipant={otherParticipant}
         onUserClick={onUserClick}
