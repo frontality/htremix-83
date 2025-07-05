@@ -3,6 +3,8 @@ import { Phone, Video, MoreVertical, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatHeaderProps {
   otherParticipant: any;
@@ -11,6 +13,36 @@ interface ChatHeaderProps {
 
 const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
   const { currentTheme } = useTheme();
+  const [isOnline, setIsOnline] = useState(false);
+
+  // Track user presence for the specific participant
+  useEffect(() => {
+    if (!otherParticipant?.id) return;
+
+    const presenceChannel = supabase.channel(`user-presence-${otherParticipant.id}`);
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const userIsPresent = Object.keys(state).includes(otherParticipant.id);
+        setIsOnline(userIsPresent);
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        if (key === otherParticipant.id) {
+          setIsOnline(true);
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        if (key === otherParticipant.id) {
+          setIsOnline(false);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [otherParticipant?.id]);
 
   return (
     <div className={`p-4 border-b ${currentTheme.border} flex items-center justify-between ${currentTheme.cardBg} bg-gradient-to-r from-purple-500/5 to-pink-500/5 backdrop-blur-sm flex-shrink-0`}>
@@ -28,20 +60,24 @@ const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
               {otherParticipant.username?.charAt(0)?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+            isOnline ? 'bg-green-500' : 'bg-gray-400'
+          }`}></div>
         </div>
         <div>
           <h3 
-            className={`font-bold ${currentTheme.text} cursor-pointer hover:text-purple-400 transition-colors bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent`}
+            className={`font-bold text-lg ${currentTheme.text} cursor-pointer hover:text-purple-400 transition-colors bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent`}
             onClick={() => onUserClick(otherParticipant)}
           >
             {otherParticipant.username || "Anonymous User"}
           </h3>
           <div className="flex items-center space-x-2 mt-0.5">
             <div className="flex items-center space-x-1">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+              }`}></div>
               <p className={`text-sm ${currentTheme.muted} font-medium`}>
-                Online now
+                {isOnline ? 'Online now' : 'Offline'}
               </p>
             </div>
             <div className="flex items-center space-x-1">

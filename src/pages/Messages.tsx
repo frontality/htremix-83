@@ -64,7 +64,7 @@ const Messages = () => {
 
   if (loading) {
     return (
-      <div className={`h-screen ${currentTheme.bg} flex items-center justify-center`}>
+      <div className={`min-h-screen pt-12 ${currentTheme.bg} flex items-center justify-center`}>
         <div className="text-center">
           <MessageCircle className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
           <p className={`${currentTheme.text} text-lg font-medium`}>Loading conversations...</p>
@@ -74,7 +74,7 @@ const Messages = () => {
   }
 
   return (
-    <div className={`h-screen ${currentTheme.bg} flex overflow-hidden`}>
+    <div className={`min-h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
       {/* Messages List - Fixed width sidebar */}
       <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl`}>
         <MessagesList
