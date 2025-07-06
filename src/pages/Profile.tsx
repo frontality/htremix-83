@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Camera, Edit, Mail, MessageCircle, User, Wallet, Heart, Sparkles, Settings, Users, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,10 @@ const Profile = () => {
     });
   };
 
+  const getDisplayName = () => {
+    return formData.username || 'Set your username';
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
@@ -114,7 +119,7 @@ const Profile = () => {
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <h1 className={`text-2xl font-bold ${currentTheme.text} flex items-center gap-2`}>
-                    {formData.username || user?.email || "Awesome User"} 
+                    @{getDisplayName()}
                     <Heart className="h-5 w-5 text-red-500" />
                   </h1>
                   <Button
@@ -127,7 +132,6 @@ const Profile = () => {
                     {isEditing ? "Cancel" : "Edit"}
                   </Button>
                 </div>
-                <p className={`${currentTheme.muted} mb-2`}>{user?.email}</p>
                 <p className={`${currentTheme.text} text-sm`}>
                   {formData.bio || "Tell everyone about your awesome self!"}
                 </p>
@@ -264,6 +268,27 @@ const Profile = () => {
                     <Settings className="h-5 w-5" />
                     Account Settings
                   </h3>
+                  
+                  {/* Email Display - Only in Settings */}
+                  <div className={`p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
+                    <div className="mb-4">
+                      <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2 mb-2`}>
+                        <Mail className="h-4 w-4" />
+                        Account Email
+                      </h4>
+                      <p className={`text-sm ${currentTheme.muted} mb-2`}>
+                        Your account is registered with this email address
+                      </p>
+                      <Input
+                        value={user?.email || 'Loading...'}
+                        disabled
+                        className={`${currentTheme.secondary} ${currentTheme.text} border-0 opacity-75`}
+                      />
+                      <p className={`text-xs ${currentTheme.muted} mt-1`}>
+                        Email addresses are private and never shown to other users
+                      </p>
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
                     <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>

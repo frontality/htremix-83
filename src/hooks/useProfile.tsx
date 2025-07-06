@@ -109,7 +109,7 @@ export const useProfile = () => {
     return targetProfile.username;
   };
 
-  // Always return null for email - emails should never be displayed
+  // Never return email for display - emails are private
   const getDisplayEmail = () => {
     return null;
   };
