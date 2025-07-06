@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle } from 'lucide-react';
+import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle, Image, Video, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +16,10 @@ interface ForumPost {
   authorAvatar: string;
   content: string;
   code?: string;
+  media?: {
+    type: 'image' | 'video';
+    url: string;
+  }[];
   category: string;
   replies: number;
   views: number;
@@ -48,6 +51,7 @@ const Forum = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', content: '', code: '', category: 'general' });
+  const [uploadedMedia, setUploadedMedia] = useState<{type: 'image' | 'video', url: string}[]>([]);
 
   const categories: ForumCategory[] = [
     {
@@ -100,7 +104,6 @@ const Forum = () => {
     }
   ];
 
-  // Load posts on component mount
   useEffect(() => {
     const loadPosts = () => {
       try {
@@ -116,7 +119,6 @@ const Forum = () => {
           }
         }
         
-        // Create some sample posts if none exist
         const samplePosts: ForumPost[] = [
           {
             id: 'sample-1',
@@ -168,6 +170,57 @@ const Forum = () => {
     return ['coding', 'scripting', 'source'].includes(category);
   };
 
+  const handleMediaUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    
+    if (type === 'image' && !validImageTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, GIF, WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (type === 'video' && !validVideoTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a video file (MP4, WebM, OGG)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const maxSize = type === 'video' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: `Please select a ${type} smaller than ${type === 'video' ? '50MB' : '10MB'}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setUploadedMedia(prev => [...prev, { type, url: result }]);
+      toast({
+        title: `${type === 'image' ? 'Image' : 'Video'} added! 📎`,
+        description: `Your ${type} has been added to the post`,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeMedia = (index: number) => {
+    setUploadedMedia(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreatePost = () => {
     if (!user) {
       toast({
@@ -195,6 +248,7 @@ const Forum = () => {
       authorAvatar: '/placeholder.svg',
       content: newPost.content,
       code: newPost.code.trim() || undefined,
+      media: uploadedMedia.length > 0 ? uploadedMedia : undefined,
       category: newPost.category,
       replies: 0,
       views: 0,
@@ -209,6 +263,7 @@ const Forum = () => {
       setPosts(currentPosts);
       
       setNewPost({ title: '', content: '', code: '', category: 'general' });
+      setUploadedMedia([]);
       setShowNewPostForm(false);
 
       toast({
@@ -245,7 +300,6 @@ const Forum = () => {
           <p className="text-gray-400">Connect, discuss, and share with the $KID HAVEN community</p>
         </div>
 
-        {/* Categories */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {categories.map((category) => (
             <div
@@ -265,7 +319,6 @@ const Forum = () => {
           ))}
         </div>
 
-        {/* Filter indicator */}
         {selectedCategory && (
           <div className="mb-4">
             <span className="text-sm text-gray-400">
@@ -282,7 +335,6 @@ const Forum = () => {
           </div>
         )}
 
-        {/* New Post Form */}
         {showNewPostForm && (
           <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6`}>
             <h3 className="text-xl font-semibold mb-4">Create New Post</h3>
@@ -335,6 +387,66 @@ const Forum = () => {
                   />
                 </div>
               )}
+              <div>
+                <label className="block text-sm font-medium mb-2">Add Media (Optional)</label>
+                <div className="flex space-x-2 mb-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleMediaUpload(e, 'image')}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <Button type="button" variant="outline" size="sm" className="cursor-pointer">
+                      <Image className="w-4 h-4 mr-2" />
+                      Add Image
+                    </Button>
+                  </label>
+                  
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleMediaUpload(e, 'video')}
+                    className="hidden"
+                    id="video-upload"
+                  />
+                  <label htmlFor="video-upload">
+                    <Button type="button" variant="outline" size="sm" className="cursor-pointer">
+                      <Video className="w-4 h-4 mr-2" />
+                      Add Video
+                    </Button>
+                  </label>
+                </div>
+
+                {uploadedMedia.length > 0 && (
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {uploadedMedia.map((media, index) => (
+                      <div key={index} className="relative">
+                        <button
+                          onClick={() => removeMedia(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center z-10"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        {media.type === 'image' ? (
+                          <img
+                            src={media.url}
+                            alt="Upload preview"
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                        ) : (
+                          <video
+                            src={media.url}
+                            className="w-full h-32 object-cover rounded border"
+                            controls
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex space-x-2">
                 <Button onClick={handleCreatePost}>Create Post</Button>
                 <Button variant="outline" onClick={() => setShowNewPostForm(false)}>Cancel</Button>
@@ -343,7 +455,6 @@ const Forum = () => {
           </div>
         )}
 
-        {/* Posts */}
         <div className="space-y-4">
           {filteredPosts.length === 0 ? (
             <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8 text-center`}>
@@ -379,15 +490,50 @@ const Forum = () => {
                       <h3 className="font-semibold text-lg hover:text-purple-400">
                         {post.title}
                       </h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${categories.find(cat => cat.id === post.category)?.color} bg-opacity-20`}>
+                      <span className={`text-xs px-2 py-1 rounded-full bg-opacity-20`}>
                         {categories.find(cat => cat.id === post.category)?.name}
                       </span>
                       {post.code && (
                         <Code className="w-4 h-4 text-green-400" />
                       )}
+                      {post.media && post.media.length > 0 && (
+                        <div className="flex space-x-1">
+                          {post.media.some(m => m.type === 'image') && (
+                            <Image className="w-4 h-4 text-blue-400" />
+                          )}
+                          {post.media.some(m => m.type === 'video') && (
+                            <Video className="w-4 h-4 text-red-400" />
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
+                    
+                    {post.media && post.media.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {post.media.slice(0, 3).map((media, index) => (
+                          <div key={index} className="relative">
+                            {media.type === 'image' ? (
+                              <img
+                                src={media.url}
+                                alt="Post media"
+                                className="w-full h-16 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center">
+                                <Video className="w-6 h-6 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {post.media.length > 3 && (
+                          <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center text-xs text-gray-400">
+                            +{post.media.length - 3} more
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
@@ -420,7 +566,6 @@ const Forum = () => {
           )}
         </div>
 
-        {/* New Post Button */}
         {user && !showNewPostForm && (
           <div className="fixed bottom-6 right-6">
             <Button 

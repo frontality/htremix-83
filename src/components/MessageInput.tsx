@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Image, Paperclip } from "lucide-react";
+import { Send, Image, Video, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -11,18 +11,21 @@ interface MessageInputProps {
   onMessageChange: (value: string) => void;
   onSendMessage: () => void;
   onSendImage?: (imageData: string) => void;
+  onSendVideo?: (videoData: string) => void;
 }
 
 const MessageInput = ({ 
   messageInput, 
   onMessageChange, 
   onSendMessage,
-  onSendImage 
+  onSendImage,
+  onSendVideo 
 }: MessageInputProps) => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   // Auto-resize textarea
@@ -91,14 +94,62 @@ const MessageInput = ({
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      handleImageFile(file);
+  const handleVideoFile = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select a video smaller than 50MB",
+        variant: "destructive",
+      });
+      return;
     }
+
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (!validVideoTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a video file (MP4, WebM, OGG, MOV)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        if (onSendVideo) {
+          onSendVideo(base64String);
+          toast({
+            title: "Video sent! 🎥",
+            description: "Your video has been sent",
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process video",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'image' && file.type.startsWith('image/')) {
+      handleImageFile(file);
+    } else if (type === 'video' && file.type.startsWith('video/')) {
+      handleVideoFile(file);
+    }
+
     // Reset the input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
@@ -121,6 +172,8 @@ const MessageInput = ({
       const file = files[0];
       if (file.type.startsWith('image/')) {
         await handleImageFile(file);
+      } else if (file.type.startsWith('video/')) {
+        await handleVideoFile(file);
       }
     }
   };
@@ -140,8 +193,11 @@ const MessageInput = ({
         {isDragging && (
           <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-purple-500/20 z-10">
             <div className="text-center">
-              <Image className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-              <p className="text-purple-500 font-medium">Drop image to send</p>
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <Image className="h-6 w-6 text-purple-500" />
+                <Video className="h-6 w-6 text-purple-500" />
+              </div>
+              <p className="text-purple-500 font-medium">Drop media to send</p>
             </div>
           </div>
         )}
@@ -154,7 +210,7 @@ const MessageInput = ({
               onChange={(e) => onMessageChange(e.target.value)}
               onKeyPress={handleKeyPress}
               onPaste={handlePaste}
-              placeholder="Type a message... (Paste or drop images to share)"
+              placeholder="Type a message... (Paste or drop images/videos to share)"
               className={`resize-none border-0 focus:ring-0 focus:outline-none ${currentTheme.text} bg-transparent placeholder:text-gray-400 min-h-[40px] max-h-[120px]`}
               rows={1}
             />
@@ -162,10 +218,18 @@ const MessageInput = ({
           
           <div className="flex items-center space-x-2">
             <input
-              ref={fileInputRef}
+              ref={imageInputRef}
               type="file"
               accept="image/*"
-              onChange={handleFileSelect}
+              onChange={(e) => handleFileSelect(e, 'image')}
+              className="hidden"
+            />
+            
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              onChange={(e) => handleFileSelect(e, 'video')}
               className="hidden"
             />
             
@@ -173,10 +237,20 @@ const MessageInput = ({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => imageInputRef.current?.click()}
               className={`${currentTheme.text} hover:${currentTheme.secondary} rounded-full w-10 h-10 p-0 transition-all duration-200 hover:scale-110`}
             >
-              <Paperclip className="h-4 w-4" />
+              <Image className="h-4 w-4" />
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => videoInputRef.current?.click()}
+              className={`${currentTheme.text} hover:${currentTheme.secondary} rounded-full w-10 h-10 p-0 transition-all duration-200 hover:scale-110`}
+            >
+              <Video className="h-4 w-4" />
             </Button>
             
             <Button
@@ -192,7 +266,7 @@ const MessageInput = ({
       </div>
       
       <p className={`text-xs ${currentTheme.muted} mt-2 text-center`}>
-        Press Enter to send • Shift+Enter for new line • Paste or drag images to share
+        Press Enter to send • Shift+Enter for new line • Drag images/videos or use buttons to share media
       </p>
     </div>
   );

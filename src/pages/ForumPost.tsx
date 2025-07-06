@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus, Code } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus, Code, Image, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -16,6 +15,10 @@ interface ForumPost {
   authorAvatar: string;
   content: string;
   code?: string;
+  media?: {
+    type: 'image' | 'video';
+    url: string;
+  }[];
   category: string;
   replies: number;
   views: number;
@@ -278,6 +281,47 @@ const ForumPost = () => {
           <div className="prose prose-invert max-w-none mb-4">
             <p className="whitespace-pre-wrap">{post.content}</p>
           </div>
+
+          {/* Media Section */}
+          {post.media && post.media.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="flex space-x-1">
+                  {post.media.some(m => m.type === 'image') && (
+                    <Image className="w-4 h-4 text-blue-400" />
+                  )}
+                  {post.media.some(m => m.type === 'video') && (
+                    <Video className="w-4 h-4 text-red-400" />
+                  )}
+                </div>
+                <h3 className="text-lg font-semibold">Media</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {post.media.map((media, index) => (
+                  <div key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg overflow-hidden`}>
+                    {media.type === 'image' ? (
+                      <img
+                        src={media.url}
+                        alt={`Post image ${index + 1}`}
+                        className="w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(media.url, '_blank')}
+                      />
+                    ) : (
+                      <video
+                        src={media.url}
+                        controls
+                        className="w-full h-auto max-h-96"
+                        preload="metadata"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Code Section */}
           {post.code && (

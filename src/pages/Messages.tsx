@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import MessagesList from "@/components/MessagesList";
@@ -35,6 +34,15 @@ const Messages = () => {
       const success = await sendMessage(selectedChat, `[IMAGE:${imageData}]`);
       if (success) {
         console.log('Image sent successfully');
+      }
+    }
+  };
+
+  const handleSendVideo = async (videoData: string) => {
+    if (selectedChat) {
+      const success = await sendMessage(selectedChat, `[VIDEO:${videoData}]`);
+      if (success) {
+        console.log('Video sent successfully');
       }
     }
   };
@@ -105,6 +113,7 @@ const Messages = () => {
             onMessageChange={setMessageInput}
             onSendMessage={handleSendMessage}
             onSendImage={handleSendImage}
+            onSendVideo={handleSendVideo}
             onUserClick={handleUserClick}
           />
         </div>
