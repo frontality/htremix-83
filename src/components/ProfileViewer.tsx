@@ -37,6 +37,7 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
     try {
       console.log('Fetching profile for user:', userId);
       
+      // Only fetch public profile information - never email
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, bio, avatar_url, created_at')
@@ -79,6 +80,15 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
       month: 'long', 
       year: 'numeric' 
     });
+  };
+
+  const getDisplayName = () => {
+    return profile?.username || 'Anonymous User';
+  };
+
+  const getInitials = () => {
+    const name = getDisplayName();
+    return name.charAt(0).toUpperCase();
   };
 
   if (loading) {
@@ -129,15 +139,15 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
           <Avatar className="h-20 w-20 mx-auto mb-4 ring-4 ring-purple-500/20">
             <AvatarImage
               src={profile.avatar_url}
-              alt={profile.username || "User"}
+              alt={getDisplayName()}
             />
             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
-              {profile.username?.charAt(0)?.toUpperCase() || "U"}
+              {getInitials()}
             </AvatarFallback>
           </Avatar>
           
           <h3 className={`text-xl font-bold ${currentTheme.text} mb-2`}>
-            {profile.username || "Anonymous User"}
+            {getDisplayName()}
           </h3>
           
           {profile.bio && (

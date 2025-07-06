@@ -17,6 +17,18 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
   const isImageMessage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
   const imageData = isImageMessage ? message.content.slice(7, -1) : null;
 
+  // Get display name without showing email
+  const getDisplayName = (participant: any) => {
+    if (!participant) return 'User';
+    return participant.username || 'Anonymous User';
+  };
+
+  const getSenderInitials = (participant: any) => {
+    if (!participant) return 'U';
+    const name = participant.username || 'User';
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group`}>
       <div className="flex items-end space-x-3 max-w-[75%] animate-fade-in">
@@ -24,10 +36,10 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
           <Avatar className="h-10 w-10 mb-2 flex-shrink-0 ring-2 ring-white/10 group-hover:ring-white/20 transition-all">
             <AvatarImage
               src={otherParticipant?.avatar_url}
-              alt={otherParticipant?.username || "User"}
+              alt={getDisplayName(otherParticipant)}
             />
             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm font-semibold">
-              {otherParticipant?.username?.charAt(0)?.toUpperCase() || "U"}
+              {getSenderInitials(otherParticipant)}
             </AvatarFallback>
           </Avatar>
         )}
@@ -75,7 +87,7 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
               alt="You"
             />
             <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm font-semibold">
-              {user?.user_metadata?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "Y"}
+              {getSenderInitials({ username: user?.user_metadata?.username || 'You' })}
             </AvatarFallback>
           </Avatar>
         )}

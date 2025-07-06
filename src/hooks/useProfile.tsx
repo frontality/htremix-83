@@ -40,15 +40,20 @@ export const useProfile = () => {
         setProfile(parsedProfile);
       } else {
         console.log('Creating new profile...');
+        // Generate username from email but never store the actual email
+        const emailPrefix = user.email?.split('@')[0] || 'User';
+        const randomSuffix = Math.floor(Math.random() * 1000);
+        const safeUsername = `${emailPrefix}${randomSuffix}`;
+        
         const newProfile: Profile = {
           id: user.id,
-          username: user.email?.split('@')[0] || 'User',
+          username: safeUsername,
           bio: null,
           avatar_url: null,
           wallet_address: null,
           email_notifications: true,
           two_factor_enabled: false,
-          show_email_to_public: false // Email hidden by default
+          show_email_to_public: false // Email always hidden
         };
 
         localStorage.setItem(storageKey, JSON.stringify(newProfile));
@@ -99,7 +104,14 @@ export const useProfile = () => {
     }
   };
 
-  // Never display email addresses - always return null
+  // Get display name that never includes email
+  const getDisplayName = (profileData?: Profile) => {
+    const targetProfile = profileData || profile;
+    if (!targetProfile) return 'Anonymous User';
+    return targetProfile.username || 'Anonymous User';
+  };
+
+  // Always return null for email - emails should never be displayed
   const getDisplayEmail = () => {
     return null;
   };
@@ -113,6 +125,7 @@ export const useProfile = () => {
     loading, 
     updateProfile, 
     refetch: fetchProfile,
-    getDisplayEmail
+    getDisplayEmail,
+    getDisplayName
   };
 };
