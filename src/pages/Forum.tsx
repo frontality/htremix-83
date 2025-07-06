@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle, Image, Video, X } from 'lucide-react';
+import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle, Image, Video, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,6 +52,8 @@ const Forum = () => {
   const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', content: '', code: '', category: 'general' });
   const [uploadedMedia, setUploadedMedia] = useState<{type: 'image' | 'video', url: string}[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
   const categories: ForumCategory[] = [
     {
@@ -108,7 +110,12 @@ const Forum = () => {
     const loadPosts = () => {
       try {
         const savedPosts = localStorage.getItem('forum_posts');
+        const savedLikes = localStorage.getItem('forum_likes');
         console.log('Loading forum posts:', savedPosts);
+        
+        if (savedLikes) {
+          setLikedPosts(new Set(JSON.parse(savedLikes)));
+        }
         
         if (savedPosts) {
           const parsedPosts = JSON.parse(savedPosts);
@@ -162,9 +169,70 @@ const Forum = () => {
     loadPosts();
   }, []);
 
-  const filteredPosts = selectedCategory 
-    ? posts.filter(post => post.category === selectedCategory)
-    : posts;
+  const filteredPosts = posts.filter(post => {
+    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
+    const matchesSearch = searchTerm ? 
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.author.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleLikePost = (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to like posts.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updatedPosts = posts.map(post => {
+      if (post.id === postId) {
+        const isLiked = likedPosts.has(postId);
+        const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
+        
+        const newLikedPosts = new Set(likedPosts);
+        if (isLiked) {
+          newLikedPosts.delete(postId);
+        } else {
+          newLikedPosts.add(postId);
+        }
+        setLikedPosts(newLikedPosts);
+        localStorage.setItem('forum_likes', JSON.stringify([...newLikedPosts]));
+        
+        toast({
+          title: isLiked ? "Like removed" : "Post liked! 👍",
+          description: isLiked ? "You unliked this post" : "Your like has been added"
+        });
+        
+        return { ...post, likes: newLikes };
+      }
+      return post;
+    });
+    
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+  };
+
+  const handleReplyToPost = (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to reply to posts.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    navigate(`/forum/post/${postId}?reply=true`);
+  };
 
   const isCodingRelated = (category: string) => {
     return ['coding', 'scripting', 'source'].includes(category);
@@ -300,6 +368,19 @@ const Forum = () => {
           <p className="text-gray-400">Connect, discuss, and share with the $KID HAVEN community</p>
         </div>
 
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search posts, authors, or content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full pl-10 pr-4 py-3 rounded-lg ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {categories.map((category) => (
             <div
@@ -319,19 +400,42 @@ const Forum = () => {
           ))}
         </div>
 
-        {selectedCategory && (
+        {(selectedCategory || searchTerm) && (
           <div className="mb-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-            <span className="text-sm text-gray-300">
-              Showing posts in: <span className="text-purple-400 font-medium">
-                {categories.find(c => c.id === selectedCategory)?.name}
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-gray-300">Active filters:</span>
+              {selectedCategory && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-purple-600 text-white">
+                  {categories.find(c => c.id === selectedCategory)?.name}
+                  <button 
+                    onClick={() => setSelectedCategory(null)}
+                    className="ml-2 hover:text-red-300"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {searchTerm && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-600 text-white">
+                  Search: "{searchTerm}"
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="ml-2 hover:text-red-300"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               <button 
-                onClick={() => setSelectedCategory(null)}
-                className="ml-3 text-xs text-red-400 hover:text-red-300 underline"
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setSearchTerm('');
+                }}
+                className="text-xs text-red-400 hover:text-red-300 underline"
               >
-                Clear filter
+                Clear all
               </button>
-            </span>
+            </div>
           </div>
         )}
 
@@ -473,9 +577,16 @@ const Forum = () => {
           {filteredPosts.length === 0 ? (
             <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8 text-center`}>
               <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
-              <p className="text-gray-400 mb-4">Be the first to start a discussion!</p>
-              {user && (
+              <h3 className="text-lg font-medium mb-2">
+                {searchTerm || selectedCategory ? 'No matching posts found' : 'No posts yet'}
+              </h3>
+              <p className="text-gray-400 mb-4">
+                {searchTerm || selectedCategory 
+                  ? 'Try adjusting your search or filters' 
+                  : 'Be the first to start a discussion!'
+                }
+              </p>
+              {user && !searchTerm && !selectedCategory && (
                 <Button onClick={() => setShowNewPostForm(true)} className="bg-purple-600 hover:bg-purple-700">
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Post
@@ -559,18 +670,30 @@ const Forum = () => {
                       </div>
                       
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <div className="flex items-center space-x-1">
+                        <button
+                          onClick={(e) => handleReplyToPost(post.id, e)}
+                          className="flex items-center space-x-1 hover:text-purple-400 transition-colors"
+                          title="Reply to post"
+                        >
                           <Reply className="w-4 h-4" />
                           <span>{post.replies}</span>
-                        </div>
+                        </button>
                         <div className="flex items-center space-x-1">
                           <Eye className="w-4 h-4" />
                           <span>{post.views}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <ThumbsUp className="w-4 h-4" />
+                        <button
+                          onClick={(e) => handleLikePost(post.id, e)}
+                          className={`flex items-center space-x-1 transition-colors ${
+                            likedPosts.has(post.id) 
+                              ? 'text-purple-400 hover:text-purple-300' 
+                              : 'hover:text-purple-400'
+                          }`}
+                          title={likedPosts.has(post.id) ? "Unlike post" : "Like post"}
+                        >
+                          <ThumbsUp className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`} />
                           <span>{post.likes}</span>
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </div>
