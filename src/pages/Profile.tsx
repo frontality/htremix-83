@@ -1,346 +1,385 @@
 
-import { useState, useEffect } from "react";
-import { Camera, Edit, Mail, MessageCircle, User, Wallet, Heart, Sparkles, Settings, Users, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import SkidHavenHeader from "@/components/SkidHavenHeader";
-import SkidHavenFooter from "@/components/SkidHavenFooter";
-import ImageUpload from "@/components/ImageUpload";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useProfile } from "@/hooks/useProfile";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { User, Edit, Save, X, Camera, Star, Shield, Calendar, MapPin, Mail, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+
+interface UserProfile {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  bio: string;
+  location: string;
+  phone: string;
+  avatar: string;
+  joinDate: string;
+  rating: number;
+  totalTrades: number;
+  isVerified: boolean;
+  preferences: {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    publicProfile: boolean;
+  };
+}
 
 const Profile = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
-  const { profile, loading, updateProfile } = useProfile();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    bio: '',
-    avatar_url: '',
-    wallet_address: '',
-    email_notifications: true,
-    two_factor_enabled: false
-  });
+  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
 
-  // Update form data when profile loads
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        username: profile.username || '',
-        bio: profile.bio || '',
-        avatar_url: profile.avatar_url || '',
-        wallet_address: profile.wallet_address || '',
-        email_notifications: profile.email_notifications,
-        two_factor_enabled: profile.two_factor_enabled
-      });
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, [profile]);
 
-  const handleSave = async () => {
-    const success = await updateProfile(formData);
-    if (success) {
+    loadProfile();
+  }, [user, navigate]);
+
+  const loadProfile = () => {
+    try {
+      const savedProfile = localStorage.getItem(`user_profile_${user?.id}`);
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      } else {
+        // Create default profile
+        const defaultProfile: UserProfile = {
+          id: user?.id || '',
+          username: user?.email?.split('@')[0] || 'user',
+          email: user?.email || '',
+          fullName: '',
+          bio: '',
+          location: '',
+          phone: '',
+          avatar: '/placeholder.svg',
+          joinDate: new Date().toLocaleDateString(),
+          rating: 4.8,
+          totalTrades: 0,
+          isVerified: false,
+          preferences: {
+            emailNotifications: true,
+            pushNotifications: true,
+            publicProfile: true
+          }
+        };
+        localStorage.setItem(`user_profile_${user?.id}`, JSON.stringify(defaultProfile));
+        setProfile(defaultProfile);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    if (!profile) return;
+
+    const updatedProfile = {
+      ...profile,
+      ...editedProfile
+    };
+
+    try {
+      localStorage.setItem(`user_profile_${user?.id}`, JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
+      setEditedProfile({});
       setIsEditing(false);
-    }
-  };
 
-  const handleCancel = () => {
-    if (profile) {
-      setFormData({
-        username: profile.username || '',
-        bio: profile.bio || '',
-        avatar_url: profile.avatar_url || '',
-        wallet_address: profile.wallet_address || '',
-        email_notifications: profile.email_notifications,
-        two_factor_enabled: profile.two_factor_enabled
+      toast({
+        title: "Profile updated! ✅",
+        description: "Your profile has been saved successfully."
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive"
       });
     }
-    setIsEditing(false);
   };
 
-  const handleImageUpload = (imageUrl: string) => {
-    setFormData(prev => ({ ...prev, avatar_url: imageUrl }));
-    updateProfile({ avatar_url: imageUrl });
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setEditedProfile(prev => ({ ...prev, avatar: result }));
+      toast({
+        title: "Avatar updated! 📸",
+        description: "Your new avatar has been set."
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const getJoinDate = () => {
-    if (!user?.created_at) return "Recently";
-    return new Date(user.created_at).toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
-  };
-
-  const getDisplayName = () => {
-    return formData.username || 'Set your username';
-  };
-
-  if (loading) {
+  if (!user || !profile) {
     return (
-      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
+      <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} pt-20 flex items-center justify-center`}>
         <div className="text-center">
-          <Sparkles className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
-          <p className={`${currentTheme.text} text-lg`}>Loading your profile...</p>
+          <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <h2 className="text-2xl font-bold mb-4">Loading profile...</h2>
         </div>
       </div>
     );
   }
 
+  const displayProfile = { ...profile, ...editedProfile };
+
   return (
-    <div className={`min-h-screen ${currentTheme.bg}`}>
-      <SkidHavenHeader />
-      
-      <div className="container py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className={`text-4xl font-bold ${currentTheme.text} mb-2 flex items-center justify-center gap-3`}>
-              <User className="h-10 w-10" />
-              Your Profile Hub
-              <Sparkles className="h-8 w-8" />
-            </h1>
-            <p className={`${currentTheme.muted} text-lg`}>
-              Make it uniquely you!
-            </p>
-          </div>
-
-          <div className={`${currentTheme.cardBg} rounded-xl p-8 border ${currentTheme.border} shadow-lg`}>
-            {/* Profile Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
-              <ImageUpload
-                currentImage={formData.avatar_url}
-                onImageUpload={handleImageUpload}
-              />
-              
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h1 className={`text-2xl font-bold ${currentTheme.text} flex items-center gap-2`}>
-                    @{getDisplayName()}
-                    <Heart className="h-5 w-5 text-red-500" />
-                  </h1>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => isEditing ? handleCancel() : setIsEditing(true)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 hover:scale-105 transition-transform flex items-center gap-2`}
-                  >
-                    {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                    {isEditing ? "Cancel" : "Edit"}
-                  </Button>
-                </div>
-                <p className={`${currentTheme.text} text-sm`}>
-                  {formData.bio || "Tell everyone about your awesome self!"}
-                </p>
-                <p className={`${currentTheme.muted} text-xs mt-2 flex items-center gap-1`}>
-                  <Sparkles className="h-3 w-3" />
-                  Member since {getJoinDate()}
-                </p>
-              </div>
-            </div>
-
-            <Tabs defaultValue="profile" className="space-y-6">
-              <TabsList className={`${currentTheme.secondary} ${currentTheme.text} rounded-lg`}>
-                <TabsTrigger value="profile" className="rounded-md flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Profile
-                </TabsTrigger>
-                <TabsTrigger value="wallet" className="rounded-md flex items-center gap-2">
-                  <Wallet className="h-4 w-4" />
-                  Wallet
-                </TabsTrigger>
-                <TabsTrigger value="friends" className="rounded-md flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Friends
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="rounded-md flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="profile" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className={`block text-sm font-medium ${currentTheme.text} mb-2 flex items-center gap-2`}>
-                        <Sparkles className="h-4 w-4" />
-                        Username
-                      </label>
-                      <Input
-                        value={formData.username}
-                        disabled={!isEditing}
-                        onChange={(e) => setFormData({...formData, username: e.target.value})}
-                        className={`${currentTheme.secondary} ${currentTheme.text} border-0 ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
-                        placeholder="Your awesome username"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-medium ${currentTheme.text} mb-2 flex items-center gap-2`}>
-                      <Edit className="h-4 w-4" />
-                      Bio
-                    </label>
-                    <Textarea
-                      value={formData.bio}
-                      disabled={!isEditing}
-                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                      className={`${currentTheme.secondary} ${currentTheme.text} border-0 min-h-24 ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
-                      placeholder="Tell everyone what makes you awesome!"
-                    />
-                  </div>
-                </div>
-                
+    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} pt-20`}>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg overflow-hidden`}>
+          {/* Profile Header */}
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 p-8">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+              <div className="relative">
+                <img
+                  src={displayProfile.avatar}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+                />
                 {isEditing && (
-                  <div className="flex space-x-3">
-                    <Button 
-                      onClick={handleSave} 
-                      className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}
+                  <label className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 rounded-full p-2 cursor-pointer transition-colors">
+                    <Camera className="w-4 h-4 text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="text-center md:text-left text-white flex-1">
+                <div className="flex items-center justify-center md:justify-start space-x-2 mb-2">
+                  <h1 className="text-2xl font-bold">{displayProfile.username}</h1>
+                  {displayProfile.isVerified && (
+                    <Shield className="w-6 h-6 text-blue-400" />
+                  )}
+                </div>
+                <p className="text-purple-100 mb-2">{displayProfile.email}</p>
+                <div className="flex items-center justify-center md:justify-start space-x-4 text-sm">
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-4 h-4 fill-current text-yellow-400" />
+                    <span>{displayProfile.rating}/5</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>Joined {displayProfile.joinDate}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center md:text-right">
+                {!isEditing ? (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    variant="outline"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <div className="space-x-2">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="bg-green-600 hover:bg-green-700 text-white"
                     >
-                      <Save className="h-4 w-4" />
-                      Save Changes
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
                     </Button>
-                    <Button 
+                    <Button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditedProfile({});
+                      }}
                       variant="outline"
-                      onClick={handleCancel}
-                      className={`${currentTheme.secondary} ${currentTheme.text} border-0 flex items-center gap-2`}
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="w-4 h-4 mr-2" />
                       Cancel
                     </Button>
                   </div>
                 )}
-              </TabsContent>
+              </div>
+            </div>
+          </div>
 
-              <TabsContent value="wallet" className="space-y-6">
-                <div className={`${currentTheme.secondary} p-6 rounded-lg border-2 border-dashed border-purple-300`}>
-                  <div className="flex items-center space-x-3 mb-4">
-                    <Wallet className={`h-6 w-6 ${currentTheme.accent}`} />
-                    <h3 className={`text-lg font-semibold ${currentTheme.text}`}>
-                      Crypto Wallet
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    <label className={`block text-sm font-medium ${currentTheme.text}`}>
-                      Wallet Address
-                    </label>
-                    <Input
-                      value={formData.wallet_address}
-                      disabled={!isEditing}
-                      onChange={(e) => setFormData({...formData, wallet_address: e.target.value})}
-                      className={`${currentTheme.secondary} ${currentTheme.text} border-0 font-mono text-sm ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
-                      placeholder="0x... your wallet address"
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="friends" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${currentTheme.text} flex items-center gap-2`}>
-                    <Users className="h-5 w-5" />
-                    Friends & Community
-                  </h3>
-                  <Button className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}>
-                    <User className="h-4 w-4" />
-                    Find Friends
-                  </Button>
-                </div>
-                
-                <div className={`${currentTheme.secondary} p-8 rounded-lg text-center border-2 border-dashed border-purple-300`}>
-                  <Users className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                  <p className={`${currentTheme.text} text-lg font-medium mb-2`}>
-                    Your friend list is waiting!
-                  </p>
-                  <p className={`${currentTheme.muted} text-sm`}>
-                    Start connecting with other awesome users!
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="settings" className="space-y-6">
+          {/* Profile Content */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
                 <div className="space-y-4">
-                  <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4 flex items-center gap-2`}>
-                    <Settings className="h-5 w-5" />
-                    Account Settings
-                  </h3>
-                  
-                  {/* Email Display - Only in Settings */}
-                  <div className={`p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
-                    <div className="mb-4">
-                      <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2 mb-2`}>
-                        <Mail className="h-4 w-4" />
-                        Account Email
-                      </h4>
-                      <p className={`text-sm ${currentTheme.muted} mb-2`}>
-                        Your account is registered with this email address
-                      </p>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    {isEditing ? (
                       <Input
-                        value={user?.email || 'Loading...'}
-                        disabled
-                        className={`${currentTheme.secondary} ${currentTheme.text} border-0 opacity-75`}
+                        value={editedProfile.fullName ?? displayProfile.fullName}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, fullName: e.target.value }))}
+                        placeholder="Enter your full name"
+                        className={`${currentTheme.cardBg} border-gray-600 focus:border-purple-500`}
                       />
-                      <p className={`text-xs ${currentTheme.muted} mt-1`}>
-                        Email addresses are private and never shown to other users
-                      </p>
+                    ) : (
+                      <p className="text-gray-300">{displayProfile.fullName || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>Location</span>
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.location ?? displayProfile.location}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Enter your location"
+                        className={`${currentTheme.cardBg} border-gray-600 focus:border-purple-500`}
+                      />
+                    ) : (
+                      <p className="text-gray-300">{displayProfile.location || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 flex items-center space-x-2">
+                      <Phone className="w-4 h-4" />
+                      <span>Phone</span>
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.phone ?? displayProfile.phone}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="Enter your phone number"
+                        className={`${currentTheme.cardBg} border-gray-600 focus:border-purple-500`}
+                      />
+                    ) : (
+                      <p className="text-gray-300">{displayProfile.phone || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Bio</label>
+                    {isEditing ? (
+                      <Textarea
+                        value={editedProfile.bio ?? displayProfile.bio}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
+                        placeholder="Tell us about yourself..."
+                        className={`${currentTheme.cardBg} border-gray-600 focus:border-purple-500 h-24`}
+                      />
+                    ) : (
+                      <p className="text-gray-300">{displayProfile.bio || 'No bio provided'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Trading Stats */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Trading Stats</h3>
+                <div className="space-y-4">
+                  <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-400">Rating</span>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 fill-current text-yellow-400" />
+                        <span className="font-semibold">{displayProfile.rating}/5</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-yellow-400 h-2 rounded-full" 
+                        style={{ width: `${(displayProfile.rating / 5) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
-                      <div>
-                        <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2`}>
-                          <Mail className="h-4 w-4" />
-                          Email Notifications
-                        </h4>
-                        <p className={`text-sm ${currentTheme.muted} mt-1`}>
-                          Get updates about your transactions and messages
-                        </p>
-                      </div>
-                      <Switch
-                        checked={formData.email_notifications}
-                        onCheckedChange={(checked) => {
-                          setFormData({...formData, email_notifications: checked});
-                          if (!isEditing) {
-                            updateProfile({ email_notifications: checked });
-                          }
-                        }}
-                      />
+
+                  <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Total Trades</span>
+                      <span className="font-semibold text-lg">{displayProfile.totalTrades}</span>
                     </div>
-                    
-                    <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
-                      <div>
-                        <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2`}>
-                          <Sparkles className="h-4 w-4" />
-                          Two-Factor Authentication
-                        </h4>
-                        <p className={`text-sm ${currentTheme.muted} mt-1`}>
-                          Extra security for your awesome account
-                        </p>
+                  </div>
+
+                  <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Verification Status</span>
+                      <div className="flex items-center space-x-2">
+                        <Shield className={`w-4 h-4 ${displayProfile.isVerified ? 'text-blue-400' : 'text-gray-400'}`} />
+                        <span className={`font-semibold ${displayProfile.isVerified ? 'text-blue-400' : 'text-gray-400'}`}>
+                          {displayProfile.isVerified ? 'Verified' : 'Unverified'}
+                        </span>
                       </div>
-                      <Switch
-                        checked={formData.two_factor_enabled}
-                        onCheckedChange={(checked) => {
-                          setFormData({...formData, two_factor_enabled: checked});
-                          if (!isEditing) {
-                            updateProfile({ two_factor_enabled: checked });
-                          }
-                        }}
-                      />
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+
+                {/* Quick Actions */}
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold mb-3">Quick Actions</h4>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => navigate('/marketplace')}
+                      variant="outline" 
+                      className="w-full justify-start"
+                    >
+                      View Marketplace
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/sell')}
+                      variant="outline" 
+                      className="w-full justify-start"
+                    >
+                      List New Item
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/settings')}
+                      variant="outline" 
+                      className="w-full justify-start"
+                    >
+                      Account Settings
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <SkidHavenFooter />
     </div>
   );
 };
