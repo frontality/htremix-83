@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -294,19 +295,19 @@ const Forum = () => {
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Community Forum</h1>
           <p className="text-gray-400">Connect, discuss, and share with the $KID HAVEN community</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {categories.map((category) => (
             <div
               key={category.id}
               onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 cursor-pointer transition-all hover:border-purple-500 ${
-                selectedCategory === category.id ? 'border-purple-500 bg-purple-900/20' : ''
+              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 cursor-pointer transition-all hover:border-purple-500 hover:shadow-lg ${
+                selectedCategory === category.id ? 'border-purple-500 bg-purple-900/20 shadow-lg' : ''
               }`}
             >
               <div className="flex items-center space-x-3 mb-2">
@@ -320,14 +321,14 @@ const Forum = () => {
         </div>
 
         {selectedCategory && (
-          <div className="mb-4">
-            <span className="text-sm text-gray-400">
+          <div className="mb-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+            <span className="text-sm text-gray-300">
               Showing posts in: <span className="text-purple-400 font-medium">
                 {categories.find(c => c.id === selectedCategory)?.name}
               </span>
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className="ml-2 text-xs text-red-400 hover:text-red-300"
+                className="ml-3 text-xs text-red-400 hover:text-red-300 underline"
               >
                 Clear filter
               </button>
@@ -336,7 +337,7 @@ const Forum = () => {
         )}
 
         {showNewPostForm && (
-          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6`}>
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6 shadow-xl`}>
             <h3 className="text-xl font-semibold mb-4">Create New Post</h3>
             <div className="space-y-4">
               <div>
@@ -357,36 +358,43 @@ const Forum = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
               <div>
                 <label className="block text-sm font-medium mb-2">Title</label>
                 <input
                   type="text"
                   value={newPost.title}
                   onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}
+                  className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
                   placeholder="Enter post title..."
                 />
               </div>
+              
               <div>
                 <label className="block text-sm font-medium mb-2">Content</label>
                 <Textarea
                   value={newPost.content}
                   onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                  className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 ${currentTheme.text}`}
+                  className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
                   placeholder="Write your post content..."
                 />
               </div>
+              
               {isCodingRelated(newPost.category) && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">Code (Optional)</label>
+                  <label className="block text-sm font-medium mb-2 flex items-center space-x-2">
+                    <Code className="w-4 h-4 text-green-400" />
+                    <span>Code (Optional)</span>
+                  </label>
                   <Textarea
                     value={newPost.code}
                     onChange={(e) => setNewPost({...newPost, code: e.target.value})}
-                    className={`w-full p-2 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 font-mono text-sm ${currentTheme.text}`}
+                    className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 font-mono text-sm ${currentTheme.text} focus:border-green-500 focus:ring-1 focus:ring-green-500`}
                     placeholder="Paste your code here..."
                   />
                 </div>
               )}
+              
               <div>
                 <label className="block text-sm font-medium mb-2">Add Media (Optional)</label>
                 <div className="flex space-x-2 mb-4">
@@ -425,7 +433,7 @@ const Forum = () => {
                       <div key={index} className="relative">
                         <button
                           onClick={() => removeMedia(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center z-10"
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center z-10 transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -433,13 +441,14 @@ const Forum = () => {
                           <img
                             src={media.url}
                             alt="Upload preview"
-                            className="w-full h-32 object-cover rounded border"
+                            className="w-full h-32 object-cover rounded border hover:opacity-90 transition-opacity"
                           />
                         ) : (
                           <video
                             src={media.url}
                             className="w-full h-32 object-cover rounded border"
                             controls
+                            preload="metadata"
                           />
                         )}
                       </div>
@@ -447,9 +456,15 @@ const Forum = () => {
                   </div>
                 )}
               </div>
-              <div className="flex space-x-2">
-                <Button onClick={handleCreatePost}>Create Post</Button>
-                <Button variant="outline" onClick={() => setShowNewPostForm(false)}>Cancel</Button>
+              
+              <div className="flex space-x-2 pt-4 border-t border-gray-700">
+                <Button onClick={handleCreatePost} className="bg-purple-600 hover:bg-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Post
+                </Button>
+                <Button variant="outline" onClick={() => setShowNewPostForm(false)}>
+                  Cancel
+                </Button>
               </div>
             </div>
           </div>
@@ -462,47 +477,47 @@ const Forum = () => {
               <h3 className="text-lg font-medium mb-2">No posts yet</h3>
               <p className="text-gray-400 mb-4">Be the first to start a discussion!</p>
               {user && (
-                <Button onClick={() => setShowNewPostForm(true)}>
+                <Button onClick={() => setShowNewPostForm(true)} className="bg-purple-600 hover:bg-purple-700">
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Post
                 </Button>
               )}
             </div>
           ) : (
-            filteredPosts.map((post) => (
+            filteredPosts.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).map((post) => (
               <div
                 key={post.id}
                 onClick={() => handlePostClick(post.id)}
-                className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 hover:border-purple-500/50 transition-all cursor-pointer`}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500/50 hover:shadow-lg transition-all cursor-pointer group`}
               >
                 <div className="flex items-start space-x-4">
                   <img
                     src={post.authorAvatar}
                     alt={post.author}
-                    className="w-10 h-10 rounded-full"
+                    className="w-12 h-12 rounded-full border-2 border-gray-600 group-hover:border-purple-500 transition-colors"
                   />
                   
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
                       {post.isPinned && (
                         <Pin className="w-4 h-4 text-yellow-400" />
                       )}
-                      <h3 className="font-semibold text-lg hover:text-purple-400">
+                      <h3 className="font-semibold text-lg hover:text-purple-400 truncate">
                         {post.title}
                       </h3>
-                      <span className={`text-xs px-2 py-1 rounded-full bg-opacity-20`}>
+                      <span className={`text-xs px-2 py-1 rounded-full bg-opacity-20 bg-gray-600 text-gray-300`}>
                         {categories.find(cat => cat.id === post.category)?.name}
                       </span>
                       {post.code && (
-                        <Code className="w-4 h-4 text-green-400" />
+                        <Code className="w-4 h-4 text-green-400" title="Contains code" />
                       )}
                       {post.media && post.media.length > 0 && (
                         <div className="flex space-x-1">
                           {post.media.some(m => m.type === 'image') && (
-                            <Image className="w-4 h-4 text-blue-400" />
+                            <Image className="w-4 h-4 text-blue-400" title="Contains images" />
                           )}
                           {post.media.some(m => m.type === 'video') && (
-                            <Video className="w-4 h-4 text-red-400" />
+                            <Video className="w-4 h-4 text-red-400" title="Contains videos" />
                           )}
                         </div>
                       )}
@@ -511,25 +526,25 @@ const Forum = () => {
                     <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
                     
                     {post.media && post.media.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        {post.media.slice(0, 3).map((media, index) => (
+                      <div className="grid grid-cols-4 gap-2 mb-3">
+                        {post.media.slice(0, 4).map((media, index) => (
                           <div key={index} className="relative">
                             {media.type === 'image' ? (
                               <img
                                 src={media.url}
                                 alt="Post media"
-                                className="w-full h-16 object-cover rounded"
+                                className="w-full h-16 object-cover rounded border border-gray-600"
                               />
                             ) : (
-                              <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center">
+                              <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center border border-gray-600">
                                 <Video className="w-6 h-6 text-gray-400" />
                               </div>
                             )}
                           </div>
                         ))}
-                        {post.media.length > 3 && (
-                          <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center text-xs text-gray-400">
-                            +{post.media.length - 3} more
+                        {post.media.length > 4 && (
+                          <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center text-xs text-gray-400 border border-gray-600">
+                            +{post.media.length - 4}
                           </div>
                         )}
                       </div>
@@ -537,7 +552,7 @@ const Forum = () => {
                     
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span>by {post.author}</span>
+                        <span>by <span className="text-purple-400">{post.author}</span></span>
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
                           <span>{post.createdAt}</span>
@@ -570,7 +585,7 @@ const Forum = () => {
           <div className="fixed bottom-6 right-6">
             <Button 
               onClick={() => setShowNewPostForm(true)}
-              className={`${currentTheme.primary} text-white px-6 py-3 rounded-full shadow-lg hover:opacity-80 transition-all flex items-center space-x-2`}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
             >
               <Plus className="w-5 h-5" />
               <span>New Post</span>
@@ -581,7 +596,9 @@ const Forum = () => {
         {!user && (
           <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 text-center mt-8`}>
             <p className="text-gray-400 mb-4">Please log in to create posts and interact with the community.</p>
-            <Button onClick={() => navigate('/login')}>Login</Button>
+            <Button onClick={() => navigate('/login')} className="bg-purple-600 hover:bg-purple-700">
+              Login
+            </Button>
           </div>
         )}
       </div>
