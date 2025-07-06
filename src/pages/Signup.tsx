@@ -109,37 +109,56 @@ const Signup = () => {
     
     setLoading(true);
     
-    // First create the account
-    const { error: signUpError } = await signUp(formData.email, formData.password);
-    
-    if (signUpError) {
-      setLoading(false);
-      return;
-    }
-
-    // Then create the profile with username
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      // First create the account
+      const { data: signUpData, error: signUpError } = await signUp(formData.email, formData.password);
+      
+      if (signUpError) {
+        console.error('Signup error:', signUpError);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Account created, now setting username:', formData.username);
+
+      // Wait a bit for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Then update the profile with username
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        console.log('Updating profile for user:', currentUser.id);
+        
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ username: formData.username.toLowerCase() })
-          .eq('id', user.id);
+          .eq('id', currentUser.id);
 
         if (profileError) {
           console.error('Error setting username:', profileError);
           toast({
             title: "Profile Error",
-            description: "Account created but username couldn't be set. Please contact support.",
+            description: "Account created but username couldn't be set. Please try setting it in your profile.",
             variant: "destructive",
+          });
+        } else {
+          console.log('Username set successfully:', formData.username);
+          toast({
+            title: "Success! 🎉",
+            description: `Welcome @${formData.username}! Please check your email to verify your account.`,
           });
         }
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error during signup:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong during signup. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleInputChange = (field: string, value: string) => {

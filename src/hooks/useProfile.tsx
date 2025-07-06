@@ -102,11 +102,22 @@ export const useProfile = () => {
     }
   };
 
-  // Get display name - always use username, never email
+  // Get display name - prioritize username, show helpful message if missing
   const getDisplayName = (profileData?: Profile) => {
     const targetProfile = profileData || profile;
-    if (!targetProfile?.username) return 'Anonymous User';
-    return targetProfile.username;
+    
+    // If we have a username, use it
+    if (targetProfile?.username) {
+      return targetProfile.username;
+    }
+    
+    // If no username but we have a profile, they need to set one
+    if (targetProfile) {
+      return 'Set your username';
+    }
+    
+    // If no profile yet, show loading state
+    return 'Loading...';
   };
 
   // Never return email for display - emails are private
