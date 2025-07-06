@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -509,15 +508,15 @@ const Forum = () => {
                         {categories.find(cat => cat.id === post.category)?.name}
                       </span>
                       {post.code && (
-                        <Code className="w-4 h-4 text-green-400" title="Contains code" />
+                        <Code className="w-4 h-4 text-green-400" />
                       )}
                       {post.media && post.media.length > 0 && (
                         <div className="flex space-x-1">
                           {post.media.some(m => m.type === 'image') && (
-                            <Image className="w-4 h-4 text-blue-400" title="Contains images" />
+                            <Image className="w-4 h-4 text-blue-400" />
                           )}
                           {post.media.some(m => m.type === 'video') && (
-                            <Video className="w-4 h-4 text-red-400" title="Contains videos" />
+                            <Video className="w-4 h-4 text-red-400" />
                           )}
                         </div>
                       )}
