@@ -17,9 +17,9 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
   const isImageMessage = message.content.startsWith('[IMAGE:') && message.content.endsWith(']');
   const imageData = isImageMessage ? message.content.slice(7, -1) : null;
 
-  // Get display name without showing email
+  // Get display name from username only - never show email
   const getDisplayName = (participant: any) => {
-    if (!participant) return 'User';
+    if (!participant) return 'Anonymous User';
     return participant.username || 'Anonymous User';
   };
 
@@ -87,7 +87,7 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
               alt="You"
             />
             <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm font-semibold">
-              {getSenderInitials({ username: user?.user_metadata?.username || 'You' })}
+              Y
             </AvatarFallback>
           </Avatar>
         )}

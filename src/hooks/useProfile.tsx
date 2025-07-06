@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
   id: string;
@@ -11,7 +12,6 @@ interface Profile {
   wallet_address: string | null;
   email_notifications: boolean;
   two_factor_enabled: boolean;
-  show_email_to_public: boolean;
 }
 
 export const useProfile = () => {
@@ -19,8 +19,6 @@ export const useProfile = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const getStorageKey = (userId: string) => `profile_${userId}`;
 
   const fetchProfile = async () => {
     if (!user) {
@@ -31,35 +29,24 @@ export const useProfile = () => {
     try {
       console.log('Fetching profile for user:', user.id);
       
-      const storageKey = getStorageKey(user.id);
-      const savedProfile = localStorage.getItem(storageKey);
-      
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        console.log('Profile loaded from localStorage:', parsedProfile);
-        setProfile(parsedProfile);
-      } else {
-        console.log('Creating new profile...');
-        // Generate username from email but never store the actual email
-        const emailPrefix = user.email?.split('@')[0] || 'User';
-        const randomSuffix = Math.floor(Math.random() * 1000);
-        const safeUsername = `${emailPrefix}${randomSuffix}`;
-        
-        const newProfile: Profile = {
-          id: user.id,
-          username: safeUsername,
-          bio: null,
-          avatar_url: null,
-          wallet_address: null,
-          email_notifications: true,
-          two_factor_enabled: false,
-          show_email_to_public: false // Email always hidden
-        };
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, bio, avatar_url, wallet_address, email_notifications, two_factor_enabled')
+        .eq('id', user.id)
+        .single();
 
-        localStorage.setItem(storageKey, JSON.stringify(newProfile));
-        console.log('New profile created and saved:', newProfile);
-        setProfile(newProfile);
+      if (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
+
+      console.log('Profile loaded:', data);
+      setProfile(data);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       toast({
@@ -80,13 +67,24 @@ export const useProfile = () => {
 
     try {
       console.log('Updating profile with:', updates);
-      const updatedProfile = { ...profile, ...updates };
       
-      const storageKey = getStorageKey(user.id);
-      localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
 
-      console.log('Profile updated successfully:', updatedProfile);
-      setProfile(updatedProfile);
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update profile. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log('Profile updated successfully');
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
       
       toast({
         title: "Success! 🎉",
@@ -104,11 +102,11 @@ export const useProfile = () => {
     }
   };
 
-  // Get display name that never includes email
+  // Get display name - always use username, never email
   const getDisplayName = (profileData?: Profile) => {
     const targetProfile = profileData || profile;
-    if (!targetProfile) return 'Anonymous User';
-    return targetProfile.username || 'Anonymous User';
+    if (!targetProfile?.username) return 'Anonymous User';
+    return targetProfile.username;
   };
 
   // Always return null for email - emails should never be displayed

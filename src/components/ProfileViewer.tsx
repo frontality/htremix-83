@@ -147,7 +147,7 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
           </Avatar>
           
           <h3 className={`text-xl font-bold ${currentTheme.text} mb-2`}>
-            {getDisplayName()}
+            @{getDisplayName()}
           </h3>
           
           {profile.bio && (
@@ -177,7 +177,7 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
             <div className="flex items-center justify-center space-x-2 text-xs">
               <Shield className={`h-3 w-3 ${currentTheme.muted}`} />
               <span className={`${currentTheme.muted}`}>
-                Email addresses are kept private
+                All personal information is kept private
               </span>
             </div>
           </div>

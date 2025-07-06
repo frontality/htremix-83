@@ -51,7 +51,7 @@ const Login = () => {
                 Welcome Back
               </CardTitle>
               <CardDescription className={currentTheme.muted}>
-                Sign in to your SkidHaven account
+                Sign in with your email and password
               </CardDescription>
             </CardHeader>
             <CardContent>
