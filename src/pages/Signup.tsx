@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,7 +110,7 @@ const Signup = () => {
     
     try {
       // First create the account
-      const { data: signUpData, error: signUpError } = await signUp(formData.email, formData.password);
+      const { error: signUpError } = await signUp(formData.email, formData.password);
       
       if (signUpError) {
         console.error('Signup error:', signUpError);
