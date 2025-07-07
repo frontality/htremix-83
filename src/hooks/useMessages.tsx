@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -163,11 +162,6 @@ export const useMessages = () => {
 
       console.log('Message sent successfully');
       await fetchMessages(conversationId);
-      
-      toast({
-        title: "Message sent! 💬",
-        description: "Your message has been delivered",
-      });
       
       return true;
     } catch (error) {
