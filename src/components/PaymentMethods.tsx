@@ -33,11 +33,13 @@ const PaymentMethods = () => {
   }, [user]);
 
   const fetchTransactions = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -51,44 +53,103 @@ const PaymentMethods = () => {
   };
 
   const createStripePayment = async (amount: number) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to make payments.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user?.id,
-          transaction_type: 'stripe',
+      const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
+        body: {
           amount,
-          currency: 'USD',
-          status: 'pending',
-          payment_method_details: { method: 'stripe' }
-        })
-        .select()
-        .single();
+          currency: 'usd',
+          user_id: user.id
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Payment Created",
-        description: "Stripe payment has been initiated.",
-      });
-
-      fetchTransactions();
+      if (data?.client_secret) {
+        toast({
+          title: "Payment Initiated",
+          description: "Stripe payment has been created successfully.",
+        });
+        fetchTransactions();
+      }
     } catch (error) {
       console.error('Error creating Stripe payment:', error);
       toast({
         title: "Error",
-        description: "Failed to create payment.",
+        description: "Failed to create Stripe payment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createPayPalPayment = async (amount: number) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to make payments.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-paypal-payment', {
+        body: {
+          amount,
+          currency: 'USD',
+          user_id: user.id
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.approve_url) {
+        window.open(data.approve_url, '_blank');
+        toast({
+          title: "PayPal Payment Created",
+          description: "Redirecting to PayPal for payment approval.",
+        });
+        fetchTransactions();
+      }
+    } catch (error) {
+      console.error('Error creating PayPal payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create PayPal payment.",
         variant: "destructive",
       });
     }
   };
 
   const createCryptoPayment = async (amount: number) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to make payments.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('transactions')
         .insert({
-          user_id: user?.id,
+          user_id: user.id,
           transaction_type: 'crypto',
           amount,
           currency: 'USD',
@@ -111,39 +172,6 @@ const PaymentMethods = () => {
       toast({
         title: "Error",
         description: "Failed to create crypto payment.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const createPayPalPayment = async (amount: number) => {
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user?.id,
-          transaction_type: 'paypal',
-          amount,
-          currency: 'USD',
-          status: 'pending',
-          payment_method_details: { method: 'paypal' }
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "PayPal Payment Created",
-        description: "PayPal payment has been initiated.",
-      });
-
-      fetchTransactions();
-    } catch (error) {
-      console.error('Error creating PayPal payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create PayPal payment.",
         variant: "destructive",
       });
     }
@@ -184,6 +212,14 @@ const PaymentMethods = () => {
       minute: '2-digit'
     });
   };
+
+  if (!user) {
+    return (
+      <div className="text-center py-8">
+        <p className={`${currentTheme.text} mb-4`}>Please log in to access payment methods.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

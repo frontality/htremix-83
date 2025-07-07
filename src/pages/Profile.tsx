@@ -16,13 +16,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// Updated XSS Protection - Allow spaces and preserve formatting
+// Simple sanitization - preserve spaces and formatting
 const sanitizeInput = (input: string): string => {
   return input
     .replace(/[<>]/g, '') // Remove < and > to prevent HTML injection
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+=/gi, ''); // Remove event handlers
-    // Note: We removed .trim() to preserve spaces
 };
 
 const Profile = () => {
@@ -49,16 +48,16 @@ const Profile = () => {
   }, [profile]);
 
   const handleSave = async () => {
-    // Sanitize inputs before saving but preserve spaces
+    // Sanitize inputs but preserve formatting for bio
     const sanitizedData = {
-      username: sanitizeInput(formData.username).trim(), // Only trim username
-      bio: sanitizeInput(formData.bio), // Don't trim bio to preserve formatting
+      username: sanitizeInput(formData.username).trim(),
+      bio: sanitizeInput(formData.bio), // Keep bio formatting
       avatar_url: formData.avatar_url
     };
     
+    console.log('Saving profile data:', sanitizedData);
     const success = await updateProfile(sanitizedData);
     if (success) {
-      setFormData(sanitizedData);
       setIsEditing(false);
     }
   };
@@ -80,13 +79,7 @@ const Profile = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    if (field === 'bio') {
-      // For bio, preserve all formatting including spaces and line breaks
-      setFormData(prev => ({ ...prev, [field]: value }));
-    } else {
-      // For other fields, apply sanitization
-      setFormData(prev => ({ ...prev, [field]: sanitizeInput(value) }));
-    }
+    setFormData(prev => ({ ...prev, [field]: sanitizeInput(value) }));
   };
 
   const getJoinDate = () => {
@@ -98,7 +91,7 @@ const Profile = () => {
   };
 
   const getDisplayName = () => {
-    return formData.username || 'Set username';
+    return formData.username || user?.email?.split('@')[0] || 'Set username';
   };
 
   if (loading) {
@@ -267,7 +260,6 @@ const Profile = () => {
                     {t('Account Settings')}
                   </h3>
                   
-                  {/* Email Display */}
                   <div className={`p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
                     <h4 className={`font-medium ${currentTheme.text} flex items-center gap-2 mb-2`}>
                       <Mail className="h-4 w-4" />

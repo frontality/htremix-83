@@ -47,7 +47,7 @@ export const useProfile = () => {
         // Create new profile if it doesn't exist
         const newProfile = {
           user_id: user.id,
-          username: user.username || null,
+          username: user.email?.split('@')[0] || null,
           bio: null,
           avatar_url: null
         };
@@ -130,12 +130,12 @@ export const useProfile = () => {
       return targetProfile.username;
     }
     
-    if (targetProfile) {
-      return 'Set your username';
+    if (user?.email) {
+      return user.email.split('@')[0];
     }
     
-    return 'Loading...';
-  }, [profile]);
+    return 'Set your username';
+  }, [profile, user]);
 
   const getDisplayEmail = useCallback(() => {
     return user?.email || null;
