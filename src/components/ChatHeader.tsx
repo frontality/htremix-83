@@ -21,7 +21,7 @@ interface ChatHeaderProps {
 const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
-  const [isOnline] = useState(true); // Simplified for now
+  const [isOnline] = useState(false); // Realistic offline status
   const [isCallActive, setIsCallActive] = useState(false);
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
 
@@ -38,13 +38,6 @@ const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
         title: "Calling...",
         description: `Calling ${otherParticipant?.username || 'user'}...`,
       });
-      setTimeout(() => {
-        setIsCallActive(false);
-        toast({
-          title: "Call Ended",
-          description: "Voice call ended.",
-        });
-      }, 10000);
     }
   };
 
@@ -61,13 +54,6 @@ const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
         title: "Starting Video Call...",
         description: `Video calling ${otherParticipant?.username || 'user'}...`,
       });
-      setTimeout(() => {
-        setIsVideoCallActive(false);
-        toast({
-          title: "Video Call Ended",
-          description: "Video call ended.",
-        });
-      }, 10000);
     }
   };
 
@@ -192,28 +178,40 @@ const ChatHeader = ({ otherParticipant, onUserClick }: ChatHeaderProps) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             align="end" 
-            className={`${currentTheme.cardBg} ${currentTheme.text} border ${currentTheme.border} shadow-xl backdrop-blur-sm`}
+            className={`${currentTheme.cardBg} ${currentTheme.text} border ${currentTheme.border} shadow-xl backdrop-blur-sm bg-opacity-95`}
           >
-            <DropdownMenuItem onClick={handleAddFriend} className="cursor-pointer hover:bg-purple-500/10">
+            <DropdownMenuItem 
+              onClick={handleAddFriend} 
+              className="cursor-pointer hover:bg-purple-500/10 focus:bg-purple-500/10"
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Friend
             </DropdownMenuItem>
             
             <DropdownMenuSeparator className={currentTheme.border} />
             
-            <DropdownMenuItem onClick={handleArchiveChat} className="cursor-pointer hover:bg-blue-500/10">
+            <DropdownMenuItem 
+              onClick={handleArchiveChat} 
+              className="cursor-pointer hover:bg-blue-500/10 focus:bg-blue-500/10"
+            >
               <Archive className="h-4 w-4 mr-2" />
               Archive Chat
             </DropdownMenuItem>
             
-            <DropdownMenuItem onClick={handleDeleteChat} className="cursor-pointer hover:bg-red-500/10 text-red-400">
+            <DropdownMenuItem 
+              onClick={handleDeleteChat} 
+              className="cursor-pointer hover:bg-red-500/10 focus:bg-red-500/10 text-red-400"
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Chat
             </DropdownMenuItem>
             
             <DropdownMenuSeparator className={currentTheme.border} />
             
-            <DropdownMenuItem onClick={handleReportUser} className="cursor-pointer hover:bg-red-500/10 text-red-400">
+            <DropdownMenuItem 
+              onClick={handleReportUser} 
+              className="cursor-pointer hover:bg-red-500/10 focus:bg-red-500/10 text-red-400"
+            >
               <Flag className="h-4 w-4 mr-2" />
               Report User
             </DropdownMenuItem>

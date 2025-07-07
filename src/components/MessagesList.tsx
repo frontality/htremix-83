@@ -8,7 +8,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import UserSearch from "@/components/UserSearch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface MessagesListProps {
   conversations: any[];
@@ -22,7 +21,6 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
   const { user } = useAuth();
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [userPresence, setUserPresence] = useState<Record<string, boolean>>({});
 
   const getOtherParticipant = (conversation: any) => {
     if (!user) return null;
@@ -31,56 +29,10 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
       : conversation.participant1;
   };
 
-  // Track user presence using Supabase realtime
-  useEffect(() => {
-    if (!conversations.length) return;
-
-    const participantIds = conversations.map(conv => {
-      const participant = getOtherParticipant(conv);
-      return participant?.id;
-    }).filter(Boolean);
-
-    if (participantIds.length === 0) return;
-
-    // Create a presence channel to track online users
-    const presenceChannel = supabase.channel('user-presence');
-
-    // Subscribe to presence changes
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const onlineUsers: Record<string, boolean> = {};
-        
-        // Mark all tracked users as offline initially
-        participantIds.forEach(id => {
-          onlineUsers[id] = false;
-        });
-
-        // Update status for users who are present
-        Object.keys(state).forEach(userId => {
-          if (participantIds.includes(userId)) {
-            onlineUsers[userId] = true;
-          }
-        });
-
-        setUserPresence(onlineUsers);
-      })
-      .on('presence', { event: 'join' }, ({ key }) => {
-        if (participantIds.includes(key)) {
-          setUserPresence(prev => ({ ...prev, [key]: true }));
-        }
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        if (participantIds.includes(key)) {
-          setUserPresence(prev => ({ ...prev, [key]: false }));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(presenceChannel);
-    };
-  }, [conversations, user]);
+  // Simple offline status - everyone is offline in demo
+  const isUserOnline = (userId: string) => {
+    return false; // Realistic offline status
+  };
 
   const filteredConversations = conversations.filter(conversation => {
     const participant = getOtherParticipant(conversation);
@@ -160,7 +112,7 @@ const MessagesList = ({ conversations, selectedChat, onSelectChat, onSelectUser 
             filteredConversations.map((conversation) => {
               const participant = getOtherParticipant(conversation);
               const isSelected = selectedChat === conversation.id;
-              const isOnline = userPresence[participant?.id] || false;
+              const isOnline = isUserOnline(participant?.id);
               
               return (
                 <button
