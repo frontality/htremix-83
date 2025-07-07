@@ -14,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
   signOut: () => void;
   loading: boolean;
+  updateUserProfile: (updates: Partial<User>) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'User already exists' };
       }
 
+      // Check if username already exists (if provided)
+      if (username && users.some((u: any) => u.username === username)) {
+        return { error: 'Username already taken' };
+      }
+
       // Create new user
       const newUser: User = {
         id: Date.now().toString(),
@@ -51,11 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: new Date().toISOString()
       };
 
-      // Save user to registered users
+      // Save user to registered users (with password)
       users.push({ ...newUser, password });
       localStorage.setItem('registered_users', JSON.stringify(users));
 
-      // Set as current user
+      // Set as current user (without password)
       setUser(newUser);
       localStorage.setItem('current_user', JSON.stringify(newUser));
 
@@ -102,6 +108,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (updates: Partial<User>): Promise<{ error: any }> => {
+    try {
+      if (!user) {
+        return { error: 'No user logged in' };
+      }
+
+      // Get existing users
+      const existingUsers = localStorage.getItem('registered_users');
+      if (!existingUsers) {
+        return { error: 'No users found' };
+      }
+
+      const users = JSON.parse(existingUsers);
+      
+      // Check if username is being updated and already exists
+      if (updates.username && updates.username !== user.username) {
+        const usernameExists = users.some((u: any) => u.username === updates.username && u.id !== user.id);
+        if (usernameExists) {
+          return { error: 'Username already taken' };
+        }
+      }
+
+      // Find and update the user
+      const userIndex = users.findIndex((u: any) => u.id === user.id);
+      if (userIndex === -1) {
+        return { error: 'User not found' };
+      }
+
+      // Update user in registered users
+      users[userIndex] = { ...users[userIndex], ...updates };
+      localStorage.setItem('registered_users', JSON.stringify(users));
+
+      // Update current user
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('current_user', JSON.stringify(updatedUser));
+
+      console.log('User profile updated successfully:', updatedUser);
+      return { error: null };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { error: 'Profile update failed' };
+    }
+  };
+
   const signOut = () => {
     setUser(null);
     localStorage.removeItem('current_user');
@@ -114,7 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signIn,
       signUp,
       signOut,
-      loading
+      loading,
+      updateUserProfile
     }}>
       {children}
     </AuthContext.Provider>

@@ -10,11 +10,13 @@ import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const { currentTheme } = useTheme();
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +34,17 @@ const Login = () => {
     
     const { error } = await signIn(email, password);
     
-    if (!error) {
+    if (error) {
+      toast({
+        title: "Login Error",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Welcome back! 🎉",
+        description: "You have successfully logged in.",
+      });
       navigate('/');
     }
     

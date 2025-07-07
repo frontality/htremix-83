@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,6 @@ import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Signup = () => {
@@ -43,21 +43,18 @@ const Signup = () => {
 
     setUsernameChecking(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username.toLowerCase())
-        .single();
-
-      if (error && error.code === 'PGRST116') {
-        // No rows found - username is available
+      // Check local storage for existing users
+      const existingUsers = localStorage.getItem('registered_users');
+      if (existingUsers) {
+        const users = JSON.parse(existingUsers);
+        const usernameExists = users.some((u: any) => u.username === username.toLowerCase());
+        setUsernameAvailable(!usernameExists);
+      } else {
         setUsernameAvailable(true);
-      } else if (data) {
-        // Username already exists
-        setUsernameAvailable(false);
       }
     } catch (error) {
       console.error('Error checking username:', error);
+      setUsernameAvailable(null);
     } finally {
       setUsernameChecking(false);
     }
@@ -109,44 +106,20 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      // First create the account
-      const { error: signUpError } = await signUp(formData.email, formData.password);
+      const { error } = await signUp(formData.email, formData.password, formData.username);
       
-      if (signUpError) {
-        console.error('Signup error:', signUpError);
-        setLoading(false);
-        return;
-      }
-
-      console.log('Account created, now setting username:', formData.username);
-
-      // Wait a bit for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Then update the profile with username
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        console.log('Updating profile for user:', currentUser.id);
-        
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ username: formData.username.toLowerCase() })
-          .eq('id', currentUser.id);
-
-        if (profileError) {
-          console.error('Error setting username:', profileError);
-          toast({
-            title: "Profile Error",
-            description: "Account created but username couldn't be set. Please try setting it in your profile.",
-            variant: "destructive",
-          });
-        } else {
-          console.log('Username set successfully:', formData.username);
-          toast({
-            title: "Success! 🎉",
-            description: `Welcome @${formData.username}! Please check your email to verify your account.`,
-          });
-        }
+      if (error) {
+        toast({
+          title: "Signup Error",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success! 🎉",
+          description: `Welcome @${formData.username}! You can now start using SkidHaven.`,
+        });
+        navigate('/');
       }
     } catch (error) {
       console.error('Error during signup:', error);

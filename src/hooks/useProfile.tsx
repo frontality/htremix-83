@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
   id: string;
@@ -15,7 +14,7 @@ interface Profile {
 }
 
 export const useProfile = () => {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,26 +26,21 @@ export const useProfile = () => {
     }
     
     try {
-      console.log('Fetching profile for user:', user.id);
+      console.log('Loading profile for user:', user.id);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, bio, avatar_url, wallet_address, email_notifications, two_factor_enabled')
-        .eq('id', user.id)
-        .single();
+      // Create profile from user data
+      const userProfile: Profile = {
+        id: user.id,
+        username: user.username || null,
+        bio: null,
+        avatar_url: null,
+        wallet_address: null,
+        email_notifications: true,
+        two_factor_enabled: false
+      };
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Profile loaded:', data);
-      setProfile(data);
+      console.log('Profile loaded:', userProfile);
+      setProfile(userProfile);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       toast({
@@ -68,19 +62,17 @@ export const useProfile = () => {
     try {
       console.log('Updating profile with:', updates);
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update profile. Please try again.",
-          variant: "destructive",
-        });
-        return false;
+      // Update user through AuthContext if username is being changed
+      if (updates.username !== undefined) {
+        const { error } = await updateUserProfile({ username: updates.username });
+        if (error) {
+          toast({
+            title: "Error",
+            description: error === 'Username already taken' ? "Username already taken" : "Failed to update profile. Please try again.",
+            variant: "destructive",
+          });
+          return false;
+        }
       }
 
       console.log('Profile updated successfully');
