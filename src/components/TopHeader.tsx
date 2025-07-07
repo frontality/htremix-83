@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { DollarSign, User, Settings, LogOut, MessageCircle, ShoppingBag, TrendingUp, Home, Menu, X, Palette, Globe, Users } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,13 +13,24 @@ const TopHeader = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const { currentTheme } = useTheme();
-  const { getCurrentLanguage } = useLanguage();
+  const { getCurrentLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [, forceUpdate] = useState({});
+
+  // Listen for language changes to force re-render
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      forceUpdate({});
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    return () => window.removeEventListener('languageChanged', handleLanguageChange);
+  }, []);
 
   const handleSignOut = async () => {
     console.log('Sign out button clicked');
@@ -32,12 +44,12 @@ const TopHeader = () => {
   };
 
   const menuItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: ShoppingBag, label: "Marketplace", path: "/marketplace" },
-    { icon: TrendingUp, label: "Sell Items", path: "/sell" },
-    { icon: DollarSign, label: "Crypto Exchange", path: "/crypto-exchange" },
-    { icon: MessageCircle, label: "Messages", path: "/messages" },
-    { icon: Users, label: "Forum", path: "/forum" },
+    { icon: Home, label: t("Home"), path: "/" },
+    { icon: ShoppingBag, label: t("Marketplace"), path: "/marketplace" },
+    { icon: TrendingUp, label: t("Sell Items"), path: "/sell" },
+    { icon: DollarSign, label: t("Crypto Exchange"), path: "/crypto-exchange" },
+    { icon: MessageCircle, label: t("Messages"), path: "/messages" },
+    { icon: Users, label: t("Forum"), path: "/forum" },
   ];
 
   const handleMenuClick = (path: string) => {
@@ -145,7 +157,6 @@ const TopHeader = () => {
                   )}
                 </div>
 
-                {/* Settings */}
                 <button
                   onClick={() => handleMenuClick('/settings')}
                   className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
@@ -153,7 +164,6 @@ const TopHeader = () => {
                   <Settings size={14} className={`${currentTheme.text} hover:rotate-90 transition-transform duration-300`} />
                 </button>
 
-                {/* Profile */}
                 <button
                   onClick={() => handleMenuClick('/profile')}
                   className={`p-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer hover:scale-110 transform`}
@@ -161,7 +171,6 @@ const TopHeader = () => {
                   <User size={14} className={`${currentTheme.text} transition-transform duration-200`} />
                 </button>
                 
-                {/* User Avatar & Menu */}
                 <div className="relative">
                   <button
                     onClick={() => {
@@ -189,7 +198,7 @@ const TopHeader = () => {
                         className="flex items-center space-x-2 p-2 w-full text-left hover:bg-red-900/20 transition-all duration-300 text-red-400 cursor-pointer text-xs hover:scale-105 transform"
                       >
                         <LogOut size={14} className="transition-transform duration-200" />
-                        <span>Sign Out</span>
+                        <span>{t("Sign Out")}</span>
                       </button>
                     </div>
                   )}
@@ -204,13 +213,13 @@ const TopHeader = () => {
                 onClick={() => handleMenuClick('/login')}
                 className={`px-3 py-1.5 rounded-md ${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 cursor-pointer ${currentTheme.text} text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
               >
-                Login
+                {t("Login")}
               </button>
               <button
                 onClick={() => handleMenuClick('/signup')}
                 className={`px-3 py-1.5 rounded-md ${currentTheme.primary} text-white hover:opacity-80 transition-all duration-300 cursor-pointer text-xs font-medium hover:scale-105 transform hover:shadow-lg`}
               >
-                Sign Up
+                {t("Sign Up")}
               </button>
             </div>
           )}

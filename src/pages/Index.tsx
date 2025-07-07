@@ -28,9 +28,20 @@ import { useAnimations } from "@/hooks/useAnimations";
 
 const Index = () => {
   const { currentTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const { isVisible, animationClasses, hoverClasses } = useAnimations();
+  const [, forceUpdate] = useState({});
+
+  // Listen for language changes to force re-render
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      forceUpdate({});
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    return () => window.removeEventListener('languageChanged', handleLanguageChange);
+  }, []);
 
   const features = [
     { icon: Shield, title: t("Secure Trading"), description: t("Protected transactions"), color: "text-green-400" },
@@ -42,10 +53,10 @@ const Index = () => {
   ];
 
   const categories = [
-    { icon: Gift, name: t("Gift Cards"), count: "0 items", color: "text-pink-400" },
-    { icon: Gamepad2, name: t("Game Accounts"), count: "0 items", color: "text-green-400" },
-    { icon: Crown, name: t("Premium Subs"), count: "0 items", color: "text-yellow-400" },
-    { icon: Music, name: t("Digital Content"), count: "0 items", color: "text-purple-400" }
+    { icon: Gift, name: t("Gift Cards"), count: t("0 items"), color: "text-pink-400" },
+    { icon: Gamepad2, name: t("Game Accounts"), count: t("0 items"), color: "text-green-400" },
+    { icon: Crown, name: t("Premium Subs"), count: t("0 items"), color: "text-yellow-400" },
+    { icon: Music, name: t("Digital Content"), count: t("0 items"), color: "text-purple-400" }
   ];
 
   return (

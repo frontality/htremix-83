@@ -18,31 +18,33 @@ const LanguageSelector = ({ onClose }: LanguageSelectorProps) => {
     
     setTimeout(() => {
       onClose();
-    }, 500);
+    }, 300);
   };
 
   return (
-    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 shadow-xl min-w-60 backdrop-blur-sm`}>
-      <h3 className={`${currentTheme.text} font-semibold mb-4 flex items-center gap-2`}>
-        <Globe className="h-5 w-5" />
-        Language
-      </h3>
-      <div className="space-y-2">
+    <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg shadow-xl min-w-48 max-w-56 backdrop-blur-sm bg-opacity-95 z-50`}>
+      <div className="p-3 border-b border-gray-700/50">
+        <h3 className={`${currentTheme.text} font-semibold text-sm flex items-center gap-2`}>
+          <Globe className="h-4 w-4" />
+          Language
+        </h3>
+      </div>
+      <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
         {availableLanguages.map((language) => (
           <button
             key={language.code}
             onClick={() => handleLanguageSelect(language.code)}
-            className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
+            className={`w-full flex items-center justify-between p-2 rounded-md transition-all duration-200 text-sm ${
               currentLanguage === language.code 
-                ? `${currentTheme.primary} text-white shadow-lg` 
+                ? `${currentTheme.primary} text-white shadow-md` 
                 : `hover:${currentTheme.secondary} ${currentTheme.text} hover:scale-102`
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{language.flag}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-base">{language.flag}</span>
               <span className="font-medium">{language.name}</span>
             </div>
-            {currentLanguage === language.code && <Check className="h-5 w-5" />}
+            {currentLanguage === language.code && <Check className="h-4 w-4" />}
           </button>
         ))}
       </div>
