@@ -90,7 +90,7 @@ const SellItems = () => {
         category: formData.category,
         price: parseFloat(formData.price),
         deliveryMethod: formData.deliveryMethod,
-        seller: user.email?.split('@')[0] || 'Anonymous',
+        seller: user.username || user.email?.split('@')[0] || 'Anonymous',
         sellerId: user.id,
         images: formData.images,
         createdAt: new Date().toISOString(),
@@ -286,21 +286,23 @@ const SellItems = () => {
               </h2>
               
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {formData.images.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img 
-                        src={image} 
-                        alt={`Upload ${index + 1}`}
-                        className="w-20 h-20 object-cover rounded border-2 border-purple-500"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
-                      />
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border-2 border-purple-500/50">
+                        <img 
+                          src={image} 
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         ×
                       </button>
@@ -308,11 +310,11 @@ const SellItems = () => {
                   ))}
                   
                   {formData.images.length < 5 && (
-                    <div className="w-20 h-20 border-2 border-dashed border-gray-500 rounded flex items-center justify-center">
+                    <div className="aspect-square">
                       <ImageUpload 
                         onImageUpload={handleImageUpload}
                         className="w-full h-full"
-                        currentImage={null}
+                        variant="marketplace"
                       />
                     </div>
                   )}

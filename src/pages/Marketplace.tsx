@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Search, Filter, Grid, List, SlidersHorizontal, Gift, DollarSign, User, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -29,6 +30,7 @@ const Marketplace = () => {
   const { currentTheme } = useTheme();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
@@ -105,13 +107,20 @@ const Marketplace = () => {
     }
   });
 
-  const handleItemClick = (itemId: string) => {
+  const handleItemClick = (item: MarketplaceItem) => {
     // Update view count
-    const updatedItems = items.map(item =>
-      item.id === itemId ? { ...item, views: item.views + 1 } : item
+    const updatedItems = items.map(existingItem =>
+      existingItem.id === item.id ? { ...existingItem, views: existingItem.views + 1 } : existingItem
     );
     setItems(updatedItems);
     localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
+    
+    // Navigate to product detail or show item details
+    console.log('Item clicked:', item);
+    toast({
+      title: `Viewing ${item.title}`,
+      description: `Price: $${item.price.toFixed(2)} - Seller: ${item.seller}`,
+    });
   };
 
   const getCategoryIcon = (category: string) => {
@@ -205,8 +214,8 @@ const Marketplace = () => {
                 key={item.id} 
                 className={`${currentTheme.cardBg} border ${currentTheme.border} hover:border-purple-500/50 transition-all cursor-pointer shadow-lg ${
                   viewMode === "list" ? "p-4" : "overflow-hidden"
-                } relative group`}
-                onClick={() => handleItemClick(item.id)}
+                } relative group hover:scale-105`}
+                onClick={() => handleItemClick(item)}
               >
                 {/* Delete button for own items */}
                 {user && user.id === item.sellerId && (
@@ -226,18 +235,19 @@ const Marketplace = () => {
                 {viewMode === "grid" ? (
                   <>
                     {/* Image */}
-                    <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                    <div className="aspect-square bg-gray-800 flex items-center justify-center overflow-hidden">
                       {item.images && item.images.length > 0 ? (
                         <img 
                           src={item.images[0]} 
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                           onError={(e) => {
+                            console.log('Image failed to load:', item.images[0]);
                             (e.target as HTMLImageElement).src = "/placeholder.svg";
                           }}
                         />
                       ) : (
-                        <div className="text-center">
+                        <div className="text-center p-4">
                           {getCategoryIcon(item.category)}
                           <p className={`text-sm ${currentTheme.muted} mt-2`}>No Image</p>
                         </div>
@@ -277,13 +287,14 @@ const Marketplace = () => {
                   </>
                 ) : (
                   <div className="flex space-x-4">
-                    <div className="w-24 h-24 bg-gray-800 rounded flex items-center justify-center flex-shrink-0">
+                    <div className="w-24 h-24 bg-gray-800 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {item.images && item.images.length > 0 ? (
                         <img 
                           src={item.images[0]} 
                           alt={item.title}
                           className="w-full h-full object-cover rounded"
                           onError={(e) => {
+                            console.log('Image failed to load:', item.images[0]);
                             (e.target as HTMLImageElement).src = "/placeholder.svg";
                           }}
                         />
@@ -303,7 +314,7 @@ const Marketplace = () => {
                         </div>
                       </div>
                       
-                      <p className={`text-sm ${currentTheme.muted} mb-2`}>
+                      <p className={`text-sm ${currentTheme.muted} mb-2 line-clamp-2`}>
                         {item.description}
                       </p>
                       
