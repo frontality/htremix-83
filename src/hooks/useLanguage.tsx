@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Language {
   code: string;
@@ -28,7 +28,6 @@ const availableLanguages: Language[] = [
 // Simplified translation function that loads translations dynamically
 const getTranslations = async (languageCode: string) => {
   try {
-    // Dynamic import to avoid bundle size issues
     const translations = await import(`@/translations/${languageCode}.ts`);
     return translations.default || translations[languageCode];
   } catch (error) {
@@ -45,7 +44,6 @@ export const useLanguage = () => {
   const [translations, setTranslations] = useState<any>({});
 
   useEffect(() => {
-    // Load translations for current language
     const loadTranslations = async () => {
       try {
         const currentTranslations = await getTranslations(currentLanguage);
@@ -58,25 +56,29 @@ export const useLanguage = () => {
     loadTranslations();
   }, [currentLanguage]);
 
-  const changeLanguage = (languageCode: string) => {
+  const changeLanguage = useCallback((languageCode: string) => {
     console.log('Changing language to:', languageCode);
     setCurrentLanguage(languageCode);
     localStorage.setItem('language', languageCode);
     
-    // Dispatch custom event for other components to listen
     window.dispatchEvent(new CustomEvent('languageChanged', { 
       detail: { language: languageCode } 
     }));
-  };
+  }, []);
 
-  const t = (key: string): string => {
+  const getCurrentLanguage = useCallback(() => {
+    return availableLanguages.find(lang => lang.code === currentLanguage) || availableLanguages[0];
+  }, [currentLanguage]);
+
+  const t = useCallback((key: string): string => {
     return translations[key] || key;
-  };
+  }, [translations]);
 
   return {
     currentLanguage,
     changeLanguage,
     availableLanguages,
+    getCurrentLanguage,
     t
   };
 };
