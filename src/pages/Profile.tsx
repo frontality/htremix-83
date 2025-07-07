@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Camera, Edit, Mail, MessageCircle, User, Wallet, Heart, Sparkles, Settings, Users, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import ImageUpload from "@/components/ImageUpload";
+import FriendsList from "@/components/FriendsList";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -240,26 +240,7 @@ const Profile = () => {
               </TabsContent>
 
               <TabsContent value="friends" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-semibold ${currentTheme.text} flex items-center gap-2`}>
-                    <Users className="h-5 w-5" />
-                    Friends & Community
-                  </h3>
-                  <Button className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}>
-                    <User className="h-4 w-4" />
-                    Find Friends
-                  </Button>
-                </div>
-                
-                <div className={`${currentTheme.secondary} p-8 rounded-lg text-center border-2 border-dashed border-purple-300`}>
-                  <Users className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
-                  <p className={`${currentTheme.text} text-lg font-medium mb-2`}>
-                    Your friend list is waiting!
-                  </p>
-                  <p className={`${currentTheme.muted} text-sm`}>
-                    Start connecting with other awesome users!
-                  </p>
-                </div>
+                <FriendsList />
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-6">

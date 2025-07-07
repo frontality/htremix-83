@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Search, User, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/contexts/ThemeContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface UserSearchProps {
@@ -14,7 +13,7 @@ interface UserSearchProps {
 interface SearchedUser {
   id: string;
   username: string;
-  avatar_url: string | null;
+  email: string;
 }
 
 const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
@@ -24,37 +23,37 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
   const [users, setUsers] = useState<SearchedUser[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const searchUsers = async (term: string) => {
+  const searchUsers = (term: string) => {
     if (!term.trim() || !user) {
       setUsers([]);
       return;
     }
 
     setLoading(true);
-    try {
-      console.log('Searching for users with term:', term);
+    
+    // Get all registered users from localStorage
+    const allUsers = localStorage.getItem('registered_users');
+    if (allUsers) {
+      const userList = JSON.parse(allUsers);
+      const filteredUsers = userList
+        .filter((u: any) => 
+          u.id !== user.id && 
+          (u.email.toLowerCase().includes(term.toLowerCase()) || 
+           (u.username && u.username.toLowerCase().includes(term.toLowerCase())))
+        )
+        .slice(0, 10)
+        .map((u: any) => ({
+          id: u.id,
+          username: u.username || u.email.split('@')[0],
+          email: u.email
+        }));
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${term}%`)
-        .neq('id', user.id)
-        .limit(10);
-
-      if (error) {
-        console.error('Error searching users:', error);
-        setUsers([]);
-        return;
-      }
-
-      console.log('Users found:', data);
-      setUsers(data || []);
-    } catch (error) {
-      console.error('Error in searchUsers:', error);
+      setUsers(filteredUsers);
+    } else {
       setUsers([]);
-    } finally {
-      setLoading(false);
     }
+    
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -76,7 +75,7 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
       <div className="flex items-center space-x-2 mb-4">
         <Search className="h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search users by username..."
+          placeholder="Search users by email or username..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={`flex-1 ${currentTheme.secondary} ${currentTheme.text} border-0`}
@@ -90,20 +89,21 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto"></div>
           </div>
         ) : users.length > 0 ? (
-          users.map((user) => (
+          users.map((searchUser) => (
             <div
-              key={user.id}
+              key={searchUser.id}
               className={`flex items-center space-x-3 p-3 rounded-lg ${currentTheme.secondary} hover:${currentTheme.primary} transition-colors cursor-pointer`}
-              onClick={() => handleSelectUser(user.id)}
+              onClick={() => handleSelectUser(searchUser.id)}
             >
-              <img
-                src={user.avatar_url || "/placeholder.svg"}
-                alt={user.username}
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">
+                {searchUser.username[0]?.toUpperCase()}
+              </div>
               <div className="flex-1">
                 <p className={`font-medium ${currentTheme.text}`}>
-                  {user.username || "Anonymous User"}
+                  {searchUser.username}
+                </p>
+                <p className={`text-xs ${currentTheme.muted}`}>
+                  {searchUser.email}
                 </p>
               </div>
               <MessageCircle className="h-4 w-4 text-gray-400" />
