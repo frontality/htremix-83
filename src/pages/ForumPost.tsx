@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -156,7 +155,7 @@ const ForumPost = () => {
   const handleAddComment = () => {
     if (!user || !post || !newComment.trim()) return;
 
-    const displayName = profile?.username || user.email?.split('@')[0] || 'Anonymous';
+    const displayName = profile?.username || user?.email?.split('@')[0] || 'Anonymous';
 
     const comment: Comment = {
       id: Date.now().toString(),
@@ -211,7 +210,7 @@ const ForumPost = () => {
 
   if (!post) {
     return (
-      <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} flex items-center justify-center`}>
+      <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} flex items-center justify-center pt-16`}>
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Post not found</h2>
           <Button onClick={() => navigate('/forum')}>
@@ -224,38 +223,53 @@ const ForumPost = () => {
   }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
-      <div className="container mx-auto px-4 py-6">
-        {/* Back Button - Make it more prominent */}
-        <div className="mb-6">
+    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} pt-16`}>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Back Button - Prominent and fixed position */}
+        <div className="sticky top-16 z-10 bg-opacity-90 backdrop-blur-sm py-4 mb-6">
           <Button 
             variant="outline" 
             onClick={() => navigate('/forum')}
-            className={`${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300`}
+            className={`${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300 shadow-lg`}
+            size="lg"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Forum
           </Button>
         </div>
 
         {/* Post Content */}
-        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6`}>
-          <div className="flex items-start space-x-4 mb-4">
-            <Avatar className="w-12 h-12">
+        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6 shadow-lg`}>
+          <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+            <Avatar className="w-12 h-12 flex-shrink-0">
               <AvatarImage src={post.authorAvatar} />
               <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <h3 className="font-semibold text-lg">{post.author}</h3>
-                <div className="flex space-x-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-3">
+                <div>
+                  <h3 className="font-semibold text-lg">{post.author}</h3>
+                  <div className="flex items-center space-x-3 text-sm text-gray-400">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{post.createdAt}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{post.views} views</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleViewProfile(post.authorId)}
+                    className="text-xs"
                   >
-                    <User className="w-4 h-4 mr-1" />
+                    <User className="w-3 h-3 mr-1" />
                     Profile
                   </Button>
                   {user && user.id !== post.authorId && (
@@ -263,42 +277,33 @@ const ForumPost = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleSendFriendRequest(post.authorId, post.author)}
+                      className="text-xs"
                     >
-                      <UserPlus className="w-4 h-4 mr-1" />
+                      <UserPlus className="w-3 h-3 mr-1" />
                       Add Friend
                     </Button>
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-4 text-sm text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{post.createdAt}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-4 h-4" />
-                  <span>{post.views} views</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6 break-words">{post.title}</h1>
           
-          <div className="prose prose-invert max-w-none mb-4">
-            <p className="whitespace-pre-wrap">{post.content}</p>
+          <div className="prose prose-invert max-w-none mb-6">
+            <p className="whitespace-pre-wrap text-base leading-relaxed">{post.content}</p>
           </div>
 
           {/* Media Section */}
           {post.media && post.media.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="flex space-x-1">
                   {post.media.some(m => m.type === 'image') && (
-                    <Image className="w-4 h-4 text-blue-400" />
+                    <Image className="w-5 h-5 text-blue-400" />
                   )}
                   {post.media.some(m => m.type === 'video') && (
-                    <Video className="w-4 h-4 text-red-400" />
+                    <Video className="w-5 h-5 text-red-400" />
                   )}
                 </div>
                 <h3 className="text-lg font-semibold">Media</h3>
@@ -306,7 +311,7 @@ const ForumPost = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {post.media.map((media, index) => (
-                  <div key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg overflow-hidden`}>
+                  <div key={index} className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg overflow-hidden shadow-md`}>
                     {media.type === 'image' ? (
                       <img
                         src={media.url}
@@ -332,14 +337,14 @@ const ForumPost = () => {
 
           {/* Code Section */}
           {post.code && (
-            <div className="mt-6">
-              <div className="flex items-center space-x-2 mb-2">
-                <Code className="w-4 h-4 text-green-400" />
+            <div className="mt-8">
+              <div className="flex items-center space-x-2 mb-3">
+                <Code className="w-5 h-5 text-green-400" />
                 <h3 className="text-lg font-semibold text-green-400">Code</h3>
               </div>
-              <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 bg-gray-900/50`}>
-                <pre className="text-sm overflow-x-auto">
-                  <code className="text-green-300">{post.code}</code>
+              <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 bg-gray-900/50 overflow-x-auto`}>
+                <pre className="text-sm">
+                  <code className="text-green-300 whitespace-pre-wrap break-all">{post.code}</code>
                 </pre>
               </div>
             </div>
@@ -347,23 +352,23 @@ const ForumPost = () => {
 
           {/* Vote Buttons */}
           {user && (
-            <div className="flex items-center space-x-4 mt-6 pt-4 border-t border-gray-700">
+            <div className="flex items-center space-x-4 mt-8 pt-6 border-t border-gray-700">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLike}
-                className={post.likedBy?.includes(user.id) ? 'bg-green-600' : ''}
+                className={`${post.likedBy?.includes(user.id) ? 'bg-green-600 hover:bg-green-700' : ''} transition-colors`}
               >
-                <ThumbsUp className="w-4 h-4 mr-1" />
+                <ThumbsUp className="w-4 h-4 mr-2" />
                 {post.likes}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleDislike}
-                className={post.dislikedBy?.includes(user.id) ? 'bg-red-600' : ''}
+                className={`${post.dislikedBy?.includes(user.id) ? 'bg-red-600 hover:bg-red-700' : ''} transition-colors`}
               >
-                <ThumbsDown className="w-4 h-4 mr-1" />
+                <ThumbsDown className="w-4 h-4 mr-2" />
                 {post.dislikes || 0}
               </Button>
             </div>
@@ -371,64 +376,70 @@ const ForumPost = () => {
         </div>
 
         {/* Comments Section */}
-        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6`}>
-          <h2 className="text-xl font-semibold mb-4">
+        <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 shadow-lg`}>
+          <h2 className="text-xl font-semibold mb-6">
             Comments ({comments.length})
           </h2>
 
           {/* Add Comment */}
           {user && (
-            <div className="mb-6">
+            <div className="mb-8">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-24`}
+                className={`w-full p-4 rounded-lg ${currentTheme.secondary} border ${currentTheme.border} min-h-[100px] resize-vertical`}
               />
-              <Button 
-                onClick={handleAddComment}
-                className="mt-2"
-                disabled={!newComment.trim()}
-              >
-                <Reply className="w-4 h-4 mr-2" />
-                Post Comment
-              </Button>
+              <div className="flex justify-end mt-3">
+                <Button 
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim()}
+                  className={`${currentTheme.primary} text-white`}
+                >
+                  <Reply className="w-4 h-4 mr-2" />
+                  Post Comment
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Comments List */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {comments.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">
-                No comments yet. Be the first to comment!
-              </p>
+              <div className="text-center py-12">
+                <p className="text-gray-400 text-lg mb-4">
+                  No comments yet. Be the first to comment!
+                </p>
+              </div>
             ) : (
               comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className={`border-l-2 border-purple-500 pl-4 py-2`}
+                  className={`border-l-4 border-purple-500 pl-6 py-4 ${currentTheme.secondary} rounded-r-lg`}
                 >
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="w-8 h-8">
+                  <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
+                    <Avatar className="w-10 h-10 flex-shrink-0">
                       <AvatarFallback>{comment.author[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium">{comment.author}</span>
-                        <span className="text-xs text-gray-400">{comment.createdAt}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <span className="font-medium">{comment.author}</span>
+                          <span className="text-xs text-gray-400">{comment.createdAt}</span>
+                        </div>
                         {user && user.id !== comment.authorId && (
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleSendFriendRequest(comment.authorId, comment.author)}
-                            className="text-xs"
+                            className="text-xs mt-2 sm:mt-0"
                           >
                             <UserPlus className="w-3 h-3 mr-1" />
-                            Add
+                            Add Friend
                           </Button>
                         )}
                       </div>
-                      <p className="text-sm">{comment.content}</p>
+                      <p className="text-sm leading-relaxed break-words">{comment.content}</p>
                     </div>
                   </div>
                 </div>
@@ -437,9 +448,11 @@ const ForumPost = () => {
           </div>
 
           {!user && (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
               <p className="text-gray-400 mb-4">Please log in to comment</p>
-              <Button onClick={() => navigate('/login')}>Login</Button>
+              <Button onClick={() => navigate('/login')} className={`${currentTheme.primary} text-white`}>
+                Login
+              </Button>
             </div>
           )}
         </div>

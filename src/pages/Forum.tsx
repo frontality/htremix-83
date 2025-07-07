@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { Search, Plus, Eye, MessageCircle, ThumbsUp, Clock, User, UserPlus, Code, Image, Video, Camera, Film, X, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Filter, Image, Video, Code, Pin, TrendingUp, MessageCircle, Eye, ThumbsUp, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
@@ -48,7 +46,6 @@ const Forum = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   
-  // New post form state
   const [newPost, setNewPost] = useState({
     title: '',
     content: '',
@@ -115,6 +112,76 @@ const Forum = () => {
       setPosts(samplePosts);
       localStorage.setItem('forum_posts', JSON.stringify(samplePosts));
     }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload only image files.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File Too Large",
+          description: "Image must be under 5MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setUploadedMedia(prev => [...prev, { type: 'image', url: result }]);
+        toast({
+          title: "Image Added! 📸",
+          description: "Image uploaded successfully."
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    files.forEach(file => {
+      if (!file.type.startsWith('video/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload only video files.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        toast({
+          title: "File Too Large",
+          description: "Video must be under 50MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setUploadedMedia(prev => [...prev, { type: 'video', url: result }]);
+        toast({
+          title: "Video Added! 🎥",
+          description: "Video uploaded successfully."
+        });
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleMediaUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
@@ -325,222 +392,249 @@ const Forum = () => {
   const regularPosts = sortedPosts.filter(post => !post.isPinned);
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
-      <div className="container mx-auto px-4 py-6">
+    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} pt-16`}>
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-          <div className="mb-4 md:mb-0">
-            <h1 className="text-3xl font-bold mb-2 flex items-center space-x-2">
-              <MessageCircle className="w-8 h-8 text-purple-500" />
-              <span>Community Forum</span>
-            </h1>
-            <p className={`${currentTheme.muted}`}>
-              Connect, share, and learn with the $KID HAVEN community
-            </p>
-          </div>
-          
-          {user && (
-            <Button 
-              onClick={() => setShowCreatePost(true)}
-              className={`${currentTheme.primary} text-white`}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Post
-            </Button>
-          )}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Community Forum</h1>
+          <p className={`${currentTheme.muted} text-lg`}>
+            Connect, share, and learn with the community
+          </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <Input
-              placeholder="Search posts, authors, or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`${currentTheme.cardBg} border ${currentTheme.border}`}
-            />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${currentTheme.primary}`}>
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">1,234</p>
+                <p className={`text-sm ${currentTheme.muted}`}>Total Posts</p>
+              </div>
+            </div>
           </div>
           
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className={`w-full md:w-48 ${currentTheme.cardBg} border ${currentTheme.border}`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.value} value={category.value}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${currentTheme.secondary}`}>
+                <Eye className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">45.6K</p>
+                <p className={`text-sm ${currentTheme.muted}`}>Total Views</p>
+              </div>
+            </div>
+          </div>
           
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className={`w-full md:w-48 ${currentTheme.cardBg} border ${currentTheme.border}`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="most-liked">Most Liked</SelectItem>
-              <SelectItem value="most-viewed">Most Viewed</SelectItem>
-              <SelectItem value="most-replies">Most Replies</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg bg-green-600`}>
+                <ThumbsUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">2,890</p>
+                <p className={`text-sm ${currentTheme.muted}`}>Total Likes</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4`}>
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg bg-orange-600`}>
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">156</p>
+                <p className={`text-sm ${currentTheme.muted}`}>Active Today</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`pl-10 ${currentTheme.secondary} ${currentTheme.text} border-0`}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSortBy(sortBy === 'newest' ? 'popular' : 'newest')}
+              className={`${currentTheme.secondary} hover:${currentTheme.primary}`}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              {sortBy === 'newest' ? 'Latest' : 'Popular'}
+            </Button>
+            {user && (
+              <Button
+                onClick={() => setShowCreatePost(true)}
+                className={`${currentTheme.primary} text-white`}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Post
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Create Post Modal */}
-        {showCreatePost && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto`}>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Create New Post</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCreatePost(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+        {showCreatePost && user && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto`}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Create New Post</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreatePost(false);
+                      setNewPost({ title: '', content: '', category: 'General', code: '' });
+                      setUploadedMedia([]);
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Title</label>
+                <div className="space-y-4">
                   <Input
+                    placeholder="Post title..."
                     value={newPost.title}
                     onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    placeholder="Enter post title..."
-                    className={`${currentTheme.cardBg} border ${currentTheme.border}`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
                   />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Category</label>
-                  <Select 
-                    value={newPost.category} 
-                    onValueChange={(value) => setNewPost({ ...newPost, category: value })}
+                  <select
+                    value={newPost.category}
+                    onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
+                    className={`w-full p-2 rounded ${currentTheme.secondary} ${currentTheme.text} border-0`}
                   >
-                    <SelectTrigger className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.slice(1).map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <option value="General">General</option>
+                    <option value="Trading">Trading</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Marketplace">Marketplace</option>
+                    <option value="Crypto">Crypto</option>
+                  </select>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Content</label>
                   <Textarea
+                    placeholder="What's on your mind?"
                     value={newPost.content}
                     onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    placeholder="Write your post content..."
-                    className={`${currentTheme.cardBg} border ${currentTheme.border} min-h-32`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 min-h-[120px]`}
                   />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Code (Optional)</label>
                   <Textarea
+                    placeholder="Add code snippet (optional)..."
                     value={newPost.code}
                     onChange={(e) => setNewPost({ ...newPost, code: e.target.value })}
-                    placeholder="Paste your code here..."
-                    className={`${currentTheme.cardBg} border ${currentTheme.border} font-mono text-sm`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 font-mono text-sm`}
                   />
-                </div>
 
-                {/* Media Upload Section */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Media</label>
-                  <div className="flex space-x-2 mb-4">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                      onChange={(e) => handleMediaUpload(e, 'image')}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        console.log('Image upload button clicked');
-                        document.getElementById('image-upload')?.click();
-                      }}
-                      className="flex items-center space-x-2"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>Add Image</span>
-                    </Button>
-                    
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                      onChange={(e) => handleMediaUpload(e, 'video')}
-                      className="hidden"
-                      id="video-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        console.log('Video upload button clicked');
-                        document.getElementById('video-upload')?.click();
-                      }}
-                      className="flex items-center space-x-2"
-                    >
-                      <Film className="w-4 h-4" />
-                      <span>Add Video</span>
-                    </Button>
+                  {/* Media Upload Section */}
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleImageUpload}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} hover:${currentTheme.primary}`}
+                        >
+                          <Image className="w-4 h-4 mr-2" />
+                          Add Images
+                        </Button>
+                      </label>
+
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleVideoUpload}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} hover:${currentTheme.primary}`}
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          Add Videos
+                        </Button>
+                      </label>
+                    </div>
+
+                    {/* Media Preview */}
+                    {uploadedMedia.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {uploadedMedia.map((media, index) => (
+                          <div key={index} className="relative">
+                            {media.type === 'image' ? (
+                              <img
+                                src={media.url}
+                                alt={`Upload ${index + 1}`}
+                                className="w-full h-24 object-cover rounded border"
+                              />
+                            ) : (
+                              <video
+                                src={media.url}
+                                className="w-full h-24 object-cover rounded border"
+                                controls={false}
+                                muted
+                              />
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
+                              onClick={() => {
+                                setUploadedMedia(prev => prev.filter((_, i) => i !== index));
+                              }}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Preview uploaded media */}
-                  {uploadedMedia.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      {uploadedMedia.map((media, index) => (
-                        <div key={index} className="relative">
-                          {media.type === 'image' ? (
-                            <img
-                              src={media.url}
-                              alt={`Upload ${index + 1}`}
-                              className="w-full h-24 object-cover rounded"
-                            />
-                          ) : (
-                            <video
-                              src={media.url}
-                              className="w-full h-24 object-cover rounded"
-                              preload="metadata"
-                            />
-                          )}
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeMedia(index)}
-                            className="absolute top-1 right-1 h-6 w-6 p-0"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex space-x-3 pt-4">
-                  <Button onClick={handleCreatePost} className={`${currentTheme.primary} text-white`}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Post
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowCreatePost(false)}
-                  >
-                    Cancel
-                  </Button>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowCreatePost(false);
+                        setNewPost({ title: '', content: '', category: 'General', code: '' });
+                        setUploadedMedia([]);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreatePost}
+                      disabled={!newPost.title.trim() || !newPost.content.trim()}
+                      className={`${currentTheme.primary} text-white`}
+                    >
+                      Create Post
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -549,316 +643,98 @@ const Forum = () => {
 
         {/* Posts List */}
         <div className="space-y-4">
-          {/* Pinned Posts */}
-          {pinnedPosts.map((post) => (
-            <div
-              key={post.id}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500 transition-colors cursor-pointer relative`}
-              onClick={() => handlePostClick(post)}
-            >
-              {post.isPinned && (
-                <div className="absolute top-3 right-3 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
-                  Pinned
-                </div>
-              )}
-              
-              <div className="flex items-start space-x-4">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={post.authorAvatar} />
-                  <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h3 className="font-semibold text-lg truncate">{post.title}</h3>
-                    <span className={`px-2 py-1 rounded text-xs ${currentTheme.secondary}`}>
-                      {categories.find(c => c.value === post.category)?.label}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4 text-sm text-gray-400 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span>{post.author}</span>
-                      {user && user.id !== post.authorId && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewProfile(post.authorId);
-                            }}
-                            className="text-xs px-2 py-1"
-                          >
-                            Profile
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendFriendRequest(post.authorId, post.author);
-                            }}
-                            className="text-xs px-2 py-1"
-                          >
-                            <UserPlus className="w-3 h-3 mr-1" />
-                            Add
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{post.createdAt}</span>
-                    </div>
-                  </div>
-                  
-                  <p className={`${currentTheme.text} mb-4 line-clamp-3`}>
-                    {post.content}
-                  </p>
-                  
-                  {/* Media Preview */}
-                  {post.media && post.media.length > 0 && (
-                    <div className="flex items-center space-x-2 mb-4">
-                      {post.media.some(m => m.type === 'image') && (
-                        <div className="flex items-center space-x-1 text-blue-400">
-                          <Image className="w-4 h-4" />
-                          <span className="text-xs">
-                            {post.media.filter(m => m.type === 'image').length} image(s)
-                          </span>
-                        </div>
-                      )}
-                      {post.media.some(m => m.type === 'video') && (
-                        <div className="flex items-center space-x-1 text-red-400">
-                          <Video className="w-4 h-4" />
-                          <span className="text-xs">
-                            {post.media.filter(m => m.type === 'video').length} video(s)
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Code Preview */}
-                  {post.code && (
-                    <div className="flex items-center space-x-1 text-green-400 mb-4">
-                      <Code className="w-4 h-4" />
-                      <span className="text-xs">Contains code</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
-                      <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{post.views}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MessageCircle className="w-4 h-4" />
-                        <span>{post.replies}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{post.likes}</span>
-                      </div>
-                    </div>
-                    
-                    {user && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(post.id);
-                        }}
-                        className={post.likedBy?.includes(user.id) ? 'text-green-500' : ''}
-                      >
-                        <ThumbsUp className="w-4 h-4 mr-1" />
-                        Like
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Regular Posts */}
-          {regularPosts.map((post) => (
-            <div
-              key={post.id}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500 transition-colors cursor-pointer`}
-              onClick={() => handlePostClick(post)}
-            >
-              <div className="flex items-start space-x-4">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={post.authorAvatar} />
-                  <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h3 className="font-semibold text-lg truncate">{post.title}</h3>
-                    <span className={`px-2 py-1 rounded text-xs ${currentTheme.secondary}`}>
-                      {categories.find(c => c.value === post.category)?.label}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4 text-sm text-gray-400 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span>{post.author}</span>
-                      {user && user.id !== post.authorId && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewProfile(post.authorId);
-                            }}
-                            className="text-xs px-2 py-1"
-                          >
-                            Profile
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendFriendRequest(post.authorId, post.author);
-                            }}
-                            className="text-xs px-2 py-1"
-                          >
-                            <UserPlus className="w-3 h-3 mr-1" />
-                            Add
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{post.createdAt}</span>
-                    </div>
-                  </div>
-                  
-                  <p className={`${currentTheme.text} mb-4 line-clamp-3`}>
-                    {post.content}
-                  </p>
-                  
-                  {/* Media Preview */}
-                  {post.media && post.media.length > 0 && (
-                    <div className="flex items-center space-x-2 mb-4">
-                      {post.media.some(m => m.type === 'image') && (
-                        <div className="flex items-center space-x-1 text-blue-400">
-                          <Image className="w-4 h-4" />
-                          <span className="text-xs">
-                            {post.media.filter(m => m.type === 'image').length} image(s)
-                          </span>
-                        </div>
-                      )}
-                      {post.media.some(m => m.type === 'video') && (
-                        <div className="flex items-center space-x-1 text-red-400">
-                          <Video className="w-4 h-4" />
-                          <span className="text-xs">
-                            {post.media.filter(m => m.type === 'video').length} video(s)
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Code Preview */}
-                  {post.code && (
-                    <div className="flex items-center space-x-1 text-green-400 mb-4">
-                      <Code className="w-4 h-4" />
-                      <span className="text-xs">Contains code</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
-                      <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{post.views}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MessageCircle className="w-4 h-4" />
-                        <span>{post.replies}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{post.likes}</span>
-                      </div>
-                    </div>
-                    
-                    {user && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(post.id);
-                        }}
-                        className={post.likedBy?.includes(user.id) ? 'text-green-500' : ''}
-                      >
-                        <ThumbsUp className="w-4 h-4 mr-1" />
-                        Like
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* No posts message */}
-          {sortedPosts.length === 0 && (
+          {filteredPosts.length === 0 ? (
             <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-12 text-center`}>
               <MessageCircle className={`w-16 h-16 ${currentTheme.muted} mx-auto mb-4`} />
-              <h3 className={`text-xl font-semibold ${currentTheme.text} mb-2`}>
-                {searchQuery || selectedCategory !== 'all' ? 'No posts found' : 'No posts yet'}
-              </h3>
-              <p className={`${currentTheme.muted} mb-6`}>
-                {searchQuery || selectedCategory !== 'all' 
-                  ? 'Try adjusting your search or filters'
-                  : 'Be the first to start a conversation!'
-                }
+              <h3 className="text-xl font-semibold mb-2">No posts found</h3>
+              <p className={`${currentTheme.muted} mb-4`}>
+                {searchQuery ? 'Try adjusting your search terms' : 'Be the first to start a conversation!'}
               </p>
-              
-              {user && (
-                <Button 
+              {user && !searchQuery && (
+                <Button
                   onClick={() => setShowCreatePost(true)}
                   className={`${currentTheme.primary} text-white`}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
                   Create First Post
                 </Button>
               )}
             </div>
+          ) : (
+            filteredPosts.map((post) => (
+              <div
+                key={post.id}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:${currentTheme.secondary} transition-all cursor-pointer`}
+                onClick={() => navigate(`/forum/post/${post.id}`)}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={post.authorAvatar} />
+                      <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-semibold">{post.author}</h3>
+                        {post.isPinned && (
+                          <Pin className="w-4 h-4 text-orange-500" />
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-400">
+                        <Clock className="w-3 h-3" />
+                        <span>{post.createdAt}</span>
+                        <span>•</span>
+                        <span className={`px-2 py-1 rounded-full text-xs ${currentTheme.secondary}`}>
+                          {post.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <h2 className="text-xl font-semibold mb-3 hover:text-purple-400 transition-colors">
+                  {post.title}
+                </h2>
+
+                <p className={`${currentTheme.muted} mb-4 line-clamp-3`}>
+                  {post.content}
+                </p>
+
+                {/* Media/Code indicators */}
+                <div className="flex items-center space-x-4 mb-4">
+                  {post.media && post.media.length > 0 && (
+                    <div className="flex items-center space-x-1 text-sm text-blue-400">
+                      <Image className="w-4 h-4" />
+                      <span>{post.media.length} media</span>
+                    </div>
+                  )}
+                  {post.code && (
+                    <div className="flex items-center space-x-1 text-sm text-green-400">
+                      <Code className="w-4 h-4" />
+                      <span>Code</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-gray-400">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <ThumbsUp className="w-4 h-4" />
+                      <span>{post.likes}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <MessageCircle className="w-4 h-4" />
+                      <span>{post.replies}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{post.views}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
-
-        {/* Login prompt for non-logged-in users */}
-        {!user && (
-          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 text-center mt-8`}>
-            <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>
-              Join the Conversation! 💬
-            </h3>
-            <p className={`${currentTheme.muted} mb-4`}>
-              Sign in to create posts, like content, and connect with the community
-            </p>
-            <div className="flex justify-center space-x-3">
-              <Button onClick={() => navigate('/login')} className={`${currentTheme.primary} text-white`}>
-                Sign In
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/signup')}>
-                Sign Up
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
