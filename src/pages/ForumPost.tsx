@@ -164,7 +164,8 @@ const ForumPost = () => {
   const handleAddComment = () => {
     if (!user || !post || !newComment.trim()) return;
 
-    const displayName = profile?.username || user?.email?.split('@')[0] || 'Anonymous';
+    // Use profile username or fallback to "Anonymous" - never use email
+    const displayName = profile?.username || 'Anonymous';
 
     const comment: Comment = {
       id: Date.now().toString(),

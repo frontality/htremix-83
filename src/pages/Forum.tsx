@@ -103,7 +103,8 @@ const Forum = () => {
       return;
     }
 
-    const displayName = profile?.username || user?.email?.split('@')[0] || 'Anonymous';
+    // Use profile username or fallback to "Anonymous" - never use email
+    const displayName = profile?.username || 'Anonymous';
 
     const post: ForumPost = {
       id: Date.now().toString(),
