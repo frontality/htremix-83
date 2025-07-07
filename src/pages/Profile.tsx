@@ -10,18 +10,19 @@ import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import ImageUpload from "@/components/ImageUpload";
 import FriendsList from "@/components/FriendsList";
+import PaymentMethods from "@/components/PaymentMethods";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// XSS Protection - Sanitize user input
+// Updated XSS Protection - Allow spaces and preserve formatting
 const sanitizeInput = (input: string): string => {
   return input
     .replace(/[<>]/g, '') // Remove < and > to prevent HTML injection
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .trim();
+    .replace(/on\w+=/gi, ''); // Remove event handlers
+    // Note: We removed .trim() to preserve spaces
 };
 
 const Profile = () => {
@@ -33,10 +34,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     username: '',
     bio: '',
-    avatar_url: '',
-    wallet_address: '',
-    email_notifications: true,
-    two_factor_enabled: false
+    avatar_url: ''
   });
 
   // Update form data when profile loads
@@ -45,21 +43,17 @@ const Profile = () => {
       setFormData({
         username: profile.username || '',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || '',
-        wallet_address: profile.wallet_address || '',
-        email_notifications: profile.email_notifications,
-        two_factor_enabled: profile.two_factor_enabled
+        avatar_url: profile.avatar_url || ''
       });
     }
   }, [profile]);
 
   const handleSave = async () => {
-    // Sanitize inputs before saving
+    // Sanitize inputs before saving but preserve spaces
     const sanitizedData = {
-      ...formData,
-      username: sanitizeInput(formData.username),
-      bio: sanitizeInput(formData.bio),
-      wallet_address: sanitizeInput(formData.wallet_address)
+      username: sanitizeInput(formData.username).trim(), // Only trim username
+      bio: sanitizeInput(formData.bio), // Don't trim bio to preserve formatting
+      avatar_url: formData.avatar_url
     };
     
     const success = await updateProfile(sanitizedData);
@@ -74,10 +68,7 @@ const Profile = () => {
       setFormData({
         username: profile.username || '',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || '',
-        wallet_address: profile.wallet_address || '',
-        email_notifications: profile.email_notifications,
-        two_factor_enabled: profile.two_factor_enabled
+        avatar_url: profile.avatar_url || ''
       });
     }
     setIsEditing(false);
@@ -89,12 +80,18 @@ const Profile = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: sanitizeInput(value) }));
+    if (field === 'bio') {
+      // For bio, preserve all formatting including spaces and line breaks
+      setFormData(prev => ({ ...prev, [field]: value }));
+    } else {
+      // For other fields, apply sanitization
+      setFormData(prev => ({ ...prev, [field]: sanitizeInput(value) }));
+    }
   };
 
   const getJoinDate = () => {
-    if (!user?.created_at) return "Recently";
-    return new Date(user.created_at).toLocaleDateString('en-US', { 
+    if (!profile?.created_at) return "Recently";
+    return new Date(profile.created_at).toLocaleDateString('en-US', { 
       month: 'long', 
       year: 'numeric' 
     });
@@ -152,7 +149,7 @@ const Profile = () => {
                     {isEditing ? t('Cancel') : t('Edit')}
                   </Button>
                 </div>
-                <p className={`${currentTheme.text} mb-2`}>
+                <p className={`${currentTheme.text} mb-2 whitespace-pre-wrap`}>
                   {formData.bio || t('Add your bio')}
                 </p>
                 <p className={`${currentTheme.muted} text-sm flex items-center gap-1`}>
@@ -171,6 +168,10 @@ const Profile = () => {
                 <TabsTrigger value="wallet" className="rounded-md flex items-center gap-2">
                   <Wallet className="h-4 w-4" />
                   {t('Wallet')}
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="rounded-md flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  {t('Payments')}
                 </TabsTrigger>
                 <TabsTrigger value="friends" className="rounded-md flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -208,7 +209,7 @@ const Profile = () => {
                       onChange={(e) => handleInputChange('bio', e.target.value)}
                       className={`${currentTheme.secondary} ${currentTheme.text} border-0 min-h-20 ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
                       placeholder={t('Tell us about yourself')}
-                      maxLength={200}
+                      maxLength={500}
                     />
                   </div>
                 </div>
@@ -242,15 +243,17 @@ const Profile = () => {
                       {t('Crypto Wallet')}
                     </h3>
                   </div>
-                  <Input
-                    value={formData.wallet_address}
-                    disabled={!isEditing}
-                    onChange={(e) => handleInputChange('wallet_address', e.target.value)}
-                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 font-mono text-sm ${isEditing ? 'ring-2 ring-purple-500' : ''}`}
-                    placeholder={t('0x... your wallet address')}
-                    maxLength={100}
-                  />
+                  <p className={`${currentTheme.text} mb-4`}>
+                    Connect your crypto wallet to receive payments and make transactions.
+                  </p>
+                  <Button className={`${currentTheme.primary} text-white`}>
+                    Connect Wallet
+                  </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="payments" className="space-y-6">
+                <PaymentMethods />
               </TabsContent>
 
               <TabsContent value="friends" className="space-y-6">
@@ -278,40 +281,6 @@ const Profile = () => {
                     <p className={`text-xs ${currentTheme.muted} mt-1`}>
                       {t('Private - never shown to other users')}
                     </p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
-                      <div>
-                        <h4 className={`font-medium ${currentTheme.text}`}>{t('Email Notifications')}</h4>
-                        <p className={`text-sm ${currentTheme.muted}`}>{t('Updates about transactions and messages')}</p>
-                      </div>
-                      <Switch
-                        checked={formData.email_notifications}
-                        onCheckedChange={(checked) => {
-                          setFormData({...formData, email_notifications: checked});
-                          if (!isEditing) {
-                            updateProfile({ email_notifications: checked });
-                          }
-                        }}
-                      />
-                    </div>
-                    
-                    <div className={`flex items-center justify-between p-4 rounded-lg ${currentTheme.secondary} border border-purple-200`}>
-                      <div>
-                        <h4 className={`font-medium ${currentTheme.text}`}>{t('Two-Factor Authentication')}</h4>
-                        <p className={`text-sm ${currentTheme.muted}`}>{t('Extra security for your account')}</p>
-                      </div>
-                      <Switch
-                        checked={formData.two_factor_enabled}
-                        onCheckedChange={(checked) => {
-                          setFormData({...formData, two_factor_enabled: checked});
-                          if (!isEditing) {
-                            updateProfile({ two_factor_enabled: checked });
-                          }
-                        }}
-                      />
-                    </div>
                   </div>
                 </div>
               </TabsContent>

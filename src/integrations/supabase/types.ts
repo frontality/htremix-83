@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gift_card_orders: {
+        Row: {
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          discounted_amount: number
+          gift_card_value: number
+          id: string
+          payment_method: string
+          status: string | null
+          transaction_details: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          discounted_amount: number
+          gift_card_value: number
+          id?: string
+          payment_method: string
+          status?: string | null
+          transaction_details?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          discounted_amount?: number
+          gift_card_value?: number
+          id?: string
+          payment_method?: string
+          status?: string | null
+          transaction_details?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          external_transaction_id: string | null
+          id: string
+          payment_method_details: Json | null
+          status: string | null
+          transaction_type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          external_transaction_id?: string | null
+          id?: string
+          payment_method_details?: Json | null
+          status?: string | null
+          transaction_type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          external_transaction_id?: string | null
+          id?: string
+          payment_method_details?: Json | null
+          status?: string | null
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

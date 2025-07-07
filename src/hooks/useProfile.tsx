@@ -2,19 +2,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
   id: string;
+  user_id: string;
   username: string | null;
   bio: string | null;
   avatar_url: string | null;
-  wallet_address: string | null;
-  email_notifications: boolean;
-  two_factor_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useProfile = () => {
-  const { user, updateUserProfile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,27 +29,43 @@ export const useProfile = () => {
     try {
       console.log('Loading profile for user:', user.id);
       
-      // Load saved profile data from localStorage
-      const savedProfile = localStorage.getItem(`profile_${user.id}`);
-      const savedAvatar = localStorage.getItem('current_avatar');
-      
-      let profileData: Profile = {
-        id: user.id,
-        username: user.username || null,
-        bio: null,
-        avatar_url: savedAvatar || null,
-        wallet_address: null,
-        email_notifications: true,
-        two_factor_enabled: false
-      };
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        profileData = { ...profileData, ...parsedProfile };
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
       }
 
-      console.log('Profile loaded:', profileData);
-      setProfile(profileData);
+      if (data) {
+        console.log('Profile loaded:', data);
+        setProfile(data);
+      } else {
+        // Create new profile if it doesn't exist
+        const newProfile = {
+          user_id: user.id,
+          username: user.username || null,
+          bio: null,
+          avatar_url: null
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          throw createError;
+        }
+
+        console.log('Profile created:', createdProfile);
+        setProfile(createdProfile);
+      }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       toast({
@@ -61,7 +78,7 @@ export const useProfile = () => {
     }
   }, [user, toast]);
 
-  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
     if (!user || !profile) {
       console.log('No user or profile for update');
       return false;
@@ -70,25 +87,25 @@ export const useProfile = () => {
     try {
       console.log('Updating profile with:', updates);
       
-      if (updates.username !== undefined) {
-        const { error } = await updateUserProfile({ username: updates.username });
-        if (error) {
-          toast({
-            title: "Error",
-            description: error === 'Username already taken' ? "Username already taken" : "Failed to update profile. Please try again.",
-            variant: "destructive",
-          });
-          return false;
-        }
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update profile. Please try again.",
+          variant: "destructive",
+        });
+        return false;
       }
 
-      const updatedProfile = { ...profile, ...updates };
-      
-      // Save profile data to localStorage
-      localStorage.setItem(`profile_${user.id}`, JSON.stringify(updatedProfile));
-      
-      console.log('Profile updated successfully');
-      setProfile(updatedProfile);
+      console.log('Profile updated successfully:', data);
+      setProfile(data);
       
       toast({
         title: "Success! 🎉",
@@ -104,7 +121,7 @@ export const useProfile = () => {
       });
       return false;
     }
-  }, [user, profile, updateUserProfile, toast]);
+  }, [user, profile, toast]);
 
   const getDisplayName = useCallback((profileData?: Profile) => {
     const targetProfile = profileData || profile;
@@ -121,8 +138,8 @@ export const useProfile = () => {
   }, [profile]);
 
   const getDisplayEmail = useCallback(() => {
-    return null;
-  }, []);
+    return user?.email || null;
+  }, [user]);
 
   useEffect(() => {
     fetchProfile();
