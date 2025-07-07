@@ -76,7 +76,7 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user?.id, user?.email, toast]);
 
   const updateProfile = useCallback(async (updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
     if (!user || !profile) {
@@ -121,7 +121,7 @@ export const useProfile = () => {
       });
       return false;
     }
-  }, [user, profile, toast]);
+  }, [user?.id, profile?.id, toast]);
 
   const getDisplayName = useCallback((profileData?: Profile) => {
     const targetProfile = profileData || profile;
@@ -135,11 +135,11 @@ export const useProfile = () => {
     }
     
     return 'Set your username';
-  }, [profile, user]);
+  }, [profile, user?.email]);
 
   const getDisplayEmail = useCallback(() => {
     return user?.email || null;
-  }, [user]);
+  }, [user?.email]);
 
   useEffect(() => {
     fetchProfile();

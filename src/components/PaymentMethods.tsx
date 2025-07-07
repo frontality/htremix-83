@@ -29,6 +29,8 @@ const PaymentMethods = () => {
   useEffect(() => {
     if (user) {
       fetchTransactions();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -36,6 +38,7 @@ const PaymentMethods = () => {
     if (!user) return;
     
     try {
+      console.log('Fetching transactions for user:', user.id);
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -43,10 +46,20 @@ const PaymentMethods = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        throw error;
+      }
+      
+      console.log('Transactions loaded:', data);
       setTransactions(data || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load transactions.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -63,6 +76,9 @@ const PaymentMethods = () => {
     }
 
     try {
+      console.log('Creating Stripe payment for amount:', amount);
+      const { data: session } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
         body: {
           amount,
@@ -70,11 +86,14 @@ const PaymentMethods = () => {
           user_id: user.id
         },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.session?.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Stripe payment error:', error);
+        throw error;
+      }
 
       if (data?.client_secret) {
         toast({
@@ -104,6 +123,9 @@ const PaymentMethods = () => {
     }
 
     try {
+      console.log('Creating PayPal payment for amount:', amount);
+      const { data: session } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('create-paypal-payment', {
         body: {
           amount,
@@ -111,11 +133,14 @@ const PaymentMethods = () => {
           user_id: user.id
         },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.session?.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('PayPal payment error:', error);
+        throw error;
+      }
 
       if (data?.approve_url) {
         window.open(data.approve_url, '_blank');
@@ -146,6 +171,7 @@ const PaymentMethods = () => {
     }
 
     try {
+      console.log('Creating crypto payment for amount:', amount);
       const { data, error } = await supabase
         .from('transactions')
         .insert({
@@ -159,7 +185,10 @@ const PaymentMethods = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Crypto payment error:', error);
+        throw error;
+      }
 
       toast({
         title: "Crypto Payment Created",

@@ -51,7 +51,7 @@ const Profile = () => {
     // Sanitize inputs but preserve formatting for bio
     const sanitizedData = {
       username: sanitizeInput(formData.username).trim(),
-      bio: sanitizeInput(formData.bio), // Keep bio formatting
+      bio: sanitizeInput(formData.bio), // Keep bio formatting including spaces
       avatar_url: formData.avatar_url
     };
     
@@ -79,7 +79,7 @@ const Profile = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: sanitizeInput(value) }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const getJoinDate = () => {
