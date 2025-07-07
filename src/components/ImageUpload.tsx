@@ -24,6 +24,7 @@ const ImageUpload = ({
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadId] = useState(() => `marketplace-upload-${Math.random().toString(36).substr(2, 9)}`);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -174,11 +175,11 @@ const ImageUpload = ({
     );
   }
 
-  // Marketplace variant (new functionality)
+  // Marketplace variant (rectangular upload area)
   return (
     <div className={`relative ${className}`}>
-      <label htmlFor={`marketplace-upload-${Math.random()}`} className="cursor-pointer block">
-        <div className="w-full h-full border-2 border-dashed border-gray-500 rounded flex flex-col items-center justify-center p-4 hover:border-purple-500 transition-colors">
+      <label htmlFor={uploadId} className="cursor-pointer block">
+        <div className="w-full h-full border-2 border-dashed border-gray-500 rounded-lg flex flex-col items-center justify-center p-6 hover:border-purple-500 transition-colors bg-gray-800/50 hover:bg-gray-700/50">
           {uploading ? (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-2"></div>
           ) : uploadSuccess ? (
@@ -187,13 +188,16 @@ const ImageUpload = ({
             <Upload className="h-8 w-8 text-gray-400 mb-2" />
           )}
           <span className="text-sm text-gray-400 text-center">
-            {uploading ? 'Uploading...' : uploadSuccess ? 'Added!' : 'Add Image'}
+            {uploading ? 'Uploading...' : uploadSuccess ? 'Added!' : 'Click to upload or drag & drop'}
+          </span>
+          <span className="text-xs text-gray-500 mt-1">
+            PNG, JPG, GIF up to 10MB
           </span>
         </div>
       </label>
       
       <input
-        id={`marketplace-upload-${Math.random()}`}
+        id={uploadId}
         type="file"
         accept="image/*"
         onChange={handleFileUpload}
