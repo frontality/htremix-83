@@ -22,7 +22,7 @@ import OTPVerification from "./pages/OTPVerification";
 import CryptoExchange from "./pages/CryptoExchange";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
-import BootingTool from "./pages/BootingTool";
+import Panel from "./pages/Panel";
 import CursorBackground from "./components/CursorBackground";
 import TopHeader from "./components/TopHeader";
 import Settings from "./pages/Settings";
@@ -66,7 +66,7 @@ const App = () => (
                     <Route path="/crypto-exchange" element={<CryptoExchange />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/messages" element={<Messages />} />
-                    <Route path="/booting-tool" element={<BootingTool />} />
+                    <Route path="/panel" element={<Panel />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/forum" element={<Forum />} />
                     <Route path="/forum/post/:postId" element={<ForumPost />} />

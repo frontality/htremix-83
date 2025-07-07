@@ -11,7 +11,7 @@ import {
   Star,
   Menu,
   X,
-  Terminal
+  Wrench
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -27,7 +27,7 @@ const MainSidebar = () => {
     { icon: TrendingUp, label: "Sell Items", path: "/sell" },
     { icon: DollarSign, label: "Crypto Exchange", path: "/crypto-exchange" },
     { icon: MessageCircle, label: "Messages", path: "/messages" },
-    { icon: Terminal, label: "Booting Tool", path: "/booting-tool" },
+    { icon: Wrench, label: "Panel", path: "/panel" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
