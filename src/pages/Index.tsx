@@ -50,15 +50,15 @@ const Index = () => {
     { icon: Diamond, title: t("Premium Verified"), description: t("Elite sellers only"), color: "text-cyan-400" },
     { icon: Shield, title: t("Military Security"), description: t("Bank-level protection"), color: "text-green-400" },
     { icon: Flame, title: t("Instant Delivery"), description: t("Under 60 seconds"), color: "text-orange-400" },
-    { icon: Crown, title: t("VIP Community"), description: t("Exclusive members"), color: "text-yellow-400" },
-    { icon: Star, title: t("5-Star Support"), description: t("24/7 concierge"), color: "text-purple-400" },
+    { icon: Crown, title: t("Exclusive Community"), description: t("Premium members"), color: "text-yellow-400" },
+    { icon: Star, title: t("5-Star Support"), description: t("24/7 assistance"), color: "text-purple-400" },
     { icon: Trophy, title: t("Best Prices"), description: t("Guaranteed lowest"), color: "text-pink-400" }
   ];
 
   const categories = [
     { icon: Gift, name: t("Premium Cards"), count: t("Exclusive deals"), color: "text-pink-400" },
     { icon: Gamepad2, name: t("Elite Accounts"), count: t("Verified sellers"), color: "text-green-400" },
-    { icon: Crown, name: t("VIP Subscriptions"), count: t("Best rates"), color: "text-yellow-400" },
+    { icon: Crown, name: t("Premium Subscriptions"), count: t("Best rates"), color: "text-yellow-400" },
     { icon: Music, name: t("Digital Assets"), count: t("Rare items"), color: "text-purple-400" }
   ];
 
@@ -142,8 +142,8 @@ const Index = () => {
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                   <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
-                    <Sparkles className="h-4 w-4 text-white" />
-                    <span className="text-white text-sm font-semibold">VIP</span>
+                    <Shield className="h-4 w-4 text-white" />
+                    <span className="text-white text-sm font-semibold">Secure</span>
                   </div>
                 </div>
               </div>
@@ -202,13 +202,13 @@ const Index = () => {
                   <Link to="/signup">
                     <Button className={`bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-bold ${hoverClasses.scale} transition-all duration-300 shadow-xl`}>
                       <Heart className="mr-2 h-5 w-5" />
-                      {t("Get VIP Access")}
+                      {t("Get Premium Access")}
                     </Button>
                   </Link>
                   <Link to="/messages">
                     <Button variant="outline" className={`${currentTheme.text} border-2 border-purple-400/50 px-8 py-3 text-lg font-bold ${hoverClasses.scale} transition-all duration-300 backdrop-blur-sm`}>
                       <MessageCircle className="mr-2 h-5 w-5" />
-                      {t("VIP Support")}
+                      {t("Premium Support")}
                     </Button>
                   </Link>
                 </div>
@@ -219,7 +219,7 @@ const Index = () => {
           {/* Enhanced Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: t("Elite Members"), value: "VIP", icon: Crown },
+              { label: t("Elite Members"), value: "Premium", icon: Crown },
               { label: t("Premium Items"), value: "∞", icon: Diamond },
               { label: t("Success Rate"), value: "100%", icon: Trophy },
               { label: t("Security Level"), value: "MAX", icon: Shield }

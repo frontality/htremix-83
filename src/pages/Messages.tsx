@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -7,7 +8,6 @@ import ProfileViewer from "@/components/ProfileViewer";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatActions from "@/components/ChatActions";
 
 const Messages = () => {
   const { currentTheme } = useTheme();
@@ -17,15 +17,6 @@ const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
-
-  const handleChatActions = {
-    onStartCall: () => console.log('Starting voice call...'),
-    onStartVideoCall: () => console.log('Starting video call...'),
-    onAddFriend: () => console.log('Adding friend...'),
-    onArchiveChat: () => console.log('Archiving chat...'),
-    onDeleteChat: () => console.log('Deleting chat...'),
-    onReportUser: () => console.log('Reporting user...'),
-  };
 
   // Handle user parameter from URL
   useEffect(() => {
@@ -131,24 +122,6 @@ const Messages = () => {
 
         {/* Chat Window - Takes remaining space */}
         <div className="flex-1 min-w-0 h-full flex flex-col">
-          {/* Chat Header with Actions */}
-          {selectedChatData && otherParticipant && (
-            <div className={`${currentTheme.cardBg} border-b ${currentTheme.border} p-4 flex items-center justify-between`}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                  {otherParticipant.username ? otherParticipant.username.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div>
-                  <h3 className={`font-semibold ${currentTheme.text}`}>
-                    {otherParticipant.username || 'Anonymous User'}
-                  </h3>
-                  <p className={`text-sm ${currentTheme.muted}`}>Online</p>
-                </div>
-              </div>
-              <ChatActions otherParticipant={otherParticipant} {...handleChatActions} />
-            </div>
-          )}
-          
           <ChatWindow
             selectedChatData={selectedChatData}
             otherParticipant={otherParticipant}
