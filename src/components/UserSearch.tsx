@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 interface UserSearchProps {
   onSelectUser: (userId: string) => void;
   onClose: () => void;
+  showMessageButton?: boolean;
 }
 
 interface SearchedUser {
@@ -16,7 +17,7 @@ interface SearchedUser {
   email: string;
 }
 
-const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
+const UserSearch = ({ onSelectUser, onClose, showMessageButton = false }: UserSearchProps) => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,13 +101,17 @@ const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
               </div>
               <div className="flex-1">
                 <p className={`font-medium ${currentTheme.text}`}>
-                  {searchUser.username}
+                  @{searchUser.username}
                 </p>
-                <p className={`text-xs ${currentTheme.muted}`}>
-                  {searchUser.email}
-                </p>
+                {/* Removed email display for privacy */}
               </div>
-              <MessageCircle className="h-4 w-4 text-gray-400" />
+              {showMessageButton ? (
+                <MessageCircle className="h-4 w-4 text-gray-400" />
+              ) : (
+                <div className={`text-xs ${currentTheme.muted}`}>
+                  Add Friend
+                </div>
+              )}
             </div>
           ))
         ) : searchTerm.trim() ? (

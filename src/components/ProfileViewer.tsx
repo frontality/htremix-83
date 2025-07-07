@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileViewerProps {
@@ -17,8 +16,7 @@ interface ProfileViewerProps {
 interface PublicProfile {
   id: string;
   username: string;
-  bio: string;
-  avatar_url: string;
+  email: string;
   created_at: string;
 }
 
@@ -37,24 +35,35 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Only fetch public profile information - never email
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, bio, avatar_url, created_at')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile",
-          variant: "destructive",
-        });
+      // Get user data from localStorage instead of Supabase
+      const allUsers = localStorage.getItem('registered_users');
+      if (!allUsers) {
+        console.log('No registered users found');
+        setProfile(null);
+        setLoading(false);
         return;
       }
 
-      setProfile(data);
+      const userList = JSON.parse(allUsers);
+      const foundUser = userList.find((u: any) => u.id === userId);
+
+      if (!foundUser) {
+        console.log('User not found:', userId);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // Create public profile (no email for privacy)
+      const publicProfile: PublicProfile = {
+        id: foundUser.id,
+        username: foundUser.username || foundUser.email.split('@')[0],
+        email: foundUser.email, // Keep for internal use but don't display
+        created_at: foundUser.created_at || new Date().toISOString()
+      };
+
+      setProfile(publicProfile);
+      console.log('Profile loaded:', publicProfile);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       toast({
@@ -138,7 +147,7 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
         <div className="text-center mb-6">
           <Avatar className="h-20 w-20 mx-auto mb-4 ring-4 ring-purple-500/20">
             <AvatarImage
-              src={profile.avatar_url}
+              src="/placeholder.svg"
               alt={getDisplayName()}
             />
             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
@@ -149,12 +158,6 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
           <h3 className={`text-xl font-bold ${currentTheme.text} mb-2`}>
             @{getDisplayName()}
           </h3>
-          
-          {profile.bio && (
-            <p className={`${currentTheme.muted} text-sm mb-3`}>
-              {profile.bio}
-            </p>
-          )}
           
           <div className="flex items-center justify-center space-x-2 text-xs">
             <Calendar className={`h-3 w-3 ${currentTheme.muted}`} />

@@ -1,5 +1,7 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import MessagesList from "@/components/MessagesList";
 import ChatWindow from "@/components/ChatWindow";
 import ProfileViewer from "@/components/ProfileViewer";
@@ -10,10 +12,25 @@ import { useAuth } from "@/contexts/AuthContext";
 const Messages = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const { conversations, messages, loading, fetchMessages, sendMessage, createConversation } = useMessages();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
+
+  // Handle user parameter from URL
+  useEffect(() => {
+    const userId = searchParams.get('user');
+    const conversationId = searchParams.get('conversation');
+    
+    if (userId && user) {
+      // Find existing conversation or create new one
+      handleSelectUser(userId);
+    } else if (conversationId) {
+      setSelectedChat(conversationId);
+      fetchMessages(conversationId);
+    }
+  }, [searchParams, conversations, user]);
 
   const handleSelectChat = async (conversationId: string) => {
     setSelectedChat(conversationId);

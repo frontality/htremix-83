@@ -1,17 +1,21 @@
 
 import { useState } from "react";
-import { Users, UserPlus, Check, X, Trash2 } from "lucide-react";
+import { Users, UserPlus, Check, X, Trash2, MessageCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useFriends } from "@/contexts/FriendsContext";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import UserSearch from "./UserSearch";
+import ProfileViewer from "./ProfileViewer";
 
 const FriendsList = () => {
   const { currentTheme } = useTheme();
   const { friends, friendRequests, acceptFriendRequest, declineFriendRequest, removeFriend, sendFriendRequest } = useFriends();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showUserSearch, setShowUserSearch] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState<string | null>(null);
 
   const handleSendFriendRequest = (userId: string) => {
     // Get the user's info from registered users
@@ -24,7 +28,7 @@ const FriendsList = () => {
         sendFriendRequest(userId, username);
         toast({
           title: "Friend Request Sent! 👋",
-          description: `Friend request sent to ${username}`
+          description: `Friend request sent to @${username}`
         });
       }
     }
@@ -50,8 +54,12 @@ const FriendsList = () => {
     removeFriend(friendId);
     toast({
       title: "Friend Removed",
-      description: `${friendName} has been removed from your friends list.`
+      description: `@${friendName} has been removed from your friends list.`
     });
+  };
+
+  const handleStartChat = (userId: string) => {
+    navigate(`/messages?user=${userId}`);
   };
 
   return (
@@ -98,7 +106,7 @@ const FriendsList = () => {
                   </div>
                   <div>
                     <p className={`font-medium ${currentTheme.text}`}>
-                      {request.fromUsername}
+                      @{request.fromUsername}
                     </p>
                     <p className={`text-sm ${currentTheme.muted}`}>
                       Sent you a friend request
@@ -140,12 +148,18 @@ const FriendsList = () => {
             {friends.map((friend) => (
               <div key={friend.id} className={`flex items-center justify-between p-3 rounded-lg ${currentTheme.secondary}`}>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                  <div 
+                    className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                    onClick={() => setViewingProfile(friend.id)}
+                  >
                     {friend.username[0]?.toUpperCase()}
                   </div>
                   <div>
-                    <p className={`font-medium ${currentTheme.text}`}>
-                      {friend.username}
+                    <p 
+                      className={`font-medium ${currentTheme.text} cursor-pointer hover:text-blue-400 transition-colors`}
+                      onClick={() => setViewingProfile(friend.id)}
+                    >
+                      @{friend.username}
                     </p>
                     <p className={`text-sm ${currentTheme.muted} flex items-center gap-1`}>
                       <span className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-gray-400'}`}></span>
@@ -153,14 +167,23 @@ const FriendsList = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleRemoveFriend(friend.id, friend.username)}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleStartChat(friend.id)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleRemoveFriend(friend.id, friend.username)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -176,6 +199,15 @@ const FriendsList = () => {
           </div>
         )}
       </div>
+
+      {/* Profile Viewer Modal */}
+      {viewingProfile && (
+        <ProfileViewer
+          userId={viewingProfile}
+          onClose={() => setViewingProfile(null)}
+          onStartChat={handleStartChat}
+        />
+      )}
     </div>
   );
 };
