@@ -13,37 +13,43 @@ const SUPPORTED_CRYPTOCURRENCIES = [
     code: "BTC", 
     name: "Bitcoin", 
     icon: "₿",
-    color: "text-orange-500"
+    color: "text-orange-500",
+    rate: 1
   },
   { 
     code: "ETH", 
     name: "Ethereum", 
     icon: "Ξ",
-    color: "text-blue-500"
+    color: "text-blue-500",
+    rate: 15.38
   },
   { 
     code: "USDT", 
     name: "Tether", 
     icon: "₮",
-    color: "text-green-500"
+    color: "text-green-500",
+    rate: 43500
   },
   { 
     code: "ADA", 
     name: "Cardano", 
     icon: "₳",
-    color: "text-blue-400"
+    color: "text-blue-400",
+    rate: 48000
   },
   { 
     code: "DOT", 
     name: "Polkadot", 
     icon: "●",
-    color: "text-pink-500"
+    color: "text-pink-500",
+    rate: 6200
   },
   { 
     code: "LINK", 
     name: "Chainlink", 
     icon: "⬡",
-    color: "text-blue-600"
+    color: "text-blue-600",
+    rate: 1950
   }
 ];
 
@@ -52,8 +58,18 @@ const CryptoExchange = () => {
   const [fromCurrency, setFromCurrency] = useState("BTC");
   const [toCurrency, setToCurrency] = useState("ETH");
   const [amount, setAmount] = useState("");
-  const [exchangeRate] = useState(0.065); // Mock exchange rate
 
+  // Calculate exchange rate dynamically
+  const getExchangeRate = (from: string, to: string) => {
+    const fromCrypto = SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === from);
+    const toCrypto = SUPPORTED_CRYPTOCURRENCIES.find(c => c.code === to);
+    
+    if (!fromCrypto || !toCrypto) return 0;
+    
+    return toCrypto.rate / fromCrypto.rate;
+  };
+
+  const exchangeRate = getExchangeRate(fromCurrency, toCurrency);
   const convertedAmount = amount ? (parseFloat(amount) * exchangeRate).toFixed(6) : "0";
 
   const handleSwapCurrencies = () => {
@@ -101,16 +117,16 @@ const CryptoExchange = () => {
                     <SelectTrigger className={`w-40 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-900 border-gray-700 z-[100]">
                       {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
-                        <SelectItem key={crypto.code} value={crypto.code}>
+                        <SelectItem key={crypto.code} value={crypto.code} className="text-white hover:bg-gray-800 focus:bg-gray-800">
                           <div className="flex items-center space-x-3">
                             <span className={`text-lg font-bold ${crypto.color}`}>
                               {crypto.icon}
                             </span>
                             <div className="flex flex-col">
                               <span className="font-medium">{crypto.code}</span>
-                              <span className="text-xs text-gray-500">{crypto.name}</span>
+                              <span className="text-xs text-gray-400">{crypto.name}</span>
                             </div>
                           </div>
                         </SelectItem>
@@ -146,16 +162,16 @@ const CryptoExchange = () => {
                     <SelectTrigger className={`w-40 ${currentTheme.secondary} ${currentTheme.text} border-0 h-12`}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-900 border-gray-700 z-[100]">
                       {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
-                        <SelectItem key={crypto.code} value={crypto.code}>
+                        <SelectItem key={crypto.code} value={crypto.code} className="text-white hover:bg-gray-800 focus:bg-gray-800">
                           <div className="flex items-center space-x-3">
                             <span className={`text-lg font-bold ${crypto.color}`}>
                               {crypto.icon}
                             </span>
                             <div className="flex flex-col">
                               <span className="font-medium">{crypto.code}</span>
-                              <span className="text-xs text-gray-500">{crypto.name}</span>
+                              <span className="text-xs text-gray-400">{crypto.name}</span>
                             </div>
                           </div>
                         </SelectItem>
@@ -176,7 +192,7 @@ const CryptoExchange = () => {
                     {getSelectedCrypto(fromCurrency)?.icon}
                   </span>
                   <span className={`text-sm font-medium ${currentTheme.accent}`}>
-                    1 {fromCurrency} = {exchangeRate} {toCurrency}
+                    1 {fromCurrency} = {exchangeRate.toFixed(6)} {toCurrency}
                   </span>
                   <span className={`text-lg ${getSelectedCrypto(toCurrency)?.color}`}>
                     {getSelectedCrypto(toCurrency)?.icon}
