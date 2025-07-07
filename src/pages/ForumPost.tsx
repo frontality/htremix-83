@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -5,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus, Code, Image, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
@@ -37,6 +39,7 @@ interface Comment {
   author: string;
   authorId: string;
   content: string;
+  code?: string;
   createdAt: string;
   likes: number;
   likedBy?: string[];
@@ -53,6 +56,12 @@ const ForumPost = () => {
   const [post, setPost] = useState<ForumPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [newCommentCode, setNewCommentCode] = useState('');
+
+  // Helper function to check if category is coding-related
+  const isCodingCategory = (category: string) => {
+    return ['source', 'codehelp', 'reverse'].includes(category);
+  };
 
   useEffect(() => {
     if (!postId) return;
@@ -163,6 +172,7 @@ const ForumPost = () => {
       author: displayName,
       authorId: user.id,
       content: newComment,
+      code: newCommentCode || undefined,
       createdAt: new Date().toLocaleDateString(),
       likes: 0,
       likedBy: []
@@ -189,9 +199,10 @@ const ForumPost = () => {
     }
 
     setNewComment('');
+    setNewCommentCode('');
     toast({
-      title: "Comment Added! 💬",
-      description: "Your comment has been posted successfully."
+      title: "Reply Posted! 💬",
+      description: "Your reply has been posted successfully."
     });
   };
 
@@ -375,40 +386,51 @@ const ForumPost = () => {
           )}
         </div>
 
-        {/* Comments Section */}
+        {/* Replies Section */}
         <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 shadow-lg`}>
           <h2 className="text-xl font-semibold mb-6">
-            Comments ({comments.length})
+            Replies ({comments.length})
           </h2>
 
-          {/* Add Comment */}
+          {/* Add Reply */}
           {user && (
-            <div className="mb-8">
+            <div className="mb-8 space-y-4">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
+                placeholder="Write a reply..."
                 className={`w-full p-4 rounded-lg ${currentTheme.secondary} border ${currentTheme.border} min-h-[100px] resize-vertical`}
               />
-              <div className="flex justify-end mt-3">
+              
+              {/* Conditional Code Input - Only show for coding categories */}
+              {isCodingCategory(post.category) && (
+                <Textarea
+                  placeholder="Add code snippet (optional)..."
+                  value={newCommentCode}
+                  onChange={(e) => setNewCommentCode(e.target.value)}
+                  className={`min-h-24 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
+                />
+              )}
+              
+              <div className="flex justify-end">
                 <Button 
                   onClick={handleAddComment}
                   disabled={!newComment.trim()}
                   className={`${currentTheme.primary} text-white`}
                 >
                   <Reply className="w-4 h-4 mr-2" />
-                  Post Comment
+                  Post Reply
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Comments List */}
+          {/* Replies List */}
           <div className="space-y-6">
             {comments.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-400 text-lg mb-4">
-                  No comments yet. Be the first to comment!
+                  No replies yet. Be the first to reply!
                 </p>
               </div>
             ) : (
@@ -439,7 +461,22 @@ const ForumPost = () => {
                           </Button>
                         )}
                       </div>
-                      <p className="text-sm leading-relaxed break-words">{comment.content}</p>
+                      <p className="text-sm leading-relaxed break-words mb-4">{comment.content}</p>
+                      
+                      {/* Code in reply */}
+                      {comment.code && (
+                        <div className="mt-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Code className="w-4 h-4 text-green-400" />
+                            <span className="text-sm font-medium text-green-400">Code</span>
+                          </div>
+                          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-3 bg-gray-900/50 overflow-x-auto`}>
+                            <pre className="text-xs">
+                              <code className="text-green-300 whitespace-pre-wrap break-all">{comment.code}</code>
+                            </pre>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -449,7 +486,7 @@ const ForumPost = () => {
 
           {!user && (
             <div className="text-center py-12">
-              <p className="text-gray-400 mb-4">Please log in to comment</p>
+              <p className="text-gray-400 mb-4">Please log in to reply</p>
               <Button onClick={() => navigate('/login')} className={`${currentTheme.primary} text-white`}>
                 Login
               </Button>

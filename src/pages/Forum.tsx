@@ -60,12 +60,18 @@ const Forum = () => {
   const categories = [
     { value: 'all', label: '🌐 All Categories', color: 'bg-gray-500' },
     { value: 'general', label: '💬 General', color: 'bg-blue-500' },
-    { value: 'help', label: '❓ Help', color: 'bg-orange-500' },
-    { value: 'sale', label: '🛒 Sale', color: 'bg-green-500' },
-    { value: 'money', label: '💰 Money', color: 'bg-yellow-500' },
-    { value: 'coding', label: '💻 Coding Sources', color: 'bg-purple-500' },
-    { value: 'trading', label: '📈 Trading', color: 'bg-red-500' }
+    { value: 'help', label: '❓ Help Support', color: 'bg-orange-500' },
+    { value: 'source', label: '📄 Source Code', color: 'bg-purple-500' },
+    { value: 'codehelp', label: '💻 Code Help', color: 'bg-green-500' },
+    { value: 'reverse', label: '🔍 Reverse Engineering', color: 'bg-red-500' },
+    { value: 'social', label: '🎭 Social Engineering', color: 'bg-pink-500' },
+    { value: 'money', label: '💰 Money Talk', color: 'bg-yellow-500' }
   ];
+
+  // Helper function to check if category is coding-related
+  const isCodingCategory = (category: string) => {
+    return ['source', 'codehelp', 'reverse'].includes(category);
+  };
 
   useEffect(() => {
     loadPosts();
@@ -334,7 +340,7 @@ const Forum = () => {
 
         {/* Create Post Form */}
         {showCreatePost && (
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mb-8 shadow-lg bg-opacity-95`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mb-8 shadow-lg`}>
             <h2 className={`text-xl font-semibold ${currentTheme.text} mb-6`}>Create New Post</h2>
             
             <div className="space-y-6">
@@ -343,13 +349,13 @@ const Forum = () => {
                   placeholder="Post title..."
                   value={newPost.title}
                   onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
-                  className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
+                  className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
                 />
               </div>
 
               <div>
                 <Select value={newPost.category} onValueChange={(value) => setNewPost(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}>
+                  <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}>
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
@@ -367,18 +373,21 @@ const Forum = () => {
                   placeholder="Write your post content..."
                   value={newPost.content}
                   onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-                  className={`min-h-32 ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
+                  className={`min-h-32 ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
                 />
               </div>
 
-              <div>
-                <Textarea
-                  placeholder="Add code snippet (optional)..."
-                  value={newPost.code}
-                  onChange={(e) => setNewPost(prev => ({ ...prev, code: e.target.value }))}
-                  className={`min-h-24 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
-                />
-              </div>
+              {/* Conditional Code Input - Only show for coding categories */}
+              {isCodingCategory(newPost.category) && (
+                <div>
+                  <Textarea
+                    placeholder="Add code snippet (optional)..."
+                    value={newPost.code}
+                    onChange={(e) => setNewPost(prev => ({ ...prev, code: e.target.value }))}
+                    className={`min-h-24 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border}`}
+                  />
+                </div>
+              )}
 
               {/* Media Upload */}
               <div className="space-y-4">
@@ -397,7 +406,7 @@ const Forum = () => {
                       variant="outline"
                       onClick={() => document.getElementById('image-upload')?.click()}
                       disabled={isUploading}
-                      className={`${currentTheme.text} border ${currentTheme.border} bg-opacity-95 hover:bg-opacity-100`}
+                      className={`${currentTheme.text} border ${currentTheme.border}`}
                     >
                       <Image className="h-4 w-4 mr-2" />
                       Add Image
@@ -418,7 +427,7 @@ const Forum = () => {
                       variant="outline"
                       onClick={() => document.getElementById('video-upload')?.click()}
                       disabled={isUploading}
-                      className={`${currentTheme.text} border ${currentTheme.border} bg-opacity-95 hover:bg-opacity-100`}
+                      className={`${currentTheme.text} border ${currentTheme.border}`}
                     >
                       <Video className="h-4 w-4 mr-2" />
                       Add Video
