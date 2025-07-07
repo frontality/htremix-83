@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -105,7 +104,7 @@ const Forum = () => {
       title: newPost.title,
       author: displayName,
       authorId: user.id,
-      authorAvatar: profile?.avatar || '',
+      authorAvatar: profile?.avatar_url || '',
       content: newPost.content,
       code: newPost.code || undefined,
       media: newPost.media.length > 0 ? newPost.media : undefined,
@@ -335,7 +334,7 @@ const Forum = () => {
 
         {/* Create Post Form */}
         {showCreatePost && (
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mb-8 shadow-lg`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mb-8 shadow-lg bg-opacity-95`}>
             <h2 className={`text-xl font-semibold ${currentTheme.text} mb-6`}>Create New Post</h2>
             
             <div className="space-y-6">
@@ -344,13 +343,13 @@ const Forum = () => {
                   placeholder="Post title..."
                   value={newPost.title}
                   onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
-                  className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-90`}
+                  className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
                 />
               </div>
 
               <div>
                 <Select value={newPost.category} onValueChange={(value) => setNewPost(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-90`}>
+                  <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}>
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
@@ -368,7 +367,7 @@ const Forum = () => {
                   placeholder="Write your post content..."
                   value={newPost.content}
                   onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-                  className={`min-h-32 ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-90`}
+                  className={`min-h-32 ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
                 />
               </div>
 
@@ -377,7 +376,7 @@ const Forum = () => {
                   placeholder="Add code snippet (optional)..."
                   value={newPost.code}
                   onChange={(e) => setNewPost(prev => ({ ...prev, code: e.target.value }))}
-                  className={`min-h-24 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-90`}
+                  className={`min-h-24 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} border ${currentTheme.border} bg-opacity-95`}
                 />
               </div>
 
@@ -398,7 +397,7 @@ const Forum = () => {
                       variant="outline"
                       onClick={() => document.getElementById('image-upload')?.click()}
                       disabled={isUploading}
-                      className={`${currentTheme.text} border ${currentTheme.border}`}
+                      className={`${currentTheme.text} border ${currentTheme.border} bg-opacity-95 hover:bg-opacity-100`}
                     >
                       <Image className="h-4 w-4 mr-2" />
                       Add Image
@@ -419,7 +418,7 @@ const Forum = () => {
                       variant="outline"
                       onClick={() => document.getElementById('video-upload')?.click()}
                       disabled={isUploading}
-                      className={`${currentTheme.text} border ${currentTheme.border}`}
+                      className={`${currentTheme.text} border ${currentTheme.border} bg-opacity-95 hover:bg-opacity-100`}
                     >
                       <Video className="h-4 w-4 mr-2" />
                       Add Video
