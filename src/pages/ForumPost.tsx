@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { ArrowLeft, ThumbsUp, ThumbsDown, Reply, Eye, Clock, User, UserPlus, Code, Image, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +48,7 @@ const ForumPost = () => {
   const navigate = useNavigate();
   const { currentTheme } = useTheme();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toast } = useToast();
 
   const [post, setPost] = useState<ForumPost | null>(null);
@@ -153,10 +156,12 @@ const ForumPost = () => {
   const handleAddComment = () => {
     if (!user || !post || !newComment.trim()) return;
 
+    const displayName = profile?.username || user.email?.split('@')[0] || 'Anonymous';
+
     const comment: Comment = {
       id: Date.now().toString(),
       postId: post.id,
-      author: user.email?.split('@')[0] || 'Anonymous',
+      author: displayName,
       authorId: user.id,
       content: newComment,
       createdAt: new Date().toLocaleDateString(),
@@ -221,15 +226,17 @@ const ForumPost = () => {
   return (
     <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
       <div className="container mx-auto px-4 py-6">
-        {/* Back Button */}
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/forum')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Forum
-        </Button>
+        {/* Back Button - Make it more prominent */}
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/forum')}
+            className={`${currentTheme.secondary} hover:${currentTheme.primary} transition-all duration-300`}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Forum
+          </Button>
+        </div>
 
         {/* Post Content */}
         <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6`}>

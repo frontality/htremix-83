@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, Users, Pin, Clock, Eye, ThumbsUp, Reply, Plus, Code, FileText, HelpCircle, Image, Video, X, Search } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import { Search, Plus, Eye, MessageCircle, ThumbsUp, Clock, User, UserPlus, Code, Image, Video, Camera, Film, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useNavigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface ForumPost {
   id: string;
@@ -24,223 +28,102 @@ interface ForumPost {
   replies: number;
   views: number;
   likes: number;
+  dislikes?: number;
   createdAt: string;
   isPinned: boolean;
-  lastReply?: {
-    author: string;
-    time: string;
-  };
-}
-
-interface ForumCategory {
-  id: string;
-  name: string;
-  description: string;
-  postCount: number;
-  icon: any;
-  color: string;
+  likedBy?: string[];
+  dislikedBy?: string[];
 }
 
 const Forum = () => {
+  const navigate = useNavigate();
   const { currentTheme } = useTheme();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { profile } = useProfile();
   const { toast } = useToast();
-  
-  const [posts, setPosts] = useState<ForumPost[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showNewPostForm, setShowNewPostForm] = useState(false);
-  const [newPost, setNewPost] = useState({ title: '', content: '', code: '', category: 'general' });
-  const [uploadedMedia, setUploadedMedia] = useState<{type: 'image' | 'video', url: string}[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
-  const categories: ForumCategory[] = [
-    {
-      id: 'general',
-      name: 'General Discussion',
-      description: 'General chat and discussions',
-      postCount: posts.filter(p => p.category === 'general').length,
-      icon: MessageCircle,
-      color: 'text-blue-400'
-    },
-    {
-      id: 'trading',
-      name: 'Trading & Market',
-      description: 'Discuss trading strategies and market trends',
-      postCount: posts.filter(p => p.category === 'trading').length,
-      icon: Users,
-      color: 'text-green-400'
-    },
-    {
-      id: 'coding',
-      name: 'Coding & Programming',
-      description: 'Programming discussions and code sharing',
-      postCount: posts.filter(p => p.category === 'coding').length,
-      icon: Code,
-      color: 'text-purple-400'
-    },
-    {
-      id: 'scripting',
-      name: 'Scripting & Automation',
-      description: 'Scripts, bots, and automation tools',
-      postCount: posts.filter(p => p.category === 'scripting').length,
-      icon: FileText,
-      color: 'text-cyan-400'
-    },
-    {
-      id: 'source',
-      name: 'Source Code',
-      description: 'Share and request source code',
-      postCount: posts.filter(p => p.category === 'source').length,
-      icon: Code,
-      color: 'text-orange-400'
-    },
-    {
-      id: 'support',
-      name: 'Support & Help',
-      description: 'Get help and support from the community',
-      postCount: posts.filter(p => p.category === 'support').length,
-      icon: HelpCircle,
-      color: 'text-yellow-400'
-    }
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  
+  // New post form state
+  const [newPost, setNewPost] = useState({
+    title: '',
+    content: '',
+    code: '',
+    category: 'general'
+  });
+  const [uploadedMedia, setUploadedMedia] = useState<{ type: 'image' | 'video'; url: string }[]>([]);
+
+  const categories = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'general', label: 'General Discussion' },
+    { value: 'trading', label: 'Trading Tips' },
+    { value: 'tech', label: 'Tech Support' },
+    { value: 'guides', label: 'Guides & Tutorials' },
+    { value: 'marketplace', label: 'Marketplace' },
   ];
 
   useEffect(() => {
-    const loadPosts = () => {
-      try {
-        const savedPosts = localStorage.getItem('forum_posts');
-        const savedLikes = localStorage.getItem('forum_likes');
-        console.log('Loading forum posts:', savedPosts);
-        
-        if (savedLikes) {
-          setLikedPosts(new Set(JSON.parse(savedLikes)));
-        }
-        
-        if (savedPosts) {
-          const parsedPosts = JSON.parse(savedPosts);
-          if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
-            console.log('Loaded posts successfully:', parsedPosts.length);
-            setPosts(parsedPosts);
-            return;
-          }
-        }
-        
-        const samplePosts: ForumPost[] = [
-          {
-            id: 'sample-1',
-            title: 'Welcome to the Forum!',
-            author: 'Admin',
-            authorId: 'admin',
-            authorAvatar: '/placeholder.svg',
-            content: 'Welcome to our community forum! Feel free to share your thoughts and connect with other members.',
-            category: 'general',
-            replies: 0,
-            views: 5,
-            likes: 2,
-            createdAt: new Date().toLocaleDateString(),
-            isPinned: true
-          },
-          {
-            id: 'sample-2',
-            title: 'Trading Tips and Strategies',
-            author: 'Trader123',
-            authorId: 'trader123',
-            authorAvatar: '/placeholder.svg',
-            content: 'Share your best trading strategies here! What has worked for you?',
-            category: 'trading',
-            replies: 0,
-            views: 3,
-            likes: 1,
-            createdAt: new Date().toLocaleDateString(),
-            isPinned: false
-          }
-        ];
-        
-        localStorage.setItem('forum_posts', JSON.stringify(samplePosts));
-        setPosts(samplePosts);
-        console.log('Created sample posts');
-      } catch (error) {
-        console.error('Error loading forum posts:', error);
-        setPosts([]);
-      }
-    };
-
     loadPosts();
   }, []);
 
-  const filteredPosts = posts.filter(post => {
-    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
-    const matchesSearch = searchTerm ? 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    return matchesCategory && matchesSearch;
-  });
-
-  const handleLikePost = (postId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to like posts.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const updatedPosts = posts.map(post => {
-      if (post.id === postId) {
-        const isLiked = likedPosts.has(postId);
-        const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
-        
-        const newLikedPosts = new Set(likedPosts);
-        if (isLiked) {
-          newLikedPosts.delete(postId);
-        } else {
-          newLikedPosts.add(postId);
+  const loadPosts = () => {
+    const savedPosts = localStorage.getItem('forum_posts');
+    if (savedPosts) {
+      setPosts(JSON.parse(savedPosts));
+    } else {
+      // Initialize with some sample posts
+      const samplePosts: ForumPost[] = [
+        {
+          id: '1',
+          title: 'Welcome to the $KID HAVEN Forum! 🎉',
+          author: 'Admin',
+          authorId: 'admin',
+          authorAvatar: '/lovable-uploads/2a21bfaa-d803-4e5a-aa4e-e377ae6c835f.png',
+          content: 'Welcome to our amazing community! Here you can discuss trading strategies, share tips, get help, and connect with other members. Please be respectful and follow our community guidelines.',
+          category: 'general',
+          replies: 15,
+          views: 1250,
+          likes: 42,
+          dislikes: 0,
+          createdAt: '2024-01-15',
+          isPinned: true,
+          likedBy: [],
+          dislikedBy: []
+        },
+        {
+          id: '2',
+          title: 'Best Trading Strategies for 2024',
+          author: 'CryptoMaster',
+          authorId: 'crypto_master',
+          authorAvatar: '/placeholder.svg',
+          content: 'Let\'s discuss the most effective trading strategies for this year. What has been working for you?',
+          category: 'trading',
+          replies: 8,
+          views: 456,
+          likes: 23,
+          dislikes: 2,
+          createdAt: '2024-01-14',
+          isPinned: false,
+          likedBy: [],
+          dislikedBy: []
         }
-        setLikedPosts(newLikedPosts);
-        localStorage.setItem('forum_likes', JSON.stringify([...newLikedPosts]));
-        
-        toast({
-          title: isLiked ? "Like removed" : "Post liked! 👍",
-          description: isLiked ? "You unliked this post" : "Your like has been added"
-        });
-        
-        return { ...post, likes: newLikes };
-      }
-      return post;
-    });
-    
-    setPosts(updatedPosts);
-    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
-  };
-
-  const handleReplyToPost = (postId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to reply to posts.",
-        variant: "destructive"
-      });
-      return;
+      ];
+      setPosts(samplePosts);
+      localStorage.setItem('forum_posts', JSON.stringify(samplePosts));
     }
-    
-    navigate(`/forum/post/${postId}?reply=true`);
-  };
-
-  const isCodingRelated = (category: string) => {
-    return ['coding', 'scripting', 'source'].includes(category);
   };
 
   const handleMediaUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    console.log('Media upload handler called for type:', type);
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
     console.log('Processing file upload:', file.name, file.type, file.size);
 
@@ -250,12 +133,12 @@ const Forum = () => {
     if (type === 'image' && !validImageTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file (JPG, PNG, GIF, WebP)",
+        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
         variant: "destructive",
       });
       return;
     }
-
+    
     if (type === 'video' && !validVideoTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
@@ -265,11 +148,11 @@ const Forum = () => {
       return;
     }
 
-    const maxSize = type === 'video' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const maxSize = type === 'image' ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: `Please select a ${type} smaller than ${type === 'video' ? '50MB' : '10MB'}`,
+        description: `${type === 'image' ? 'Image' : 'Video'} must be smaller than ${type === 'image' ? '5MB' : '50MB'}`,
         variant: "destructive",
       });
       return;
@@ -308,437 +191,672 @@ const Forum = () => {
   };
 
   const handleCreatePost = () => {
-    if (!user) {
+    if (!user || !newPost.title.trim() || !newPost.content.trim()) {
       toast({
-        title: "Login Required",
-        description: "Please log in to create a post.",
-        variant: "destructive"
+        title: "Missing information",
+        description: "Please fill in both title and content",
+        variant: "destructive",
       });
       return;
     }
 
-    if (!newPost.title.trim() || !newPost.content.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in both title and content.",
-        variant: "destructive"
-      });
-      return;
-    }
+    const displayName = profile?.username || user.email?.split('@')[0] || 'Anonymous';
 
     const post: ForumPost = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: Date.now().toString(),
       title: newPost.title,
-      author: user.email?.split('@')[0] || 'Anonymous',
+      author: displayName,
       authorId: user.id,
-      authorAvatar: '/placeholder.svg',
+      authorAvatar: profile?.avatar_url || '/placeholder.svg',
       content: newPost.content,
-      code: newPost.code.trim() || undefined,
+      code: newPost.code || undefined,
       media: uploadedMedia.length > 0 ? uploadedMedia : undefined,
       category: newPost.category,
       replies: 0,
       views: 0,
       likes: 0,
+      dislikes: 0,
       createdAt: new Date().toLocaleDateString(),
-      isPinned: false
+      isPinned: false,
+      likedBy: [],
+      dislikedBy: []
     };
 
-    try {
-      const currentPosts = [...posts, post];
-      localStorage.setItem('forum_posts', JSON.stringify(currentPosts));
-      setPosts(currentPosts);
-      
-      setNewPost({ title: '', content: '', code: '', category: 'general' });
-      setUploadedMedia([]);
-      setShowNewPostForm(false);
+    const updatedPosts = [post, ...posts];
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
 
-      toast({
-        title: "Post Created! 🎉",
-        description: "Your post has been published successfully."
-      });
-      
-      console.log('Post created successfully:', post.id);
-    } catch (error) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create post. Please try again.",
-        variant: "destructive"
-      });
-    }
+    // Reset form
+    setNewPost({ title: '', content: '', code: '', category: 'general' });
+    setUploadedMedia([]);
+    setShowCreatePost(false);
+
+    toast({
+      title: "Post Created! 🎉",
+      description: "Your post has been published successfully"
+    });
   };
 
-  const handlePostClick = (postId: string) => {
-    const updatedPosts = posts.map(post => 
-      post.id === postId ? { ...post, views: post.views + 1 } : post
+  const handleLike = (postId: string) => {
+    if (!user) return;
+
+    const updatedPosts = posts.map(post => {
+      if (post.id === postId) {
+        const likedBy = post.likedBy || [];
+        const dislikedBy = post.dislikedBy || [];
+        
+        if (likedBy.includes(user.id)) {
+          // Remove like
+          return {
+            ...post,
+            likes: post.likes - 1,
+            likedBy: likedBy.filter(id => id !== user.id)
+          };
+        } else {
+          // Add like and remove dislike if exists
+          return {
+            ...post,
+            likes: post.likes + 1,
+            dislikes: dislikedBy.includes(user.id) ? (post.dislikes || 0) - 1 : (post.dislikes || 0),
+            likedBy: [...likedBy, user.id],
+            dislikedBy: dislikedBy.filter(id => id !== user.id)
+          };
+        }
+      }
+      return post;
+    });
+
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+  };
+
+  const handlePostClick = (post: ForumPost) => {
+    // Increment view count
+    const updatedPosts = posts.map(p => 
+      p.id === post.id ? { ...p, views: p.views + 1 } : p
     );
     setPosts(updatedPosts);
     localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
     
-    navigate(`/forum/post/${postId}`);
+    navigate(`/forum/post/${post.id}`);
   };
 
+  const handleViewProfile = (userId: string) => {
+    navigate(`/profile?user=${userId}`);
+  };
+
+  const handleSendFriendRequest = (userId: string, username: string) => {
+    if (!user) return;
+    
+    toast({
+      title: "Friend Request Sent! 👋",
+      description: `Friend request sent to ${username}`
+    });
+  };
+
+  // Filter and sort posts
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.author.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'most-liked':
+        return b.likes - a.likes;
+      case 'most-viewed':
+        return b.views - a.views;
+      case 'most-replies':
+        return b.replies - a.replies;
+      default:
+        return 0;
+    }
+  });
+
+  // Separate pinned and regular posts
+  const pinnedPosts = sortedPosts.filter(post => post.isPinned);
+  const regularPosts = sortedPosts.filter(post => !post.isPinned);
+
   return (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} pt-20`}>
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Community Forum</h1>
-          <p className="text-gray-400">Connect, discuss, and share with the $KID HAVEN community</p>
+    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div className="mb-4 md:mb-0">
+            <h1 className="text-3xl font-bold mb-2 flex items-center space-x-2">
+              <MessageCircle className="w-8 h-8 text-purple-500" />
+              <span>Community Forum</span>
+            </h1>
+            <p className={`${currentTheme.muted}`}>
+              Connect, share, and learn with the $KID HAVEN community
+            </p>
+          </div>
+          
+          {user && (
+            <Button 
+              onClick={() => setShowCreatePost(true)}
+              className={`${currentTheme.primary} text-white`}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Post
+            </Button>
+          )}
         </div>
 
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <Input
               placeholder="Search posts, authors, or content..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`${currentTheme.cardBg} border ${currentTheme.border}`}
             />
           </div>
+          
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className={`w-full md:w-48 ${currentTheme.cardBg} border ${currentTheme.border}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className={`w-full md:w-48 ${currentTheme.cardBg} border ${currentTheme.border}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="most-liked">Most Liked</SelectItem>
+              <SelectItem value="most-viewed">Most Viewed</SelectItem>
+              <SelectItem value="most-replies">Most Replies</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-4 cursor-pointer transition-all hover:border-purple-500 hover:shadow-lg ${
-                selectedCategory === category.id ? 'border-purple-500 bg-purple-900/20 shadow-lg' : ''
-              }`}
-            >
-              <div className="flex items-center space-x-3 mb-2">
-                <category.icon className={`w-6 h-6 ${category.color}`} />
-                <h3 className="font-semibold">{category.name}</h3>
+        {/* Create Post Modal */}
+        {showCreatePost && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto`}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Create New Post</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCreatePost(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
-              <p className="text-sm text-gray-400 mb-2">{category.description}</p>
-              <p className="text-xs text-gray-500">{category.postCount} posts</p>
-            </div>
-          ))}
-        </div>
 
-        {(selectedCategory || searchTerm) && (
-          <div className="mb-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-300">Active filters:</span>
-              {selectedCategory && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-purple-600 text-white">
-                  {categories.find(c => c.id === selectedCategory)?.name}
-                  <button 
-                    onClick={() => setSelectedCategory(null)}
-                    className="ml-2 hover:text-red-300"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-              {searchTerm && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-600 text-white">
-                  Search: "{searchTerm}"
-                  <button 
-                    onClick={() => setSearchTerm('')}
-                    className="ml-2 hover:text-red-300"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-              <button 
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setSearchTerm('');
-                }}
-                className="text-xs text-red-400 hover:text-red-300 underline"
-              >
-                Clear all
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showNewPostForm && (
-          <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 mb-6 shadow-xl`}>
-            <h3 className="text-xl font-semibold mb-4">Create New Post</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Category</label>
-                <Select value={newPost.category} onValueChange={(value) => setNewPost({...newPost, category: value})}>
-                  <SelectTrigger className={`w-full ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text}`}>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent className={`${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} bg-gray-900 z-50`}>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id} className={`${currentTheme.text} hover:bg-gray-800 focus:bg-gray-800`}>
-                        <div className="flex items-center space-x-2">
-                          <cat.icon className={`w-4 h-4 ${cat.color}`} />
-                          <span>{cat.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
-                <input
-                  type="text"
-                  value={newPost.title}
-                  onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                  className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
-                  placeholder="Enter post title..."
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Content</label>
-                <Textarea
-                  value={newPost.content}
-                  onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                  className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 ${currentTheme.text} focus:border-purple-500 focus:ring-1 focus:ring-purple-500`}
-                  placeholder="Write your post content..."
-                />
-              </div>
-              
-              {isCodingRelated(newPost.category) && (
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 flex items-center space-x-2">
-                    <Code className="w-4 h-4 text-green-400" />
-                    <span>Code (Optional)</span>
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <Input
+                    value={newPost.title}
+                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                    placeholder="Enter post title..."
+                    className={`${currentTheme.cardBg} border ${currentTheme.border}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Category</label>
+                  <Select 
+                    value={newPost.category} 
+                    onValueChange={(value) => setNewPost({ ...newPost, category: value })}
+                  >
+                    <SelectTrigger className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.slice(1).map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Content</label>
+                  <Textarea
+                    value={newPost.content}
+                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                    placeholder="Write your post content..."
+                    className={`${currentTheme.cardBg} border ${currentTheme.border} min-h-32`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Code (Optional)</label>
                   <Textarea
                     value={newPost.code}
-                    onChange={(e) => setNewPost({...newPost, code: e.target.value})}
-                    className={`w-full p-3 rounded ${currentTheme.cardBg} border ${currentTheme.border} h-32 font-mono text-sm ${currentTheme.text} focus:border-green-500 focus:ring-1 focus:ring-green-500`}
+                    onChange={(e) => setNewPost({ ...newPost, code: e.target.value })}
                     placeholder="Paste your code here..."
+                    className={`${currentTheme.cardBg} border ${currentTheme.border} font-mono text-sm`}
                   />
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Add Media (Optional)</label>
-                <div className="flex space-x-2 mb-4">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                    onChange={(e) => handleMediaUpload(e, 'image')}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label htmlFor="image-upload">
-                    <Button type="button" variant="outline" size="sm" className="cursor-pointer">
-                      <Image className="w-4 h-4 mr-2" />
-                      Add Image
-                    </Button>
-                  </label>
-                  
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                    onChange={(e) => handleMediaUpload(e, 'video')}
-                    className="hidden"
-                    id="video-upload"
-                  />
-                  <label htmlFor="video-upload">
-                    <Button type="button" variant="outline" size="sm" className="cursor-pointer">
-                      <Video className="w-4 h-4 mr-2" />
-                      Add Video
-                    </Button>
-                  </label>
                 </div>
 
-                {uploadedMedia.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    {uploadedMedia.map((media, index) => (
-                      <div key={index} className="relative">
-                        <button
-                          onClick={() => removeMedia(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center z-10 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        {media.type === 'image' ? (
-                          <img
-                            src={media.url}
-                            alt="Upload preview"
-                            className="w-full h-32 object-cover rounded border hover:opacity-90 transition-opacity"
-                          />
-                        ) : (
-                          <video
-                            src={media.url}
-                            className="w-full h-32 object-cover rounded border"
-                            controls
-                            preload="metadata"
-                          />
-                        )}
-                      </div>
-                    ))}
+                {/* Media Upload Section */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Media</label>
+                  <div className="flex space-x-2 mb-4">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                      onChange={(e) => handleMediaUpload(e, 'image')}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        console.log('Image upload button clicked');
+                        document.getElementById('image-upload')?.click();
+                      }}
+                      className="flex items-center space-x-2"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Add Image</span>
+                    </Button>
+                    
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      onChange={(e) => handleMediaUpload(e, 'video')}
+                      className="hidden"
+                      id="video-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        console.log('Video upload button clicked');
+                        document.getElementById('video-upload')?.click();
+                      }}
+                      className="flex items-center space-x-2"
+                    >
+                      <Film className="w-4 h-4" />
+                      <span>Add Video</span>
+                    </Button>
                   </div>
-                )}
-              </div>
-              
-              <div className="flex space-x-2 pt-4 border-t border-gray-700">
-                <Button onClick={handleCreatePost} className="bg-purple-600 hover:bg-purple-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Post
-                </Button>
-                <Button variant="outline" onClick={() => setShowNewPostForm(false)}>
-                  Cancel
-                </Button>
+
+                  {/* Preview uploaded media */}
+                  {uploadedMedia.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {uploadedMedia.map((media, index) => (
+                        <div key={index} className="relative">
+                          {media.type === 'image' ? (
+                            <img
+                              src={media.url}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-24 object-cover rounded"
+                            />
+                          ) : (
+                            <video
+                              src={media.url}
+                              className="w-full h-24 object-cover rounded"
+                              preload="metadata"
+                            />
+                          )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => removeMedia(index)}
+                            className="absolute top-1 right-1 h-6 w-6 p-0"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button onClick={handleCreatePost} className={`${currentTheme.primary} text-white`}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Post
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCreatePost(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* Posts List */}
         <div className="space-y-4">
-          {filteredPosts.length === 0 ? (
-            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-8 text-center`}>
-              <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">
-                {searchTerm || selectedCategory ? 'No matching posts found' : 'No posts yet'}
+          {/* Pinned Posts */}
+          {pinnedPosts.map((post) => (
+            <div
+              key={post.id}
+              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500 transition-colors cursor-pointer relative`}
+              onClick={() => handlePostClick(post)}
+            >
+              {post.isPinned && (
+                <div className="absolute top-3 right-3 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
+                  Pinned
+                </div>
+              )}
+              
+              <div className="flex items-start space-x-4">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={post.authorAvatar} />
+                  <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="font-semibold text-lg truncate">{post.title}</h3>
+                    <span className={`px-2 py-1 rounded text-xs ${currentTheme.secondary}`}>
+                      {categories.find(c => c.value === post.category)?.label}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4 text-sm text-gray-400 mb-3">
+                    <div className="flex items-center space-x-1">
+                      <User className="w-4 h-4" />
+                      <span>{post.author}</span>
+                      {user && user.id !== post.authorId && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewProfile(post.authorId);
+                            }}
+                            className="text-xs px-2 py-1"
+                          >
+                            Profile
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendFriendRequest(post.authorId, post.author);
+                            }}
+                            className="text-xs px-2 py-1"
+                          >
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Add
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{post.createdAt}</span>
+                    </div>
+                  </div>
+                  
+                  <p className={`${currentTheme.text} mb-4 line-clamp-3`}>
+                    {post.content}
+                  </p>
+                  
+                  {/* Media Preview */}
+                  {post.media && post.media.length > 0 && (
+                    <div className="flex items-center space-x-2 mb-4">
+                      {post.media.some(m => m.type === 'image') && (
+                        <div className="flex items-center space-x-1 text-blue-400">
+                          <Image className="w-4 h-4" />
+                          <span className="text-xs">
+                            {post.media.filter(m => m.type === 'image').length} image(s)
+                          </span>
+                        </div>
+                      )}
+                      {post.media.some(m => m.type === 'video') && (
+                        <div className="flex items-center space-x-1 text-red-400">
+                          <Video className="w-4 h-4" />
+                          <span className="text-xs">
+                            {post.media.filter(m => m.type === 'video').length} video(s)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Code Preview */}
+                  {post.code && (
+                    <div className="flex items-center space-x-1 text-green-400 mb-4">
+                      <Code className="w-4 h-4" />
+                      <span className="text-xs">Contains code</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 text-sm text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <Eye className="w-4 h-4" />
+                        <span>{post.views}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>{post.replies}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{post.likes}</span>
+                      </div>
+                    </div>
+                    
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(post.id);
+                        }}
+                        className={post.likedBy?.includes(user.id) ? 'text-green-500' : ''}
+                      >
+                        <ThumbsUp className="w-4 h-4 mr-1" />
+                        Like
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Regular Posts */}
+          {regularPosts.map((post) => (
+            <div
+              key={post.id}
+              className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500 transition-colors cursor-pointer`}
+              onClick={() => handlePostClick(post)}
+            >
+              <div className="flex items-start space-x-4">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={post.authorAvatar} />
+                  <AvatarFallback>{post.author[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="font-semibold text-lg truncate">{post.title}</h3>
+                    <span className={`px-2 py-1 rounded text-xs ${currentTheme.secondary}`}>
+                      {categories.find(c => c.value === post.category)?.label}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4 text-sm text-gray-400 mb-3">
+                    <div className="flex items-center space-x-1">
+                      <User className="w-4 h-4" />
+                      <span>{post.author}</span>
+                      {user && user.id !== post.authorId && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewProfile(post.authorId);
+                            }}
+                            className="text-xs px-2 py-1"
+                          >
+                            Profile
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendFriendRequest(post.authorId, post.author);
+                            }}
+                            className="text-xs px-2 py-1"
+                          >
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Add
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{post.createdAt}</span>
+                    </div>
+                  </div>
+                  
+                  <p className={`${currentTheme.text} mb-4 line-clamp-3`}>
+                    {post.content}
+                  </p>
+                  
+                  {/* Media Preview */}
+                  {post.media && post.media.length > 0 && (
+                    <div className="flex items-center space-x-2 mb-4">
+                      {post.media.some(m => m.type === 'image') && (
+                        <div className="flex items-center space-x-1 text-blue-400">
+                          <Image className="w-4 h-4" />
+                          <span className="text-xs">
+                            {post.media.filter(m => m.type === 'image').length} image(s)
+                          </span>
+                        </div>
+                      )}
+                      {post.media.some(m => m.type === 'video') && (
+                        <div className="flex items-center space-x-1 text-red-400">
+                          <Video className="w-4 h-4" />
+                          <span className="text-xs">
+                            {post.media.filter(m => m.type === 'video').length} video(s)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Code Preview */}
+                  {post.code && (
+                    <div className="flex items-center space-x-1 text-green-400 mb-4">
+                      <Code className="w-4 h-4" />
+                      <span className="text-xs">Contains code</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 text-sm text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <Eye className="w-4 h-4" />
+                        <span>{post.views}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>{post.replies}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{post.likes}</span>
+                      </div>
+                    </div>
+                    
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(post.id);
+                        }}
+                        className={post.likedBy?.includes(user.id) ? 'text-green-500' : ''}
+                      >
+                        <ThumbsUp className="w-4 h-4 mr-1" />
+                        Like
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* No posts message */}
+          {sortedPosts.length === 0 && (
+            <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-12 text-center`}>
+              <MessageCircle className={`w-16 h-16 ${currentTheme.muted} mx-auto mb-4`} />
+              <h3 className={`text-xl font-semibold ${currentTheme.text} mb-2`}>
+                {searchQuery || selectedCategory !== 'all' ? 'No posts found' : 'No posts yet'}
               </h3>
-              <p className="text-gray-400 mb-4">
-                {searchTerm || selectedCategory 
-                  ? 'Try adjusting your search or filters' 
-                  : 'Be the first to start a discussion!'
+              <p className={`${currentTheme.muted} mb-6`}>
+                {searchQuery || selectedCategory !== 'all' 
+                  ? 'Try adjusting your search or filters'
+                  : 'Be the first to start a conversation!'
                 }
               </p>
-              {user && !searchTerm && !selectedCategory && (
-                <Button onClick={() => setShowNewPostForm(true)} className="bg-purple-600 hover:bg-purple-700">
+              
+              {user && (
+                <Button 
+                  onClick={() => setShowCreatePost(true)}
+                  className={`${currentTheme.primary} text-white`}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Post
                 </Button>
               )}
             </div>
-          ) : (
-            filteredPosts.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).map((post) => (
-              <div
-                key={post.id}
-                onClick={() => handlePostClick(post.id)}
-                className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 hover:border-purple-500/50 hover:shadow-lg transition-all cursor-pointer group`}
-              >
-                <div className="flex items-start space-x-4">
-                  <img
-                    src={post.authorAvatar}
-                    alt={post.author}
-                    className="w-12 h-12 rounded-full border-2 border-gray-600 group-hover:border-purple-500 transition-colors"
-                  />
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                      {post.isPinned && (
-                        <Pin className="w-4 h-4 text-yellow-400" />
-                      )}
-                      <h3 className="font-semibold text-lg hover:text-purple-400 truncate">
-                        {post.title}
-                      </h3>
-                      <span className={`text-xs px-2 py-1 rounded-full bg-opacity-20 bg-gray-600 text-gray-300`}>
-                        {categories.find(cat => cat.id === post.category)?.name}
-                      </span>
-                      {post.code && (
-                        <Code className="w-4 h-4 text-green-400" />
-                      )}
-                      {post.media && post.media.length > 0 && (
-                        <div className="flex space-x-1">
-                          {post.media.some(m => m.type === 'image') && (
-                            <Image className="w-4 h-4 text-blue-400" />
-                          )}
-                          {post.media.some(m => m.type === 'video') && (
-                            <Video className="w-4 h-4 text-red-400" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
-                    
-                    {post.media && post.media.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 mb-3">
-                        {post.media.slice(0, 4).map((media, index) => (
-                          <div key={index} className="relative">
-                            {media.type === 'image' ? (
-                              <img
-                                src={media.url}
-                                alt="Post media"
-                                className="w-full h-16 object-cover rounded border border-gray-600"
-                              />
-                            ) : (
-                              <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center border border-gray-600">
-                                <Video className="w-6 h-6 text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        {post.media.length > 4 && (
-                          <div className="w-full h-16 bg-gray-800 rounded flex items-center justify-center text-xs text-gray-400 border border-gray-600">
-                            +{post.media.length - 4}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span>by <span className="text-purple-400">{post.author}</span></span>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{post.createdAt}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <button
-                          onClick={(e) => handleReplyToPost(post.id, e)}
-                          className="flex items-center space-x-1 hover:text-purple-400 transition-colors"
-                          title="Reply to post"
-                        >
-                          <Reply className="w-4 h-4" />
-                          <span>{post.replies}</span>
-                        </button>
-                        <div className="flex items-center space-x-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{post.views}</span>
-                        </div>
-                        <button
-                          onClick={(e) => handleLikePost(post.id, e)}
-                          className={`flex items-center space-x-1 transition-colors ${
-                            likedPosts.has(post.id) 
-                              ? 'text-purple-400 hover:text-purple-300' 
-                              : 'hover:text-purple-400'
-                          }`}
-                          title={likedPosts.has(post.id) ? "Unlike post" : "Like post"}
-                        >
-                          <ThumbsUp className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`} />
-                          <span>{post.likes}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
           )}
         </div>
 
-        {user && !showNewPostForm && (
-          <div className="fixed bottom-6 right-6">
-            <Button 
-              onClick={() => setShowNewPostForm(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Post</span>
-            </Button>
-          </div>
-        )}
-
+        {/* Login prompt for non-logged-in users */}
         {!user && (
           <div className={`${currentTheme.cardBg} border ${currentTheme.border} rounded-lg p-6 text-center mt-8`}>
-            <p className="text-gray-400 mb-4">Please log in to create posts and interact with the community.</p>
-            <Button onClick={() => navigate('/login')} className="bg-purple-600 hover:bg-purple-700">
-              Login
-            </Button>
+            <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2`}>
+              Join the Conversation! 💬
+            </h3>
+            <p className={`${currentTheme.muted} mb-4`}>
+              Sign in to create posts, like content, and connect with the community
+            </p>
+            <div className="flex justify-center space-x-3">
+              <Button onClick={() => navigate('/login')} className={`${currentTheme.primary} text-white`}>
+                Sign In
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/signup')}>
+                Sign Up
+              </Button>
+            </div>
           </div>
         )}
       </div>
