@@ -10,6 +10,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { ViewTracker } from "@/utils/viewTracker";
 
 interface MarketplaceItem {
   id: string;
@@ -110,16 +111,16 @@ const Marketplace = () => {
   });
 
   const handleItemClick = (item: MarketplaceItem) => {
-    // Only increment view count once per session per item
-    if (!viewedItems.has(item.id)) {
+    // Check if this user has already viewed this item
+    if (!ViewTracker.hasViewed('marketplace', item.id)) {
+      // Mark as viewed and increment view count
+      ViewTracker.markAsViewed('marketplace', item.id);
+      
       const updatedItems = items.map(existingItem =>
         existingItem.id === item.id ? { ...existingItem, views: existingItem.views + 1 } : existingItem
       );
       setItems(updatedItems);
       localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
-      
-      // Track that this item has been viewed in this session
-      setViewedItems(prev => new Set(prev).add(item.id));
     }
     
     // Navigate to product detail page

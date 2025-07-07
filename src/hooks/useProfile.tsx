@@ -28,9 +28,11 @@ export const useProfile = () => {
     try {
       console.log('Loading profile for user:', user.id);
       
+      // Load saved profile data from localStorage
+      const savedProfile = localStorage.getItem(`profile_${user.id}`);
       const savedAvatar = localStorage.getItem('current_avatar');
       
-      const userProfile: Profile = {
+      let profileData: Profile = {
         id: user.id,
         username: user.username || null,
         bio: null,
@@ -40,8 +42,13 @@ export const useProfile = () => {
         two_factor_enabled: false
       };
 
-      console.log('Profile loaded:', userProfile);
-      setProfile(userProfile);
+      if (savedProfile) {
+        const parsedProfile = JSON.parse(savedProfile);
+        profileData = { ...profileData, ...parsedProfile };
+      }
+
+      console.log('Profile loaded:', profileData);
+      setProfile(profileData);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       toast({
@@ -75,8 +82,13 @@ export const useProfile = () => {
         }
       }
 
+      const updatedProfile = { ...profile, ...updates };
+      
+      // Save profile data to localStorage
+      localStorage.setItem(`profile_${user.id}`, JSON.stringify(updatedProfile));
+      
       console.log('Profile updated successfully');
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      setProfile(updatedProfile);
       
       toast({
         title: "Success! 🎉",
