@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,17 +119,6 @@ const Signup = () => {
     // Final username check if still pending
     if (usernameAvailable === null && formData.username) {
       await checkUsernameAvailability(formData.username);
-      // Wait for the state to update and then check again
-      setTimeout(() => {
-        if (usernameAvailable === false) {
-          toast({
-            title: "Username Error",
-            description: "Username is already taken",
-            variant: "destructive",
-          });
-          return;
-        }
-      }, 100);
     }
     
     setLoading(true);
