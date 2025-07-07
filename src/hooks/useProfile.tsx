@@ -21,7 +21,8 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) {
+    if (!user?.id) {
+      console.log('No user ID available for profile fetch');
       setLoading(false);
       return;
     }
@@ -44,6 +45,7 @@ export const useProfile = () => {
         console.log('Profile loaded:', data);
         setProfile(data);
       } else {
+        console.log('No profile found, creating new one');
         // Create new profile if it doesn't exist
         const newProfile = {
           user_id: user.id,
@@ -79,8 +81,23 @@ export const useProfile = () => {
   }, [user?.id, user?.email, toast]);
 
   const updateProfile = useCallback(async (updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
-    if (!user || !profile) {
-      console.log('No user or profile for update');
+    if (!user?.id) {
+      console.log('No user ID for profile update');
+      toast({
+        title: "Error",
+        description: "Please log in to update your profile.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!profile?.id) {
+      console.log('No profile ID for update');
+      toast({
+        title: "Error", 
+        description: "Profile not loaded. Please refresh the page.",
+        variant: "destructive",
+      });
       return false;
     }
 
@@ -135,15 +152,21 @@ export const useProfile = () => {
     }
     
     return 'Set your username';
-  }, [profile, user?.email]);
+  }, [profile?.username, user?.email]);
 
   const getDisplayEmail = useCallback(() => {
     return user?.email || null;
   }, [user?.email]);
 
+  // Only fetch profile when user changes
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    if (user?.id) {
+      fetchProfile();
+    } else {
+      setProfile(null);
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   return { 
     profile, 

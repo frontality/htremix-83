@@ -35,10 +35,12 @@ const Profile = () => {
     bio: '',
     avatar_url: ''
   });
+  const [saving, setSaving] = useState(false);
 
-  // Update form data when profile loads
+  // Update form data when profile loads or changes
   useEffect(() => {
     if (profile) {
+      console.log('Updating form data from profile:', profile);
       setFormData({
         username: profile.username || '',
         bio: profile.bio || '',
@@ -48,21 +50,35 @@ const Profile = () => {
   }, [profile]);
 
   const handleSave = async () => {
-    // Sanitize inputs but preserve formatting for bio
-    const sanitizedData = {
-      username: sanitizeInput(formData.username).trim(),
-      bio: sanitizeInput(formData.bio), // Keep bio formatting including spaces
-      avatar_url: formData.avatar_url
-    };
-    
-    console.log('Saving profile data:', sanitizedData);
-    const success = await updateProfile(sanitizedData);
-    if (success) {
-      setIsEditing(false);
+    if (!profile) {
+      console.log('No profile available for saving');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Only sanitize but preserve all content including spaces
+      const sanitizedData = {
+        username: sanitizeInput(formData.username).trim(),
+        bio: sanitizeInput(formData.bio), // Keep spaces and formatting
+        avatar_url: formData.avatar_url
+      };
+      
+      console.log('Attempting to save profile data:', sanitizedData);
+      const success = await updateProfile(sanitizedData);
+      if (success) {
+        setIsEditing(false);
+        console.log('Profile saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleCancel = () => {
+    // Reset form data to current profile values
     if (profile) {
       setFormData({
         username: profile.username || '',
@@ -73,9 +89,12 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  const handleImageUpload = (imageUrl: string) => {
+  const handleImageUpload = async (imageUrl: string) => {
     setFormData(prev => ({ ...prev, avatar_url: imageUrl }));
-    updateProfile({ avatar_url: imageUrl });
+    // Auto-save avatar changes
+    if (profile) {
+      await updateProfile({ avatar_url: imageUrl });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -100,6 +119,18 @@ const Profile = () => {
         <div className="text-center">
           <Sparkles className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4 animate-pulse`} />
           <p className={`${currentTheme.text} text-lg`}>{t('Loading profile...')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
+        <div className="text-center">
+          <User className={`h-12 w-12 ${currentTheme.muted} mx-auto mb-4`} />
+          <p className={`${currentTheme.text} text-lg mb-4`}>Profile not found</p>
+          <p className={`${currentTheme.muted} text-sm`}>Please try refreshing the page</p>
         </div>
       </div>
     );
@@ -136,6 +167,7 @@ const Profile = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => isEditing ? handleCancel() : setIsEditing(true)}
+                    disabled={saving}
                     className={`${currentTheme.secondary} ${currentTheme.text} border-0 hover:scale-105 transition-transform flex items-center gap-1`}
                   >
                     {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
@@ -211,14 +243,16 @@ const Profile = () => {
                   <div className="flex space-x-3">
                     <Button 
                       onClick={handleSave} 
+                      disabled={saving}
                       className={`${currentTheme.primary} text-white hover:scale-105 transition-transform flex items-center gap-2`}
                     >
                       <Save className="h-4 w-4" />
-                      {t('Save')}
+                      {saving ? 'Saving...' : t('Save')}
                     </Button>
                     <Button 
                       variant="outline"
                       onClick={handleCancel}
+                      disabled={saving}
                       className={`${currentTheme.secondary} ${currentTheme.text} border-0 flex items-center gap-2`}
                     >
                       <X className="h-4 w-4" />
