@@ -10,9 +10,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, username?: string) => Promise<boolean>;
-  logout: () => void;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
+  signOut: () => void;
   loading: boolean;
 }
 
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const signup = async (email: string, password: string, username?: string): Promise<boolean> => {
+  const signUp = async (email: string, password: string, username?: string): Promise<{ error: any }> => {
     try {
       // Get existing users
       const existingUsers = localStorage.getItem('registered_users');
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if user already exists
       const userExists = users.some((u: any) => u.email === email);
       if (userExists) {
-        return false;
+        return { error: 'User already exists' };
       }
 
       // Create new user
@@ -60,19 +60,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('current_user', JSON.stringify(newUser));
 
       console.log('User signed up successfully:', newUser);
-      return true;
+      return { error: null };
     } catch (error) {
       console.error('Signup error:', error);
-      return false;
+      return { error: 'Signup failed' };
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const signIn = async (email: string, password: string): Promise<{ error: any }> => {
     try {
       // Get registered users
       const existingUsers = localStorage.getItem('registered_users');
       if (!existingUsers) {
-        return false;
+        return { error: 'No users found' };
       }
 
       const users = JSON.parse(existingUsers);
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Find user with matching email and password
       const foundUser = users.find((u: any) => u.email === email && u.password === password);
       if (!foundUser) {
-        return false;
+        return { error: 'Invalid credentials' };
       }
 
       // Set as current user (without password in the state)
@@ -95,14 +95,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('current_user', JSON.stringify(userWithoutPassword));
 
       console.log('User logged in successfully:', userWithoutPassword);
-      return true;
+      return { error: null };
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return { error: 'Login failed' };
     }
   };
 
-  const logout = () => {
+  const signOut = () => {
     setUser(null);
     localStorage.removeItem('current_user');
     console.log('User logged out');
@@ -111,9 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{
       user,
-      login,
-      signup,
-      logout,
+      signIn,
+      signUp,
+      signOut,
       loading
     }}>
       {children}

@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -100,11 +101,11 @@ const MessageBubble = ({ message, otherParticipant }: MessageBubbleProps) => {
         {isOwnMessage && (
           <Avatar className="h-10 w-10 mb-2 flex-shrink-0 ring-2 ring-white/10 group-hover:ring-white/20 transition-all">
             <AvatarImage
-              src={user?.user_metadata?.avatar_url}
+              src="/placeholder.svg"
               alt="You"
             />
             <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white text-sm font-semibold">
-              Y
+              {user?.username?.[0]?.toUpperCase() || 'Y'}
             </AvatarFallback>
           </Avatar>
         )}
