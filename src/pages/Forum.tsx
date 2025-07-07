@@ -220,6 +220,27 @@ const Forum = () => {
     }));
   };
 
+  const handleDeletePost = (postId: string) => {
+    if (!user) return;
+    
+    const updatedPosts = posts.filter(post => post.id !== postId);
+    setPosts(updatedPosts);
+    localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+    
+    // Also delete related comments
+    const savedComments = localStorage.getItem('forum_comments');
+    if (savedComments) {
+      const allComments = JSON.parse(savedComments);
+      const filteredComments = allComments.filter((comment: any) => comment.postId !== postId);
+      localStorage.setItem('forum_comments', JSON.stringify(filteredComments));
+    }
+    
+    toast({
+      title: "Post Deleted! 🗑️",
+      description: "Your post has been removed successfully."
+    });
+  };
+
   // Filter and sort posts
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -504,15 +525,31 @@ const Forum = () => {
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-2">
-                        {post.isPinned && (
-                          <Pin className="h-4 w-4 text-yellow-500" />
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          {post.isPinned && (
+                            <Pin className="h-4 w-4 text-yellow-500" />
+                          )}
+                          <Badge className={`${categoryInfo?.color || 'bg-gray-500'} text-white`}>
+                            {categoryInfo?.label.replace(/^[^\s]+\s/, '') || post.category}
+                          </Badge>
+                          <span className={`text-sm ${currentTheme.muted}`}>•</span>
+                          <span className={`text-sm ${currentTheme.muted}`}>{post.createdAt}</span>
+                        </div>
+                        
+                        {user && user.id === post.authorId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePost(post.id);
+                            }}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                          >
+                            🗑️
+                          </Button>
                         )}
-                        <Badge className={`${categoryInfo?.color || 'bg-gray-500'} text-white`}>
-                          {categoryInfo?.label.replace(/^[^\s]+\s/, '') || post.category}
-                        </Badge>
-                        <span className={`text-sm ${currentTheme.muted}`}>•</span>
-                        <span className={`text-sm ${currentTheme.muted}`}>{post.createdAt}</span>
                       </div>
                       
                       <h3 className={`text-lg font-semibold ${currentTheme.text} mb-2 hover:text-purple-400 transition-colors`}>

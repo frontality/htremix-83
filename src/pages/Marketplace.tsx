@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Filter, Grid, List, SlidersHorizontal, Gift, DollarSign, User, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MarketplaceItem {
   id: string;
@@ -27,6 +27,7 @@ interface MarketplaceItem {
 const Marketplace = () => {
   const { currentTheme } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
@@ -69,6 +70,17 @@ const Marketplace = () => {
 
     loadItems();
   }, []);
+
+  const handleDeleteItem = (itemId: string) => {
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+    localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
+    
+    toast({
+      title: "Item Deleted! 🗑️",
+      description: "Your marketplace item has been removed successfully."
+    });
+  };
 
   // Filter and sort items
   const filteredItems = items.filter(item => {
@@ -192,9 +204,24 @@ const Marketplace = () => {
                 key={item.id} 
                 className={`${currentTheme.cardBg} border ${currentTheme.border} hover:border-purple-500/50 transition-all cursor-pointer shadow-lg ${
                   viewMode === "list" ? "p-4" : "overflow-hidden"
-                }`}
+                } relative group`}
                 onClick={() => handleItemClick(item.id)}
               >
+                {/* Delete button for own items */}
+                {user && user.id === item.sellerId && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteItem(item.id);
+                    }}
+                    className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  >
+                    🗑️
+                  </Button>
+                )}
+
                 {viewMode === "grid" ? (
                   <>
                     {/* Image */}

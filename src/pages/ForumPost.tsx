@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useFriends } from '@/contexts/FriendsContext';
 
 interface ForumPost {
   id: string;
@@ -52,6 +52,7 @@ const ForumPost = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
+  const { sendFriendRequest, areFriends, hasPendingRequest } = useFriends();
 
   const [post, setPost] = useState<ForumPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -84,6 +85,66 @@ const ForumPost = () => {
       setComments(postComments);
     }
   }, [postId]);
+
+  const handleDeleteComment = (commentId: string) => {
+    if (!user) return;
+    
+    const updatedComments = comments.filter(comment => comment.id !== commentId);
+    setComments(updatedComments);
+    
+    // Update localStorage
+    const savedComments = localStorage.getItem('forum_comments');
+    if (savedComments) {
+      const allComments = JSON.parse(savedComments);
+      const filteredComments = allComments.filter((comment: Comment) => comment.id !== commentId);
+      localStorage.setItem('forum_comments', JSON.stringify(filteredComments));
+    }
+    
+    // Update post reply count
+    if (post) {
+      const savedPosts = localStorage.getItem('forum_posts');
+      if (savedPosts) {
+        const posts = JSON.parse(savedPosts);
+        const updatedPosts = posts.map((p: ForumPost) => 
+          p.id === post.id ? { ...p, replies: Math.max(0, p.replies - 1) } : p
+        );
+        localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+        setPost({ ...post, replies: Math.max(0, post.replies - 1) });
+      }
+    }
+    
+    toast({
+      title: "Reply Deleted! 🗑️",
+      description: "Your reply has been removed successfully."
+    });
+  };
+
+  const handleDeletePost = () => {
+    if (!user || !post || user.id !== post.authorId) return;
+    
+    // Delete the post
+    const savedPosts = localStorage.getItem('forum_posts');
+    if (savedPosts) {
+      const posts = JSON.parse(savedPosts);
+      const updatedPosts = posts.filter((p: ForumPost) => p.id !== post.id);
+      localStorage.setItem('forum_posts', JSON.stringify(updatedPosts));
+    }
+    
+    // Delete all comments for this post
+    const savedComments = localStorage.getItem('forum_comments');
+    if (savedComments) {
+      const allComments = JSON.parse(savedComments);
+      const filteredComments = allComments.filter((comment: Comment) => comment.postId !== post.id);
+      localStorage.setItem('forum_comments', JSON.stringify(filteredComments));
+    }
+    
+    toast({
+      title: "Post Deleted! 🗑️",
+      description: "Your post has been removed successfully."
+    });
+    
+    navigate('/forum');
+  };
 
   const handleLike = () => {
     if (!user || !post) return;
@@ -214,6 +275,23 @@ const ForumPost = () => {
   const handleSendFriendRequest = (userId: string, username: string) => {
     if (!user) return;
     
+    if (areFriends(userId)) {
+      toast({
+        title: "Already Friends! 👥",
+        description: `You are already friends with ${username}`
+      });
+      return;
+    }
+    
+    if (hasPendingRequest(userId)) {
+      toast({
+        title: "Request Already Sent! ⏳",
+        description: `Friend request already sent to ${username}`
+      });
+      return;
+    }
+    
+    sendFriendRequest(userId, username);
     toast({
       title: "Friend Request Sent! 👋",
       description: `Friend request sent to ${username}`
@@ -293,6 +371,16 @@ const ForumPost = () => {
                     >
                       <UserPlus className="w-3 h-3 mr-1" />
                       Add Friend
+                    </Button>
+                  )}
+                  {user && user.id === post.authorId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDeletePost}
+                      className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    >
+                      🗑️ Delete
                     </Button>
                   )}
                 </div>
@@ -450,17 +538,29 @@ const ForumPost = () => {
                           <span className="font-medium">{comment.author}</span>
                           <span className="text-xs text-gray-400">{comment.createdAt}</span>
                         </div>
-                        {user && user.id !== comment.authorId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleSendFriendRequest(comment.authorId, comment.author)}
-                            className="text-xs mt-2 sm:mt-0"
-                          >
-                            <UserPlus className="w-3 h-3 mr-1" />
-                            Add Friend
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {user && user.id !== comment.authorId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleSendFriendRequest(comment.authorId, comment.author)}
+                              className="text-xs mt-2 sm:mt-0"
+                            >
+                              <UserPlus className="w-3 h-3 mr-1" />
+                              Add Friend
+                            </Button>
+                          )}
+                          {user && user.id === comment.authorId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 mt-2 sm:mt-0"
+                            >
+                              🗑️
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm leading-relaxed break-words mb-4">{comment.content}</p>
                       
