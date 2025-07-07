@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, DollarSign, Star, Share2, Heart, ShoppingCart } from "lucide-react";
+import { ArrowLeft, MessageCircle, DollarSign, Star, Share2, Heart, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,26 +13,19 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock product data - in real app this would come from your database
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    title: "Gaming Laptop RTX 4070",
-    description: "High-performance gaming laptop with RTX 4070 graphics card, perfect for gaming and content creation. Excellent condition, barely used.",
-    price: 1299.99,
-    category: "Electronics",
-    condition: "like-new",
-    images: ["/placeholder.svg", "/placeholder.svg"],
-    seller: {
-      id: "seller1",
-      username: "TechGuru2024",
-      avatar: "/placeholder.svg",
-      rating: 4.8,
-      totalSales: 127
-    },
-    createdAt: "2024-01-15"
-  }
-];
+interface MarketplaceItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  deliveryMethod: string;
+  seller: string;
+  sellerId: string;
+  images: string[];
+  createdAt: string;
+  views: number;
+}
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -40,17 +33,23 @@ const ProductDetail = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<MarketplaceItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [offerAmount, setOfferAmount] = useState("");
   const [message, setMessage] = useState("");
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showOfferDialog, setShowOfferDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
 
   useEffect(() => {
-    // In real app, fetch product by ID from database
-    const foundProduct = MOCK_PRODUCTS.find(p => p.id === id);
-    setProduct(foundProduct);
+    // Load product from localStorage marketplace items
+    const savedItems = localStorage.getItem('marketplace_items');
+    if (savedItems) {
+      const items = JSON.parse(savedItems);
+      const foundProduct = items.find((item: MarketplaceItem) => item.id === id);
+      setProduct(foundProduct || null);
+    }
   }, [id]);
 
   const handleSendMessage = () => {
@@ -63,7 +62,6 @@ const ProductDetail = () => {
       return;
     }
 
-    // In real app, send message to seller
     console.log("Sending message:", message);
     
     toast({
@@ -94,7 +92,6 @@ const ProductDetail = () => {
       return;
     }
 
-    // In real app, send offer to seller
     console.log("Making offer:", offerAmount);
     
     toast({
@@ -106,7 +103,7 @@ const ProductDetail = () => {
     setShowOfferDialog(false);
   };
 
-  const handleBuyNow = () => {
+  const handlePurchase = () => {
     if (!user) {
       toast({
         title: "Login Required",
@@ -116,13 +113,40 @@ const ProductDetail = () => {
       return;
     }
 
-    // In real app, redirect to payment
-    navigate("/payment");
+    if (!selectedPaymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simulate purchase process
+    console.log("Processing purchase with:", selectedPaymentMethod);
+    
+    toast({
+      title: "Purchase Initiated",
+      description: `Processing payment of $${product?.price.toFixed(2)} via ${selectedPaymentMethod}`,
+    });
+    
+    setShowPaymentDialog(false);
+    
+    // Redirect to processing page after a delay
+    setTimeout(() => {
+      navigate("/processing-payment");
+    }, 1000);
   };
+
+  const paymentMethods = [
+    { id: "card", name: "Credit/Debit Card", icon: CreditCard },
+    { id: "crypto", name: "Cryptocurrency", icon: Wallet },
+    { id: "paypal", name: "PayPal", icon: Banknote },
+  ];
 
   if (!product) {
     return (
-      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}>
+      <div className={`min-h-screen ${currentTheme.bg} flex items-center justify-center pt-20`}>
         <div className="text-center">
           <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Product Not Found</h2>
           <Button onClick={() => navigate("/marketplace")} className={`${currentTheme.primary} text-white`}>
@@ -134,8 +158,8 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg}`}>
-      <div className="container py-6">
+    <div className={`min-h-screen ${currentTheme.bg} pt-20`}>
+      <div className="container py-6 max-w-6xl mx-auto px-4">
         <Button
           onClick={() => navigate(-1)}
           variant="ghost"
@@ -149,25 +173,37 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className={`${currentTheme.cardBg} rounded-lg p-4 border ${currentTheme.border}`}>
-              <img
-                src={product.images[currentImageIndex]}
-                alt={product.title}
-                className="w-full h-96 object-cover rounded-lg"
-              />
+              <div className="aspect-video rounded-lg overflow-hidden bg-gray-800">
+                <img
+                  src={product.images[currentImageIndex] || "/placeholder.svg"}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
+              </div>
             </div>
             {product.images.length > 1 && (
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 overflow-x-auto">
                 {product.images.map((image: string, index: number) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                    className={`w-20 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0 ${
                       index === currentImageIndex 
                         ? `border-purple-500` 
                         : `border-gray-300`
                     }`}
                   >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                    <img 
+                      src={image} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
                   </button>
                 ))}
               </div>
@@ -185,11 +221,11 @@ const ProductDetail = () => {
                   {product.category}
                 </Badge>
                 <Badge variant="outline" className={`${currentTheme.border}`}>
-                  {product.condition}
+                  {product.deliveryMethod}
                 </Badge>
               </div>
               <p className={`text-4xl font-bold ${currentTheme.accent} mb-4`}>
-                ${product.price}
+                ${product.price.toFixed(2)}
               </p>
             </div>
 
@@ -198,22 +234,22 @@ const ProductDetail = () => {
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
                   <Avatar>
-                    <AvatarImage src={product.seller.avatar} />
-                    <AvatarFallback>{product.seller.username[0]}</AvatarFallback>
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback>{product.seller[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <h3 className={`font-semibold ${currentTheme.text}`}>
-                      {product.seller.username}
+                      {product.seller}
                     </h3>
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-500 fill-current" />
                         <span className={`text-sm ${currentTheme.text} ml-1`}>
-                          {product.seller.rating}
+                          4.8
                         </span>
                       </div>
                       <span className={`text-sm ${currentTheme.muted}`}>
-                        {product.seller.totalSales} sales
+                        {product.views} views
                       </span>
                     </div>
                   </div>
@@ -223,13 +259,54 @@ const ProductDetail = () => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button
-                onClick={handleBuyNow}
-                className={`w-full ${currentTheme.primary} text-white h-12 text-lg font-semibold`}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Buy Now
-              </Button>
+              <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    className={`w-full ${currentTheme.primary} text-white h-12 text-lg font-semibold`}
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Buy Now - ${product.price.toFixed(2)}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className={`${currentTheme.cardBg} ${currentTheme.text}`}>
+                  <DialogHeader>
+                    <DialogTitle>Choose Payment Method</DialogTitle>
+                    <DialogDescription className={currentTheme.muted}>
+                      Select how you'd like to pay for {product.title}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {paymentMethods.map((method) => (
+                      <Card 
+                        key={method.id}
+                        className={`cursor-pointer transition-colors ${
+                          selectedPaymentMethod === method.id 
+                            ? `border-purple-500 ${currentTheme.secondary}` 
+                            : `${currentTheme.cardBg} border-gray-300 hover:border-purple-300`
+                        }`}
+                        onClick={() => setSelectedPaymentMethod(method.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <method.icon className="h-6 w-6" />
+                            <span className="font-medium">{method.name}</span>
+                            {selectedPaymentMethod === method.id && (
+                              <div className="ml-auto w-4 h-4 bg-purple-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    <Button 
+                      onClick={handlePurchase} 
+                      className={`w-full ${currentTheme.primary} text-white`}
+                      disabled={!selectedPaymentMethod}
+                    >
+                      Complete Purchase
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               
               <div className="grid grid-cols-2 gap-3">
                 <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
@@ -272,7 +349,7 @@ const ProductDetail = () => {
                     <DialogHeader>
                       <DialogTitle>Message Seller</DialogTitle>
                       <DialogDescription className={currentTheme.muted}>
-                        Send a message to {product.seller.username}
+                        Send a message to {product.seller}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -297,7 +374,7 @@ const ProductDetail = () => {
                 <CardTitle className={currentTheme.text}>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`${currentTheme.text} leading-relaxed`}>
+                <p className={`${currentTheme.text} leading-relaxed whitespace-pre-wrap`}>
                   {product.description}
                 </p>
               </CardContent>

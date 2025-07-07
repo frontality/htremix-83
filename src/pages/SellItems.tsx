@@ -286,10 +286,10 @@ const SellItems = () => {
               </h2>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative group">
-                      <div className="aspect-square rounded-lg overflow-hidden border-2 border-purple-500/50">
+                      <div className="aspect-video rounded-lg overflow-hidden border-2 border-purple-500/50 bg-gray-800">
                         <img 
                           src={image} 
                           alt={`Upload ${index + 1}`}
@@ -310,7 +310,7 @@ const SellItems = () => {
                   ))}
                   
                   {formData.images.length < 5 && (
-                    <div className="aspect-square">
+                    <div className="aspect-video">
                       <ImageUpload 
                         onImageUpload={handleImageUpload}
                         className="w-full h-full"

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Filter, Grid, List, SlidersHorizontal, Gift, DollarSign, User, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +45,9 @@ const Marketplace = () => {
     { value: "streaming", label: t("Streaming Services") },
     { value: "digital-content", label: t("Digital Content") }
   ];
+
+  // Track viewed items per user session to prevent multiple views
+  const [viewedItems, setViewedItems] = useState<Set<string>>(new Set());
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -108,19 +110,20 @@ const Marketplace = () => {
   });
 
   const handleItemClick = (item: MarketplaceItem) => {
-    // Update view count
-    const updatedItems = items.map(existingItem =>
-      existingItem.id === item.id ? { ...existingItem, views: existingItem.views + 1 } : existingItem
-    );
-    setItems(updatedItems);
-    localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
+    // Only increment view count once per session per item
+    if (!viewedItems.has(item.id)) {
+      const updatedItems = items.map(existingItem =>
+        existingItem.id === item.id ? { ...existingItem, views: existingItem.views + 1 } : existingItem
+      );
+      setItems(updatedItems);
+      localStorage.setItem('marketplace_items', JSON.stringify(updatedItems));
+      
+      // Track that this item has been viewed in this session
+      setViewedItems(prev => new Set(prev).add(item.id));
+    }
     
-    // Navigate to product detail or show item details
-    console.log('Item clicked:', item);
-    toast({
-      title: `Viewing ${item.title}`,
-      description: `Price: $${item.price.toFixed(2)} - Seller: ${item.seller}`,
-    });
+    // Navigate to product detail page
+    navigate(`/product/${item.id}`);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -235,7 +238,7 @@ const Marketplace = () => {
                 {viewMode === "grid" ? (
                   <>
                     {/* Image */}
-                    <div className="aspect-square bg-gray-800 flex items-center justify-center overflow-hidden">
+                    <div className="aspect-video bg-gray-800 flex items-center justify-center overflow-hidden">
                       {item.images && item.images.length > 0 ? (
                         <img 
                           src={item.images[0]} 
@@ -287,7 +290,7 @@ const Marketplace = () => {
                   </>
                 ) : (
                   <div className="flex space-x-4">
-                    <div className="w-24 h-24 bg-gray-800 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className="w-24 h-16 bg-gray-800 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {item.images && item.images.length > 0 ? (
                         <img 
                           src={item.images[0]} 
