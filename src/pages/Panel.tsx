@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database } from "lucide-react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +21,8 @@ const Panel = () => {
   const [command, setCommand] = useState("");
   const [target, setTarget] = useState("");
   const [port, setPort] = useState("22");
+  const [connectionStatus, setConnectionStatus] = useState<"disconnected" | "connecting" | "connected" | "failed">("disconnected");
+  const [progress, setProgress] = useState(0);
 
   const handleStart = async () => {
     if (!target.trim()) {
@@ -32,24 +35,39 @@ const Panel = () => {
     }
 
     setIsRunning(true);
-    setOutput("Starting booting tool...\n");
+    setProgress(0);
+    setConnectionStatus("connecting");
+    setOutput("=== BOOTING TOOL STARTED ===\n");
+    setOutput(prev => prev + `Target: ${target}:${port}\n`);
+    setOutput(prev => prev + `Timestamp: ${new Date().toISOString()}\n\n`);
     
     const steps = [
-      "Initializing connection...",
-      `Connecting to ${target}:${port}...`,
-      "Checking target system...",
-      "Analyzing boot sequence...",
-      "Preparing boot environment...",
-      "Executing boot commands...",
-      "Boot process completed successfully!"
+      { text: "Initializing connection protocols...", delay: 800 },
+      { text: `Attempting connection to ${target}:${port}...`, delay: 1200 },
+      { text: "Performing security handshake...", delay: 1000 },
+      { text: "Checking target system architecture...", delay: 900 },
+      { text: "Analyzing boot sequence configuration...", delay: 1100 },
+      { text: "Preparing boot environment variables...", delay: 800 },
+      { text: "Executing primary boot commands...", delay: 1300 },
+      { text: "Verifying system integrity...", delay: 700 },
+      { text: "Finalizing boot process...", delay: 600 },
+      { text: "✓ Boot process completed successfully!", delay: 500 }
     ];
 
     for (let i = 0; i < steps.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOutput(prev => prev + steps[i] + "\n");
+      await new Promise(resolve => setTimeout(resolve, steps[i].delay));
+      setOutput(prev => prev + `[${new Date().toLocaleTimeString()}] ${steps[i].text}\n`);
+      setProgress(((i + 1) / steps.length) * 100);
+      
+      if (i === 1) {
+        setConnectionStatus("connected");
+      }
     }
 
     setIsRunning(false);
+    setConnectionStatus("connected");
+    setOutput(prev => prev + "\n=== PROCESS COMPLETED ===\n");
+    
     toast({
       title: "Success! 🎉",
       description: "Booting tool completed successfully",
@@ -58,7 +76,9 @@ const Panel = () => {
 
   const handleStop = () => {
     setIsRunning(false);
-    setOutput(prev => prev + "Process stopped by user\n");
+    setConnectionStatus("disconnected");
+    setProgress(0);
+    setOutput(prev => prev + `\n[${new Date().toLocaleTimeString()}] PROCESS STOPPED BY USER\n`);
     toast({
       title: "Stopped",
       description: "Booting tool has been stopped",
@@ -67,14 +87,17 @@ const Panel = () => {
 
   const handleClear = () => {
     setOutput("");
+    setProgress(0);
+    setConnectionStatus("disconnected");
   };
 
   const handleDownload = () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const blob = new Blob([output], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'booting-tool-output.txt';
+    a.download = `booting-tool-output-${timestamp}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -89,9 +112,49 @@ const Panel = () => {
   const handleExecuteCommand = () => {
     if (!command.trim()) return;
     
-    setOutput(prev => prev + `$ ${command}\n`);
-    setOutput(prev => prev + "Command executed successfully\n");
+    const timestamp = new Date().toLocaleTimeString();
+    setOutput(prev => prev + `\n[${timestamp}] $ ${command}\n`);
+    
+    // Simulate different command responses
+    const responses = {
+      'help': 'Available commands: status, ping, scan, reboot, shutdown, info',
+      'status': 'System Status: ONLINE | CPU: 45% | Memory: 67% | Uptime: 2d 4h 32m',
+      'ping': 'PING successful - Response time: 12ms',
+      'scan': 'Port scan completed - 3 open ports found: 22, 80, 443',
+      'info': `Target: ${target} | OS: Linux Ubuntu 20.04 | Kernel: 5.4.0-42`,
+      'reboot': 'System reboot initiated... Please wait.',
+      'shutdown': 'System shutdown sequence started...'
+    };
+    
+    const response = responses[command.toLowerCase() as keyof typeof responses] || `Command '${command}' executed successfully`;
+    setOutput(prev => prev + `[${timestamp}] ${response}\n`);
     setCommand("");
+  };
+
+  const getStatusIcon = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "connecting":
+        return <Wifi className="h-4 w-4 text-yellow-500 animate-pulse" />;
+      case "failed":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <WifiOff className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "Connected";
+      case "connecting":
+        return "Connecting...";
+      case "failed":
+        return "Failed";
+      default:
+        return "Disconnected";
+    }
   };
 
   return (
@@ -131,7 +194,15 @@ const Panel = () => {
               <div className="lg:col-span-1">
                 <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
                   <CardHeader>
-                    <CardTitle className={currentTheme.text}>Configuration</CardTitle>
+                    <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
+                      Configuration
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon()}
+                        <Badge variant={connectionStatus === "connected" ? "default" : "secondary"}>
+                          {getStatusText()}
+                        </Badge>
+                      </div>
+                    </CardTitle>
                     <CardDescription className={currentTheme.muted}>
                       Set up your target system
                     </CardDescription>
@@ -145,6 +216,7 @@ const Panel = () => {
                         onChange={(e) => setTarget(e.target.value)}
                         placeholder="192.168.1.100"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
+                        disabled={isRunning}
                       />
                     </div>
                     
@@ -156,8 +228,22 @@ const Panel = () => {
                         onChange={(e) => setPort(e.target.value)}
                         placeholder="22"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
+                        disabled={isRunning}
                       />
                     </div>
+
+                    {progress > 0 && (
+                      <div className="space-y-2">
+                        <Label className={currentTheme.text}>Progress</Label>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
+                      </div>
+                    )}
 
                     <div className="flex space-x-2">
                       <Button
@@ -186,6 +272,9 @@ const Panel = () => {
                 <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl mt-6`}>
                   <CardHeader>
                     <CardTitle className={currentTheme.text}>Quick Commands</CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Available: help, status, ping, scan, info, reboot, shutdown
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -200,6 +289,7 @@ const Panel = () => {
                     <Button
                       onClick={handleExecuteCommand}
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      disabled={!command.trim()}
                     >
                       Execute
                     </Button>
@@ -219,6 +309,7 @@ const Panel = () => {
                           variant="outline"
                           size="sm"
                           className={`${currentTheme.secondary} ${currentTheme.text}`}
+                          disabled={!output}
                         >
                           <Download className="h-4 w-4 mr-1" />
                           Download
