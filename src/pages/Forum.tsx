@@ -242,8 +242,10 @@ const Forum = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    console.log('Processing file upload:', file.name, file.type, file.size);
+
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
     
     if (type === 'image' && !validImageTypes.includes(file.type)) {
       toast({
@@ -257,7 +259,7 @@ const Forum = () => {
     if (type === 'video' && !validVideoTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please select a video file (MP4, WebM, OGG)",
+        description: "Please select a video file (MP4, WebM, OGG, MOV)",
         variant: "destructive",
       });
       return;
@@ -276,13 +278,29 @@ const Forum = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      setUploadedMedia(prev => [...prev, { type, url: result }]);
+      if (result) {
+        console.log(`Adding ${type} to uploaded media`);
+        setUploadedMedia(prev => [...prev, { type, url: result }]);
+        toast({
+          title: `${type === 'image' ? 'Image' : 'Video'} added! 📎`,
+          description: `Your ${type} has been added to the post`,
+        });
+      }
+    };
+    
+    reader.onerror = () => {
+      console.error('Error reading file');
       toast({
-        title: `${type === 'image' ? 'Image' : 'Video'} added! 📎`,
-        description: `Your ${type} has been added to the post`,
+        title: "Upload failed",
+        description: "Failed to read the file. Please try again.",
+        variant: "destructive",
       });
     };
+    
     reader.readAsDataURL(file);
+
+    // Reset the input value to allow uploading the same file again
+    event.target.value = '';
   };
 
   const removeMedia = (index: number) => {
@@ -503,7 +521,7 @@ const Forum = () => {
                 <div className="flex space-x-2 mb-4">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     onChange={(e) => handleMediaUpload(e, 'image')}
                     className="hidden"
                     id="image-upload"
@@ -517,7 +535,7 @@ const Forum = () => {
                   
                   <input
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
                     onChange={(e) => handleMediaUpload(e, 'video')}
                     className="hidden"
                     id="video-upload"
