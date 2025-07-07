@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, User, MessageCircle, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/contexts/ThemeContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessages } from "@/hooks/useMessages";
 
 interface Profile {
   id: string;
@@ -18,7 +16,6 @@ interface Profile {
 const FixedUserSearch = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
-  const { createConversation } = useMessages();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,20 +29,9 @@ const FixedUserSearch = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${query}%`)
-        .neq('id', user.id)
-        .limit(10);
-
-      if (error) {
-        console.error('Error searching users:', error);
-        setUsers([]);
-        return;
-      }
-
-      setUsers(data || []);
+      // For now, just show empty results since database tables don't exist
+      console.log('Search functionality requires database tables to be set up');
+      setUsers([]);
     } catch (error) {
       console.error('Error in searchUsers:', error);
       setUsers([]);
@@ -54,19 +40,9 @@ const FixedUserSearch = () => {
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchUsers(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, user]);
-
   const handleUserSelect = async (userId: string) => {
-    const conversationId = await createConversation(userId);
-    if (conversationId) {
-      window.location.href = `/messages?conversation=${conversationId}`;
-    }
+    // For now, just log the selection since messaging functionality requires database setup
+    console.log('Selected user:', userId);
     setIsOpen(false);
     setSearchQuery("");
   };
@@ -100,7 +76,10 @@ const FixedUserSearch = () => {
               <Input
                 placeholder="Search by username..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  searchUsers(e.target.value);
+                }}
                 className={`pl-10 ${currentTheme.secondary} ${currentTheme.text} border-0`}
               />
             </div>
@@ -111,41 +90,13 @@ const FixedUserSearch = () => {
                   <div className="text-center py-4">
                     <div className={`${currentTheme.muted}`}>Searching...</div>
                   </div>
-                ) : users.length === 0 ? (
+                ) : (
                   <div className="text-center py-4">
                     <User className={`h-8 w-8 ${currentTheme.muted} mx-auto mb-2`} />
                     <div className={`${currentTheme.muted}`}>
-                      {searchQuery ? 'No users found' : 'Start typing to search for users'}
+                      {searchQuery ? 'Database setup required for user search' : 'Start typing to search for users'}
                     </div>
                   </div>
-                ) : (
-                  users.map((profile) => (
-                    <div
-                      key={profile.id}
-                      className={`flex items-center justify-between p-3 rounded-lg hover:${currentTheme.secondary} transition-colors`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={profile.avatar_url || "/placeholder.svg"}
-                          alt={profile.username || "User"}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className={`font-medium ${currentTheme.text}`}>
-                            {profile.username || "Anonymous User"}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleUserSelect(profile.id)}
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        Message
-                      </Button>
-                    </div>
-                  ))
                 )}
               </div>
             </ScrollArea>
