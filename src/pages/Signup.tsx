@@ -117,17 +117,20 @@ const Signup = () => {
       return;
     }
 
+    // Final username check if still pending
     if (usernameAvailable === null && formData.username) {
-      // Force check username availability one more time
       await checkUsernameAvailability(formData.username);
-      if (usernameAvailable === false) {
-        toast({
-          title: "Username Error",
-          description: "Username is already taken",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Wait for the state to update and then check again
+      setTimeout(() => {
+        if (usernameAvailable === false) {
+          toast({
+            title: "Username Error",
+            description: "Username is already taken",
+            variant: "destructive",
+          });
+          return;
+        }
+      }, 100);
     }
     
     setLoading(true);
