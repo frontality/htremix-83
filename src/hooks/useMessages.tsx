@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -46,56 +46,43 @@ export const useMessages = () => {
     try {
       console.log('Fetching conversations for user:', user.id);
       
-      // First, get conversations
-      const { data: conversationsData, error: conversationsError } = await supabase
-        .from('conversations')
-        .select('*')
-        .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+      // Get conversations from localStorage
+      const savedConversations = localStorage.getItem('conversations');
+      const conversationsData = savedConversations ? JSON.parse(savedConversations) : [];
+      
+      // Filter conversations for current user
+      const userConversations = conversationsData.filter((conv: any) => 
+        conv.participant1_id === user.id || conv.participant2_id === user.id
+      );
 
-      if (conversationsError) {
-        console.error('Error fetching conversations:', conversationsError);
-        setConversations([]);
-        setLoading(false);
-        return;
-      }
-
-      if (!conversationsData || conversationsData.length === 0) {
+      if (userConversations.length === 0) {
         console.log('No conversations found');
         setConversations([]);
         setLoading(false);
         return;
       }
 
-      // Get all unique participant IDs
-      const participantIds = new Set<string>();
-      conversationsData.forEach(conv => {
-        participantIds.add(conv.participant1_id);
-        participantIds.add(conv.participant2_id);
+      // Get user data for participants
+      const allUsers = localStorage.getItem('registered_users');
+      const userList = allUsers ? JSON.parse(allUsers) : [];
+      
+      // Add participant data to conversations
+      const conversationsWithProfiles = userConversations.map((conv: any) => {
+        const participant1 = userList.find((u: any) => u.id === conv.participant1_id);
+        const participant2 = userList.find((u: any) => u.id === conv.participant2_id);
+        
+        return {
+          ...conv,
+          participant1: participant1 ? {
+            username: participant1.username || participant1.email.split('@')[0],
+            avatar_url: null
+          } : { username: 'Unknown User', avatar_url: null },
+          participant2: participant2 ? {
+            username: participant2.username || participant2.email.split('@')[0],
+            avatar_url: null
+          } : { username: 'Unknown User', avatar_url: null }
+        };
       });
-
-      // Fetch profiles for all participants
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', Array.from(participantIds));
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-      }
-
-      // Create a map of profiles for easy lookup
-      const profilesMap = new Map();
-      profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
-      });
-
-      // Combine conversations with profile data
-      const conversationsWithProfiles = conversationsData.map(conv => ({
-        ...conv,
-        participant1: profilesMap.get(conv.participant1_id) || { username: 'Unknown User', avatar_url: null },
-        participant2: profilesMap.get(conv.participant2_id) || { username: 'Unknown User', avatar_url: null }
-      }));
 
       console.log('Conversations with profiles:', conversationsWithProfiles);
       setConversations(conversationsWithProfiles);
@@ -111,49 +98,37 @@ export const useMessages = () => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
       
-      // First, get messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      // Get messages from localStorage
+      const savedMessages = localStorage.getItem('messages');
+      const messagesData = savedMessages ? JSON.parse(savedMessages) : [];
+      
+      // Filter messages for this conversation
+      const conversationMessages = messagesData.filter((msg: any) => 
+        msg.conversation_id === conversationId
+      );
 
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        setMessages([]);
-        return;
-      }
-
-      if (!messagesData || messagesData.length === 0) {
+      if (conversationMessages.length === 0) {
         console.log('No messages found');
         setMessages([]);
         return;
       }
 
-      // Get unique sender IDs
-      const senderIds = [...new Set(messagesData.map(msg => msg.sender_id))];
-
-      // Fetch profiles for all senders
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', senderIds);
-
-      if (profilesError) {
-        console.error('Error fetching sender profiles:', profilesError);
-      }
-
-      // Create a map of profiles for easy lookup
-      const profilesMap = new Map();
-      profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
+      // Get user data for senders
+      const allUsers = localStorage.getItem('registered_users');
+      const userList = allUsers ? JSON.parse(allUsers) : [];
+      
+      // Add sender data to messages
+      const messagesWithSenders = conversationMessages.map((msg: any) => {
+        const sender = userList.find((u: any) => u.id === msg.sender_id);
+        
+        return {
+          ...msg,
+          sender: sender ? {
+            username: sender.username || sender.email.split('@')[0],
+            avatar_url: null
+          } : { username: 'Unknown User', avatar_url: null }
+        };
       });
-
-      // Combine messages with sender profile data
-      const messagesWithSenders = messagesData.map(msg => ({
-        ...msg,
-        sender: profilesMap.get(msg.sender_id) || { username: 'Unknown User', avatar_url: null }
-      }));
 
       console.log('Messages with senders:', messagesWithSenders);
       setMessages(messagesWithSenders);
@@ -172,23 +147,22 @@ export const useMessages = () => {
     try {
       console.log('Sending message:', { conversationId, content, userId: user.id });
       
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content: content.trim()
-        });
-
-      if (error) {
-        console.error('Error sending message:', error);
-        toast({
-          title: "Error",
-          description: "Failed to send message. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
+      // Get existing messages
+      const savedMessages = localStorage.getItem('messages');
+      const messagesData = savedMessages ? JSON.parse(savedMessages) : [];
+      
+      // Create new message
+      const newMessage = {
+        id: Date.now().toString(),
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: content.trim(),
+        created_at: new Date().toISOString()
+      };
+      
+      // Add to messages
+      messagesData.push(newMessage);
+      localStorage.setItem('messages', JSON.stringify(messagesData));
 
       console.log('Message sent successfully');
       await fetchMessages(conversationId);
@@ -230,26 +204,23 @@ export const useMessages = () => {
         return existingConv.id;
       }
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert({
-          participant1_id: user.id,
-          participant2_id: participantId
-        })
-        .select()
-        .single();
+      // Get existing conversations
+      const savedConversations = localStorage.getItem('conversations');
+      const conversationsData = savedConversations ? JSON.parse(savedConversations) : [];
+      
+      // Create new conversation
+      const newConversation = {
+        id: Date.now().toString(),
+        participant1_id: user.id,
+        participant2_id: participantId,
+        created_at: new Date().toISOString()
+      };
+      
+      // Add to conversations
+      conversationsData.push(newConversation);
+      localStorage.setItem('conversations', JSON.stringify(conversationsData));
 
-      if (error) {
-        console.error('Error creating conversation:', error);
-        toast({
-          title: "Error",
-          description: "Failed to create conversation. Please try again.",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      console.log('New conversation created:', data);
+      console.log('New conversation created:', newConversation);
       await fetchConversations();
       
       toast({
@@ -257,7 +228,7 @@ export const useMessages = () => {
         description: "You can now start chatting",
       });
       
-      return data.id;
+      return newConversation.id;
     } catch (error) {
       console.error('Error in createConversation:', error);
       toast({
@@ -271,35 +242,6 @@ export const useMessages = () => {
 
   useEffect(() => {
     fetchConversations();
-    
-    // Set up realtime subscriptions
-    const messagesChannel = supabase
-      .channel('messages-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'messages'
-      }, () => {
-        // Refresh conversations when messages change
-        fetchConversations();
-      })
-      .subscribe();
-
-    const conversationsChannel = supabase
-      .channel('conversations-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'conversations'
-      }, () => {
-        fetchConversations();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(conversationsChannel);
-    };
   }, [user]);
 
   return {

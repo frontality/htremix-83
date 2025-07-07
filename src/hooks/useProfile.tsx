@@ -28,12 +28,15 @@ export const useProfile = () => {
     try {
       console.log('Loading profile for user:', user.id);
       
+      // Load saved avatar from localStorage
+      const savedAvatar = localStorage.getItem('current_avatar');
+      
       // Create profile from user data
       const userProfile: Profile = {
         id: user.id,
         username: user.username || null,
         bio: null,
-        avatar_url: null,
+        avatar_url: savedAvatar || null,
         wallet_address: null,
         email_notifications: true,
         two_factor_enabled: false
