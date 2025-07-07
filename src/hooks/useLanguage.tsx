@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { translations, TranslationKey } from '@/translations';
 
 interface Language {
   code: string;
@@ -26,10 +25,38 @@ const availableLanguages: Language[] = [
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
 ];
 
+// Simplified translation function that loads translations dynamically
+const getTranslations = async (languageCode: string) => {
+  try {
+    // Dynamic import to avoid bundle size issues
+    const translations = await import(`@/translations/${languageCode}.ts`);
+    return translations.default || translations[languageCode];
+  } catch (error) {
+    console.warn(`Failed to load translations for ${languageCode}, falling back to English`);
+    const fallback = await import('@/translations/en.ts');
+    return fallback.en;
+  }
+};
+
 export const useLanguage = () => {
   const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
     return localStorage.getItem('language') || 'en';
   });
+  const [translations, setTranslations] = useState<any>({});
+
+  useEffect(() => {
+    // Load translations for current language
+    const loadTranslations = async () => {
+      try {
+        const currentTranslations = await getTranslations(currentLanguage);
+        setTranslations(currentTranslations);
+      } catch (error) {
+        console.error('Error loading translations:', error);
+      }
+    };
+    
+    loadTranslations();
+  }, [currentLanguage]);
 
   const changeLanguage = (languageCode: string) => {
     console.log('Changing language to:', languageCode);
@@ -42,9 +69,8 @@ export const useLanguage = () => {
     }));
   };
 
-  const t = (key: TranslationKey): string => {
-    const translation = translations[currentLanguage as keyof typeof translations];
-    return translation?.[key] || translations.en[key] || key;
+  const t = (key: string): string => {
+    return translations[key] || key;
   };
 
   return {

@@ -11,14 +11,23 @@ interface LanguageSelectorProps {
 const LanguageSelector = ({ onClose }: LanguageSelectorProps) => {
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const { currentTheme } = useTheme();
+  const [isChanging, setIsChanging] = useState(false);
 
-  const handleLanguageSelect = (languageCode: string) => {
+  const handleLanguageSelect = async (languageCode: string) => {
     console.log('Language selected:', languageCode);
-    changeLanguage(languageCode);
+    setIsChanging(true);
     
-    setTimeout(() => {
-      onClose();
-    }, 300);
+    try {
+      changeLanguage(languageCode);
+      
+      setTimeout(() => {
+        setIsChanging(false);
+        onClose();
+      }, 300);
+    } catch (error) {
+      console.error('Error changing language:', error);
+      setIsChanging(false);
+    }
   };
 
   return (
@@ -34,11 +43,12 @@ const LanguageSelector = ({ onClose }: LanguageSelectorProps) => {
           <button
             key={language.code}
             onClick={() => handleLanguageSelect(language.code)}
+            disabled={isChanging}
             className={`w-full flex items-center justify-between p-2 rounded-md transition-all duration-200 text-sm ${
               currentLanguage === language.code 
                 ? `${currentTheme.primary} text-white shadow-md` 
                 : `hover:${currentTheme.secondary} ${currentTheme.text} hover:scale-102`
-            }`}
+            } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex items-center gap-2">
               <span className="text-base">{language.flag}</span>

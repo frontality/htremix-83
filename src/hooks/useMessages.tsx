@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,7 +37,17 @@ export const useMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchConversations = async () => {
+  const getUserList = useCallback(() => {
+    try {
+      const allUsers = localStorage.getItem('registered_users');
+      return allUsers ? JSON.parse(allUsers) : [];
+    } catch (error) {
+      console.error('Error parsing user list:', error);
+      return [];
+    }
+  }, []);
+
+  const fetchConversations = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -46,11 +56,9 @@ export const useMessages = () => {
     try {
       console.log('Fetching conversations for user:', user.id);
       
-      // Get conversations from localStorage
       const savedConversations = localStorage.getItem('conversations');
       const conversationsData = savedConversations ? JSON.parse(savedConversations) : [];
       
-      // Filter conversations for current user
       const userConversations = conversationsData.filter((conv: any) => 
         conv.participant1_id === user.id || conv.participant2_id === user.id
       );
@@ -62,11 +70,8 @@ export const useMessages = () => {
         return;
       }
 
-      // Get user data for participants
-      const allUsers = localStorage.getItem('registered_users');
-      const userList = allUsers ? JSON.parse(allUsers) : [];
+      const userList = getUserList();
       
-      // Add participant data to conversations
       const conversationsWithProfiles = userConversations.map((conv: any) => {
         const participant1 = userList.find((u: any) => u.id === conv.participant1_id);
         const participant2 = userList.find((u: any) => u.id === conv.participant2_id);
@@ -92,17 +97,15 @@ export const useMessages = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, getUserList]);
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       console.log('Fetching messages for conversation:', conversationId);
       
-      // Get messages from localStorage
       const savedMessages = localStorage.getItem('messages');
       const messagesData = savedMessages ? JSON.parse(savedMessages) : [];
       
-      // Filter messages for this conversation
       const conversationMessages = messagesData.filter((msg: any) => 
         msg.conversation_id === conversationId
       );
@@ -113,11 +116,8 @@ export const useMessages = () => {
         return;
       }
 
-      // Get user data for senders
-      const allUsers = localStorage.getItem('registered_users');
-      const userList = allUsers ? JSON.parse(allUsers) : [];
+      const userList = getUserList();
       
-      // Add sender data to messages
       const messagesWithSenders = conversationMessages.map((msg: any) => {
         const sender = userList.find((u: any) => u.id === msg.sender_id);
         
@@ -136,9 +136,9 @@ export const useMessages = () => {
       console.error('Error in fetchMessages:', error);
       setMessages([]);
     }
-  };
+  }, [getUserList]);
 
-  const sendMessage = async (conversationId: string, content: string) => {
+  const sendMessage = useCallback(async (conversationId: string, content: string) => {
     if (!user || !content.trim()) {
       console.log('No user or empty content');
       return false;
@@ -147,11 +147,9 @@ export const useMessages = () => {
     try {
       console.log('Sending message:', { conversationId, content, userId: user.id });
       
-      // Get existing messages
       const savedMessages = localStorage.getItem('messages');
       const messagesData = savedMessages ? JSON.parse(savedMessages) : [];
       
-      // Create new message
       const newMessage = {
         id: Date.now().toString(),
         conversation_id: conversationId,
@@ -160,7 +158,6 @@ export const useMessages = () => {
         created_at: new Date().toISOString()
       };
       
-      // Add to messages
       messagesData.push(newMessage);
       localStorage.setItem('messages', JSON.stringify(messagesData));
 
@@ -182,9 +179,9 @@ export const useMessages = () => {
       });
       return false;
     }
-  };
+  }, [user, fetchMessages, toast]);
 
-  const createConversation = async (participantId: string) => {
+  const createConversation = useCallback(async (participantId: string) => {
     if (!user) {
       console.log('No user for creating conversation');
       return null;
@@ -193,7 +190,6 @@ export const useMessages = () => {
     try {
       console.log('Creating conversation with participant:', participantId);
       
-      // Check if conversation already exists
       const existingConv = conversations.find(conv => 
         (conv.participant1_id === user.id && conv.participant2_id === participantId) ||
         (conv.participant1_id === participantId && conv.participant2_id === user.id)
@@ -204,11 +200,9 @@ export const useMessages = () => {
         return existingConv.id;
       }
 
-      // Get existing conversations
       const savedConversations = localStorage.getItem('conversations');
       const conversationsData = savedConversations ? JSON.parse(savedConversations) : [];
       
-      // Create new conversation
       const newConversation = {
         id: Date.now().toString(),
         participant1_id: user.id,
@@ -216,7 +210,6 @@ export const useMessages = () => {
         created_at: new Date().toISOString()
       };
       
-      // Add to conversations
       conversationsData.push(newConversation);
       localStorage.setItem('conversations', JSON.stringify(conversationsData));
 
@@ -238,11 +231,11 @@ export const useMessages = () => {
       });
       return null;
     }
-  };
+  }, [user, conversations, fetchConversations, toast]);
 
   useEffect(() => {
     fetchConversations();
-  }, [user]);
+  }, [fetchConversations]);
 
   return {
     conversations,

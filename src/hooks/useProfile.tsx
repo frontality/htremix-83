@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,7 +19,7 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -28,10 +28,8 @@ export const useProfile = () => {
     try {
       console.log('Loading profile for user:', user.id);
       
-      // Load saved avatar from localStorage
       const savedAvatar = localStorage.getItem('current_avatar');
       
-      // Create profile from user data
       const userProfile: Profile = {
         id: user.id,
         username: user.username || null,
@@ -54,9 +52,9 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!user || !profile) {
       console.log('No user or profile for update');
       return false;
@@ -65,7 +63,6 @@ export const useProfile = () => {
     try {
       console.log('Updating profile with:', updates);
       
-      // Update user through AuthContext if username is being changed
       if (updates.username !== undefined) {
         const { error } = await updateUserProfile({ username: updates.username });
         if (error) {
@@ -95,34 +92,29 @@ export const useProfile = () => {
       });
       return false;
     }
-  };
+  }, [user, profile, updateUserProfile, toast]);
 
-  // Get display name - prioritize username, show helpful message if missing
-  const getDisplayName = (profileData?: Profile) => {
+  const getDisplayName = useCallback((profileData?: Profile) => {
     const targetProfile = profileData || profile;
     
-    // If we have a username, use it
     if (targetProfile?.username) {
       return targetProfile.username;
     }
     
-    // If no username but we have a profile, they need to set one
     if (targetProfile) {
       return 'Set your username';
     }
     
-    // If no profile yet, show loading state
     return 'Loading...';
-  };
+  }, [profile]);
 
-  // Never return email for display - emails are private
-  const getDisplayEmail = () => {
+  const getDisplayEmail = useCallback(() => {
     return null;
-  };
+  }, []);
 
   useEffect(() => {
     fetchProfile();
-  }, [user]);
+  }, [fetchProfile]);
 
   return { 
     profile, 
