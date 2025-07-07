@@ -59,12 +59,12 @@ const Forum = () => {
 
   const categories = [
     { value: 'all', label: '🌐 All Categories', color: 'bg-gray-500' },
-    { value: 'general', label: '💬 General Discussion', color: 'bg-blue-500' },
-    { value: 'gaming', label: '🎮 Gaming', color: 'bg-green-500' },
-    { value: 'crypto', label: '💰 Cryptocurrency', color: 'bg-yellow-500' },
-    { value: 'tech', label: '⚡ Technology', color: 'bg-purple-500' },
-    { value: 'trading', label: '📈 Trading & Finance', color: 'bg-red-500' },
-    { value: 'help', label: '❓ Help & Support', color: 'bg-orange-500' }
+    { value: 'general', label: '💬 General', color: 'bg-blue-500' },
+    { value: 'help', label: '❓ Help', color: 'bg-orange-500' },
+    { value: 'sale', label: '🛒 Sale', color: 'bg-green-500' },
+    { value: 'money', label: '💰 Money', color: 'bg-yellow-500' },
+    { value: 'coding', label: '💻 Coding Sources', color: 'bg-purple-500' },
+    { value: 'trading', label: '📈 Trading', color: 'bg-red-500' }
   ];
 
   useEffect(() => {
