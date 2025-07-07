@@ -111,8 +111,8 @@ const Marketplace = () => {
   };
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg}`}>
-      <div className="container mx-auto px-4 py-8">
+    <div className={`min-h-screen ${currentTheme.bg} pt-20`}>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className={`text-4xl font-bold ${currentTheme.text} mb-4`}>
@@ -124,7 +124,7 @@ const Marketplace = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} p-6 mb-8`}>
+        <div className={`${currentTheme.cardBg} rounded-xl border ${currentTheme.border} p-6 mb-8 shadow-lg`}>
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${currentTheme.muted}`} />
@@ -136,7 +136,7 @@ const Marketplace = () => {
               />
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger className={`w-48 ${currentTheme.secondary} ${currentTheme.text} border-0`}>
                   <SelectValue />
@@ -186,11 +186,11 @@ const Marketplace = () => {
 
         {/* Items Grid/List */}
         {sortedItems.length > 0 ? (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
+          <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
             {sortedItems.map((item) => (
               <Card 
                 key={item.id} 
-                className={`${currentTheme.cardBg} border ${currentTheme.border} hover:border-purple-500/50 transition-all cursor-pointer ${
+                className={`${currentTheme.cardBg} border ${currentTheme.border} hover:border-purple-500/50 transition-all cursor-pointer shadow-lg ${
                   viewMode === "list" ? "p-4" : "overflow-hidden"
                 }`}
                 onClick={() => handleItemClick(item.id)}
@@ -338,7 +338,7 @@ const Marketplace = () => {
             return (
               <Card 
                 key={index} 
-                className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center hover:scale-105 transition-transform cursor-pointer`}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} p-4 text-center hover:scale-105 transition-transform cursor-pointer shadow-lg`}
                 onClick={() => setFilterCategory(category.value)}
               >
                 <Gift className={`h-8 w-8 mx-auto mb-3 ${currentTheme.accent}`} />

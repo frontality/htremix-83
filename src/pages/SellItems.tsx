@@ -163,8 +163,8 @@ const SellItems = () => {
   };
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg}`}>
-      <div className="container mx-auto px-4 py-8">
+    <div className={`min-h-screen ${currentTheme.bg} pt-20`}>
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className={`text-4xl font-bold ${currentTheme.text} mb-4`}>
@@ -178,7 +178,7 @@ const SellItems = () => {
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6`}>
+            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 shadow-lg`}>
               <h2 className={`text-2xl font-semibold ${currentTheme.text} mb-6 flex items-center`}>
                 <Info className="mr-3 h-6 w-6" />
                 {t("Basic Information")}
@@ -186,24 +186,24 @@ const SellItems = () => {
               
               <div className="space-y-6">
                 <div>
-                  <Label className={`${currentTheme.text} text-sm font-medium`}>
+                  <Label className={`${currentTheme.text} text-sm font-medium mb-2 block`}>
                     {t("Item Title")} *
                   </Label>
                   <Input
                     placeholder={t("e.g., $50 Steam Gift Card, Netflix Premium Account, etc.")}
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label className={`${currentTheme.text} text-sm font-medium`}>
+                  <Label className={`${currentTheme.text} text-sm font-medium mb-2 block`}>
                     {t("Category")} *
                   </Label>
                   <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                    <SelectTrigger className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                    <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
                       <SelectValue placeholder={t("Select a category")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -220,14 +220,14 @@ const SellItems = () => {
                 </div>
 
                 <div>
-                  <Label className={`${currentTheme.text} text-sm font-medium`}>
+                  <Label className={`${currentTheme.text} text-sm font-medium mb-2 block`}>
                     {t("Description")} *
                   </Label>
                   <Textarea
                     placeholder={t("Describe your digital item in detail. Include any important information about delivery, validity, region restrictions, etc.")}
                     value={formData.description}
                     onChange={(e) => handleInputChange("description", e.target.value)}
-                    className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0 min-h-32`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0 min-h-32`}
                     required
                   />
                 </div>
@@ -235,7 +235,7 @@ const SellItems = () => {
             </Card>
 
             {/* Pricing & Delivery */}
-            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6`}>
+            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 shadow-lg`}>
               <h2 className={`text-2xl font-semibold ${currentTheme.text} mb-6 flex items-center`}>
                 <DollarSign className="mr-3 h-6 w-6" />
                 {t("Pricing & Delivery")}
@@ -243,7 +243,7 @@ const SellItems = () => {
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label className={`${currentTheme.text} text-sm font-medium`}>
+                  <Label className={`${currentTheme.text} text-sm font-medium mb-2 block`}>
                     {t("Price (USD)")} *
                   </Label>
                   <Input
@@ -251,7 +251,7 @@ const SellItems = () => {
                     placeholder="0.00"
                     value={formData.price}
                     onChange={(e) => handleInputChange("price", e.target.value)}
-                    className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}
+                    className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
                     min="0"
                     step="0.01"
                     required
@@ -259,11 +259,11 @@ const SellItems = () => {
                 </div>
 
                 <div>
-                  <Label className={`${currentTheme.text} text-sm font-medium`}>
+                  <Label className={`${currentTheme.text} text-sm font-medium mb-2 block`}>
                     {t("Delivery Method")} *
                   </Label>
                   <Select value={formData.deliveryMethod} onValueChange={(value) => handleInputChange("deliveryMethod", value)}>
-                    <SelectTrigger className={`mt-2 ${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                    <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
                       <SelectValue placeholder={t("How will you deliver this item?")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -279,7 +279,7 @@ const SellItems = () => {
             </Card>
 
             {/* Images */}
-            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6`}>
+            <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 shadow-lg`}>
               <h2 className={`text-2xl font-semibold ${currentTheme.text} mb-6 flex items-center`}>
                 <Upload className="mr-3 h-6 w-6" />
                 {t("Images")}
@@ -325,7 +325,7 @@ const SellItems = () => {
             </Card>
 
             {/* Submit */}
-            <div className="text-center">
+            <div className="text-center py-8">
               <Button 
                 type="submit" 
                 className={`${currentTheme.primary} text-white px-12 py-4 text-lg font-semibold hover:scale-105 transition-transform shadow-lg`}
@@ -337,7 +337,7 @@ const SellItems = () => {
           </form>
 
           {/* Information Card */}
-          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mt-8`}>
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 mt-8 shadow-lg`}>
             <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>
               {t("Important Information")}
             </h3>
