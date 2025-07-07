@@ -43,12 +43,15 @@ const Signup = () => {
 
     setUsernameChecking(true);
     try {
+      console.log('Checking username availability for:', username);
+      
       // Check local storage for existing users
       const existingUsers = localStorage.getItem('registered_users');
       if (existingUsers) {
         const users = JSON.parse(existingUsers);
-        const usernameExists = users.some((u: any) => u.username === username.toLowerCase());
+        const usernameExists = users.some((u: any) => u.username && u.username.toLowerCase() === username.toLowerCase());
         setUsernameAvailable(!usernameExists);
+        console.log('Username availability result:', !usernameExists);
       } else {
         setUsernameAvailable(true);
       }
@@ -65,9 +68,14 @@ const Signup = () => {
     const sanitized = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
     setFormData(prev => ({ ...prev, username: sanitized }));
     
+    // Clear previous availability result
+    setUsernameAvailable(null);
+    
     // Debounce username check
     const timeoutId = setTimeout(() => {
-      checkUsernameAvailability(sanitized);
+      if (sanitized.length >= 3) {
+        checkUsernameAvailability(sanitized);
+      }
     }, 500);
 
     return () => clearTimeout(timeoutId);
@@ -76,19 +84,16 @@ const Signup = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Starting signup with data:', { 
+      username: formData.username, 
+      email: formData.email,
+      usernameAvailable 
+    });
+    
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password Error",
         description: "Passwords don't match",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!usernameAvailable) {
-      toast({
-        title: "Username Error",
-        description: "Please choose an available username",
         variant: "destructive",
       });
       return;
@@ -102,6 +107,28 @@ const Signup = () => {
       });
       return;
     }
+
+    if (usernameAvailable === false) {
+      toast({
+        title: "Username Error",
+        description: "Username is already taken",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (usernameAvailable === null && formData.username) {
+      // Force check username availability one more time
+      await checkUsernameAvailability(formData.username);
+      if (usernameAvailable === false) {
+        toast({
+          title: "Username Error",
+          description: "Username is already taken",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     
     setLoading(true);
     
@@ -109,6 +136,7 @@ const Signup = () => {
       const { error } = await signUp(formData.email, formData.password, formData.username);
       
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: "Signup Error",
           description: error,
@@ -258,7 +286,7 @@ const Signup = () => {
                 <Button 
                   type="submit" 
                   className={`w-full ${currentTheme.primary} text-white`}
-                  disabled={loading || !usernameAvailable || formData.password !== formData.confirmPassword}
+                  disabled={loading || usernameAvailable === false || formData.password !== formData.confirmPassword || formData.username.length < 3}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
                   {loading ? "Creating Account..." : "Create Account"}

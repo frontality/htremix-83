@@ -42,33 +42,52 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     if (user) {
+      console.log('Loading friends data for user:', user.id);
       loadFriendsData();
+    } else {
+      // Clear data when user logs out
+      setFriends([]);
+      setFriendRequests([]);
+      setSentRequests([]);
     }
   }, [user]);
 
   const loadFriendsData = () => {
     if (!user) return;
 
-    const savedFriends = localStorage.getItem(`friends_${user.id}`);
-    if (savedFriends) {
-      setFriends(JSON.parse(savedFriends));
-    }
+    try {
+      const savedFriends = localStorage.getItem(`friends_${user.id}`);
+      if (savedFriends) {
+        const friendsList = JSON.parse(savedFriends);
+        setFriends(friendsList);
+        console.log('Loaded friends:', friendsList);
+      }
 
-    const savedRequests = localStorage.getItem('friend_requests');
-    if (savedRequests) {
-      const allRequests = JSON.parse(savedRequests);
-      setFriendRequests(allRequests.filter((req: FriendRequest) => req.toUserId === user.id && req.status === 'pending'));
-      setSentRequests(allRequests.filter((req: FriendRequest) => req.fromUserId === user.id));
+      const savedRequests = localStorage.getItem('friend_requests');
+      if (savedRequests) {
+        const allRequests = JSON.parse(savedRequests);
+        const incomingRequests = allRequests.filter((req: FriendRequest) => req.toUserId === user.id && req.status === 'pending');
+        const outgoingRequests = allRequests.filter((req: FriendRequest) => req.fromUserId === user.id);
+        
+        setFriendRequests(incomingRequests);
+        setSentRequests(outgoingRequests);
+        console.log('Loaded friend requests:', incomingRequests);
+        console.log('Loaded sent requests:', outgoingRequests);
+      }
+    } catch (error) {
+      console.error('Error loading friends data:', error);
     }
   };
 
   const sendFriendRequest = (toUserId: string, toUsername: string) => {
     if (!user || toUserId === user.id) return;
 
+    console.log('Sending friend request from', user.username, 'to', toUsername);
+
     const request: FriendRequest = {
       id: Date.now().toString(),
       fromUserId: user.id,
-      fromUsername: user.email?.split('@')[0] || 'Anonymous',
+      fromUsername: user.username || user.email?.split('@')[0] || 'Anonymous',
       toUserId,
       toUsername,
       status: 'pending',
@@ -81,10 +100,13 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('friend_requests', JSON.stringify(allRequests));
 
     setSentRequests(prev => [...prev, request]);
+    console.log('Friend request sent:', request);
   };
 
   const acceptFriendRequest = (requestId: string) => {
     if (!user) return;
+
+    console.log('Accepting friend request:', requestId);
 
     const savedRequests = localStorage.getItem('friend_requests');
     if (!savedRequests) return;
@@ -116,16 +138,19 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const theirFriendsList = theirFriends ? JSON.parse(theirFriends) : [];
     const meAsFriend: Friend = {
       id: user.id,
-      username: user.email?.split('@')[0] || 'Anonymous',
+      username: user.username || user.email?.split('@')[0] || 'Anonymous',
       status: 'offline'
     };
     theirFriendsList.push(meAsFriend);
     localStorage.setItem(`friends_${request.fromUserId}`, JSON.stringify(theirFriendsList));
 
     setFriendRequests(prev => prev.filter(req => req.id !== requestId));
+    console.log('Friend request accepted, new friend added:', newFriend);
   };
 
   const declineFriendRequest = (requestId: string) => {
+    console.log('Declining friend request:', requestId);
+    
     const savedRequests = localStorage.getItem('friend_requests');
     if (!savedRequests) return;
 
@@ -140,6 +165,8 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeFriend = (friendId: string) => {
     if (!user) return;
+
+    console.log('Removing friend:', friendId);
 
     const updatedFriends = friends.filter(friend => friend.id !== friendId);
     setFriends(updatedFriends);
