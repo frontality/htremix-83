@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, DollarSign, Star, Share2, Heart, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
+import { ArrowLeft, MessageCircle, DollarSign, Share2, Heart, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,15 @@ const ProductDetail = () => {
       toast({
         title: "Login Required",
         description: "Please login to message sellers",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!message.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please enter a message to send",
         variant: "destructive",
       });
       return;
@@ -131,6 +140,7 @@ const ProductDetail = () => {
     });
     
     setShowPaymentDialog(false);
+    setSelectedPaymentMethod("");
     
     // Redirect to processing page after a delay
     setTimeout(() => {
@@ -229,7 +239,7 @@ const ProductDetail = () => {
               </p>
             </div>
 
-            {/* Seller Info */}
+            {/* Seller Info - Removed fake review */}
             <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -241,17 +251,9 @@ const ProductDetail = () => {
                     <h3 className={`font-semibold ${currentTheme.text}`}>
                       {product.seller}
                     </h3>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className={`text-sm ${currentTheme.text} ml-1`}>
-                          4.8
-                        </span>
-                      </div>
-                      <span className={`text-sm ${currentTheme.muted}`}>
-                        {product.views} views
-                      </span>
-                    </div>
+                    <span className={`text-sm ${currentTheme.muted}`}>
+                      {product.views} views
+                    </span>
                   </div>
                 </div>
               </CardContent>
