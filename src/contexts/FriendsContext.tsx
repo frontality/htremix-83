@@ -1,35 +1,26 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Friend {
   id: string;
   username: string;
-  avatar?: string;
-  status: 'online' | 'offline';
-}
-
-interface FriendRequest {
-  id: string;
-  fromUserId: string;
-  fromUsername: string;
-  fromAvatar?: string;
-  toUserId: string;
-  toUsername: string;
-  status: 'pending' | 'accepted' | 'declined';
-  createdAt: string;
+  email: string;
+  status: 'pending' | 'accepted' | 'blocked';
+  created_at: string;
 }
 
 interface FriendsContextType {
   friends: Friend[];
-  friendRequests: FriendRequest[];
-  sentRequests: FriendRequest[];
-  sendFriendRequest: (toUserId: string, toUsername: string) => void;
-  acceptFriendRequest: (requestId: string) => void;
-  declineFriendRequest: (requestId: string) => void;
-  removeFriend: (friendId: string) => void;
-  areFriends: (userId: string) => boolean;
-  hasPendingRequest: (userId: string) => boolean;
+  pendingRequests: Friend[];
+  sentRequests: Friend[];
+  sendFriendRequest: (userId: string) => Promise<boolean>;
+  acceptFriendRequest: (requestId: string) => Promise<boolean>;
+  rejectFriendRequest: (requestId: string) => Promise<boolean>;
+  blockUser: (userId: string) => Promise<boolean>;
+  unblockUser: (userId: string) => Promise<boolean>;
+  loading: boolean;
+  refreshFriends: () => Promise<void>;
 }
 
 const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
@@ -37,170 +28,226 @@ const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
 export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
+  const [sentRequests, setSentRequests] = useState<Friend[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const getUserList = () => {
+    try {
+      const allUsers = localStorage.getItem('registered_users');
+      return allUsers ? JSON.parse(allUsers) : [];
+    } catch (error) {
+      console.error('Error parsing user list:', error);
+      return [];
+    }
+  };
+
+  const getFriendsList = () => {
+    try {
+      const friendsData = localStorage.getItem('friends');
+      return friendsData ? JSON.parse(friendsData) : [];
+    } catch (error) {
+      console.error('Error parsing friends list:', error);
+      return [];
+    }
+  };
+
+  const saveFriendsList = (friendsData: any[]) => {
+    try {
+      localStorage.setItem('friends', JSON.stringify(friendsData));
+    } catch (error) {
+      console.error('Error saving friends list:', error);
+    }
+  };
+
+  const refreshFriends = async () => {
+    if (!user) {
+      setFriends([]);
+      setPendingRequests([]);
+      setSentRequests([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const friendsData = getFriendsList();
+      const userList = getUserList();
+
+      const userFriends = friendsData.filter((f: any) => 
+        (f.user1_id === user.id || f.user2_id === user.id) && f.status === 'accepted'
+      );
+
+      const userPendingRequests = friendsData.filter((f: any) => 
+        f.user2_id === user.id && f.status === 'pending'
+      );
+
+      const userSentRequests = friendsData.filter((f: any) => 
+        f.user1_id === user.id && f.status === 'pending'
+      );
+
+      const mapFriendData = (friendRequests: any[]) => {
+        return friendRequests.map((f: any) => {
+          const friendId = f.user1_id === user.id ? f.user2_id : f.user1_id;
+          const friendData = userList.find((u: any) => u.id === friendId);
+          
+          return {
+            id: friendId,
+            username: friendData?.username || friendData?.email?.split('@')[0] || 'Unknown User',
+            email: friendData?.email || '',
+            status: f.status,
+            created_at: f.created_at || new Date().toISOString()
+          };
+        });
+      };
+
+      setFriends(mapFriendData(userFriends));
+      setPendingRequests(mapFriendData(userPendingRequests));
+      setSentRequests(mapFriendData(userSentRequests));
+    } catch (error) {
+      console.error('Error refreshing friends:', error);
+      setFriends([]);
+      setPendingRequests([]);
+      setSentRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendFriendRequest = async (userId: string): Promise<boolean> => {
+    if (!user || userId === user.id) return false;
+
+    try {
+      const friendsData = getFriendsList();
+      
+      // Check if request already exists
+      const existingRequest = friendsData.find((f: any) => 
+        (f.user1_id === user.id && f.user2_id === userId) ||
+        (f.user1_id === userId && f.user2_id === user.id)
+      );
+
+      if (existingRequest) return false;
+
+      const newRequest = {
+        id: Date.now().toString(),
+        user1_id: user.id,
+        user2_id: userId,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      friendsData.push(newRequest);
+      saveFriendsList(friendsData);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      return false;
+    }
+  };
+
+  const acceptFriendRequest = async (requestId: string): Promise<boolean> => {
+    try {
+      const friendsData = getFriendsList();
+      const requestIndex = friendsData.findIndex((f: any) => 
+        f.user1_id === requestId && f.user2_id === user?.id && f.status === 'pending'
+      );
+
+      if (requestIndex === -1) return false;
+
+      friendsData[requestIndex].status = 'accepted';
+      saveFriendsList(friendsData);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      return false;
+    }
+  };
+
+  const rejectFriendRequest = async (requestId: string): Promise<boolean> => {
+    try {
+      const friendsData = getFriendsList();
+      const filteredData = friendsData.filter((f: any) => 
+        !(f.user1_id === requestId && f.user2_id === user?.id && f.status === 'pending')
+      );
+
+      saveFriendsList(filteredData);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      return false;
+    }
+  };
+
+  const blockUser = async (userId: string): Promise<boolean> => {
+    if (!user || userId === user.id) return false;
+
+    try {
+      const friendsData = getFriendsList();
+      
+      // Remove existing friendship/request
+      const filteredData = friendsData.filter((f: any) => 
+        !((f.user1_id === user.id && f.user2_id === userId) ||
+          (f.user1_id === userId && f.user2_id === user.id))
+      );
+
+      // Add block entry
+      const blockEntry = {
+        id: Date.now().toString(),
+        user1_id: user.id,
+        user2_id: userId,
+        status: 'blocked',
+        created_at: new Date().toISOString()
+      };
+
+      filteredData.push(blockEntry);
+      saveFriendsList(filteredData);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      return false;
+    }
+  };
+
+  const unblockUser = async (userId: string): Promise<boolean> => {
+    try {
+      const friendsData = getFriendsList();
+      const filteredData = friendsData.filter((f: any) => 
+        !(f.user1_id === user?.id && f.user2_id === userId && f.status === 'blocked')
+      );
+
+      saveFriendsList(filteredData);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (user) {
-      console.log('Loading friends data for user:', user.id);
-      loadFriendsData();
-    } else {
-      // Clear data when user logs out
-      setFriends([]);
-      setFriendRequests([]);
-      setSentRequests([]);
+      refreshFriends();
     }
   }, [user]);
 
-  const loadFriendsData = () => {
-    if (!user) return;
-
-    try {
-      const savedFriends = localStorage.getItem(`friends_${user.id}`);
-      if (savedFriends) {
-        const friendsList = JSON.parse(savedFriends);
-        setFriends(friendsList);
-        console.log('Loaded friends:', friendsList);
-      }
-
-      const savedRequests = localStorage.getItem('friend_requests');
-      if (savedRequests) {
-        const allRequests = JSON.parse(savedRequests);
-        const incomingRequests = allRequests.filter((req: FriendRequest) => req.toUserId === user.id && req.status === 'pending');
-        const outgoingRequests = allRequests.filter((req: FriendRequest) => req.fromUserId === user.id);
-        
-        setFriendRequests(incomingRequests);
-        setSentRequests(outgoingRequests);
-        console.log('Loaded friend requests:', incomingRequests);
-        console.log('Loaded sent requests:', outgoingRequests);
-      }
-    } catch (error) {
-      console.error('Error loading friends data:', error);
-    }
-  };
-
-  const sendFriendRequest = (toUserId: string, toUsername: string) => {
-    if (!user || toUserId === user.id) return;
-
-    console.log('Sending friend request from', user.username, 'to', toUsername);
-
-    const request: FriendRequest = {
-      id: Date.now().toString(),
-      fromUserId: user.id,
-      fromUsername: user.username || user.email?.split('@')[0] || 'Anonymous',
-      toUserId,
-      toUsername,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-
-    const savedRequests = localStorage.getItem('friend_requests');
-    const allRequests = savedRequests ? JSON.parse(savedRequests) : [];
-    allRequests.push(request);
-    localStorage.setItem('friend_requests', JSON.stringify(allRequests));
-
-    setSentRequests(prev => [...prev, request]);
-    console.log('Friend request sent:', request);
-  };
-
-  const acceptFriendRequest = (requestId: string) => {
-    if (!user) return;
-
-    console.log('Accepting friend request:', requestId);
-
-    const savedRequests = localStorage.getItem('friend_requests');
-    if (!savedRequests) return;
-
-    const allRequests = JSON.parse(savedRequests);
-    const request = allRequests.find((req: FriendRequest) => req.id === requestId);
-    if (!request) return;
-
-    // Update request status
-    const updatedRequests = allRequests.map((req: FriendRequest) =>
-      req.id === requestId ? { ...req, status: 'accepted' } : req
-    );
-    localStorage.setItem('friend_requests', JSON.stringify(updatedRequests));
-
-    // Add to both users' friend lists
-    const newFriend: Friend = {
-      id: request.fromUserId,
-      username: request.fromUsername,
-      avatar: request.fromAvatar,
-      status: 'offline'
-    };
-
-    const myFriends = [...friends, newFriend];
-    setFriends(myFriends);
-    localStorage.setItem(`friends_${user.id}`, JSON.stringify(myFriends));
-
-    // Add me to their friend list
-    const theirFriends = localStorage.getItem(`friends_${request.fromUserId}`);
-    const theirFriendsList = theirFriends ? JSON.parse(theirFriends) : [];
-    const meAsFriend: Friend = {
-      id: user.id,
-      username: user.username || user.email?.split('@')[0] || 'Anonymous',
-      status: 'offline'
-    };
-    theirFriendsList.push(meAsFriend);
-    localStorage.setItem(`friends_${request.fromUserId}`, JSON.stringify(theirFriendsList));
-
-    setFriendRequests(prev => prev.filter(req => req.id !== requestId));
-    console.log('Friend request accepted, new friend added:', newFriend);
-  };
-
-  const declineFriendRequest = (requestId: string) => {
-    console.log('Declining friend request:', requestId);
-    
-    const savedRequests = localStorage.getItem('friend_requests');
-    if (!savedRequests) return;
-
-    const allRequests = JSON.parse(savedRequests);
-    const updatedRequests = allRequests.map((req: FriendRequest) =>
-      req.id === requestId ? { ...req, status: 'declined' } : req
-    );
-    localStorage.setItem('friend_requests', JSON.stringify(updatedRequests));
-
-    setFriendRequests(prev => prev.filter(req => req.id !== requestId));
-  };
-
-  const removeFriend = (friendId: string) => {
-    if (!user) return;
-
-    console.log('Removing friend:', friendId);
-
-    const updatedFriends = friends.filter(friend => friend.id !== friendId);
-    setFriends(updatedFriends);
-    localStorage.setItem(`friends_${user.id}`, JSON.stringify(updatedFriends));
-
-    // Remove me from their friend list
-    const theirFriends = localStorage.getItem(`friends_${friendId}`);
-    if (theirFriends) {
-      const theirFriendsList = JSON.parse(theirFriends);
-      const updatedTheirFriends = theirFriendsList.filter((friend: Friend) => friend.id !== user.id);
-      localStorage.setItem(`friends_${friendId}`, JSON.stringify(updatedTheirFriends));
-    }
-  };
-
-  const areFriends = (userId: string) => {
-    return friends.some(friend => friend.id === userId);
-  };
-
-  const hasPendingRequest = (userId: string) => {
-    return sentRequests.some(req => req.toUserId === userId && req.status === 'pending');
+  const contextValue = {
+    friends,
+    pendingRequests,
+    sentRequests,
+    sendFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    blockUser,
+    unblockUser,
+    loading,
+    refreshFriends
   };
 
   return (
-    <FriendsContext.Provider value={{
-      friends,
-      friendRequests,
-      sentRequests,
-      sendFriendRequest,
-      acceptFriendRequest,
-      declineFriendRequest,
-      removeFriend,
-      areFriends,
-      hasPendingRequest
-    }}>
+    <FriendsContext.Provider value={contextValue}>
       {children}
     </FriendsContext.Provider>
   );
