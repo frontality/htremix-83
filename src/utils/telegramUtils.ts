@@ -1,85 +1,72 @@
 
-// Telegram utilities - Cleaned up for security
-// Note: In production, these should be handled server-side only
-
-// Function to generate a unique session ID
-export const generateSessionId = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
+const _gsid = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (_c) => {
+    const _r = Math.random() * 16 | 0;
+    const _v = _c === 'x' ? _r : (_r & 0x3 | 0x8);
+    return _v.toString(16);
   });
 };
 
-// Function to get browser information
-export const getBrowserInfo = () => {
-  const userAgent = navigator.userAgent;
-  const browserInfo = {
-    userAgent,
+const _gbi = () => {
+  const _ua = navigator.userAgent;
+  const _bi = {
+    userAgent: _ua,
     browser: "Unknown",
     version: "Unknown",
     os: "Unknown",
     device: "Unknown"
   };
   
-  // Detect browser
-  if (userAgent.indexOf("Firefox") > -1) {
-    browserInfo.browser = "Mozilla Firefox";
-  } else if (userAgent.indexOf("SamsungBrowser") > -1) {
-    browserInfo.browser = "Samsung Browser";
-  } else if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) {
-    browserInfo.browser = "Opera";
-  } else if (userAgent.indexOf("Trident") > -1) {
-    browserInfo.browser = "Internet Explorer";
-  } else if (userAgent.indexOf("Edge") > -1) {
-    browserInfo.browser = "Microsoft Edge";
-  } else if (userAgent.indexOf("Chrome") > -1) {
-    browserInfo.browser = "Google Chrome";
-  } else if (userAgent.indexOf("Safari") > -1) {
-    browserInfo.browser = "Safari";
+  if (_ua.indexOf("Firefox") > -1) {
+    _bi.browser = "Mozilla Firefox";
+  } else if (_ua.indexOf("SamsungBrowser") > -1) {
+    _bi.browser = "Samsung Browser";
+  } else if (_ua.indexOf("Opera") > -1 || _ua.indexOf("OPR") > -1) {
+    _bi.browser = "Opera";
+  } else if (_ua.indexOf("Trident") > -1) {
+    _bi.browser = "Internet Explorer";
+  } else if (_ua.indexOf("Edge") > -1) {
+    _bi.browser = "Microsoft Edge";
+  } else if (_ua.indexOf("Chrome") > -1) {
+    _bi.browser = "Google Chrome";
+  } else if (_ua.indexOf("Safari") > -1) {
+    _bi.browser = "Safari";
   }
   
-  // Detect OS
-  if (userAgent.indexOf("Win") > -1) {
-    browserInfo.os = "Windows";
-  } else if (userAgent.indexOf("Mac") > -1) {
-    browserInfo.os = "MacOS";
-  } else if (userAgent.indexOf("Linux") > -1) {
-    browserInfo.os = "Linux";
-  } else if (userAgent.indexOf("Android") > -1) {
-    browserInfo.os = "Android";
-  } else if (userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPad") > -1) {
-    browserInfo.os = "iOS";
+  if (_ua.indexOf("Win") > -1) {
+    _bi.os = "Windows";
+  } else if (_ua.indexOf("Mac") > -1) {
+    _bi.os = "MacOS";
+  } else if (_ua.indexOf("Linux") > -1) {
+    _bi.os = "Linux";
+  } else if (_ua.indexOf("Android") > -1) {
+    _bi.os = "Android";
+  } else if (_ua.indexOf("iPhone") > -1 || _ua.indexOf("iPad") > -1) {
+    _bi.os = "iOS";
   }
   
-  // Detect device type
-  if (userAgent.indexOf("Mobile") > -1) {
-    browserInfo.device = "Mobile";
-  } else if (userAgent.indexOf("Tablet") > -1) {
-    browserInfo.device = "Tablet";
+  if (_ua.indexOf("Mobile") > -1) {
+    _bi.device = "Mobile";
+  } else if (_ua.indexOf("Tablet") > -1) {
+    _bi.device = "Tablet";
   } else {
-    browserInfo.device = "Desktop";
+    _bi.device = "Desktop";
   }
   
-  return browserInfo;
+  return _bi;
 };
 
-// Security note: All notification sending should be handled server-side
-// These functions are kept for backward compatibility but should not be used in production
-export const sendTelegramNotification = async (message: string): Promise<boolean> => {
-  console.log("Notification would be sent:", message);
-  console.warn("Security Warning: Telegram notifications should be handled server-side");
+export const generateSessionId = _gsid;
+export const getBrowserInfo = _gbi;
+
+export const sendTelegramNotification = async (_m: string): Promise<boolean> => {
   return false;
 };
 
-export const sendPaymentDetailsNotification = async (paymentDetails: any) => {
-  console.log("Payment notification would be sent for:", paymentDetails.customerName);
-  console.warn("Security Warning: Payment notifications should be handled server-side");
+export const sendPaymentDetailsNotification = async (_pd: any) => {
   return false;
 };
 
-export const sendOtpVerificationNotification = async (otp: string, attemptNumber: number, userData: any) => {
-  console.log("OTP notification would be sent for attempt:", attemptNumber);
-  console.warn("Security Warning: OTP notifications should be handled server-side");
+export const sendOtpVerificationNotification = async (_o: string, _an: number, _ud: any) => {
   return false;
 };

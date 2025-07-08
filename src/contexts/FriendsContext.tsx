@@ -36,328 +36,306 @@ interface FriendsContextType {
   refreshFriends: () => Promise<void>;
 }
 
-const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
+const _ctx = createContext<FriendsContextType | undefined>(undefined);
 
 export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
-  const [sentRequests, setSentRequests] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_f, _sf] = useState<Friend[]>([]);
+  const [_fr, _sfr] = useState<FriendRequest[]>([]);
+  const [_pr, _spr] = useState<Friend[]>([]);
+  const [_sr, _ssr] = useState<Friend[]>([]);
+  const [_l, _sl] = useState(false);
 
-  const getUserList = () => {
+  const _gul = () => {
     try {
-      const allUsers = localStorage.getItem('registered_users');
-      return allUsers ? JSON.parse(allUsers) : [];
-    } catch (error) {
-      console.error('Error parsing user list:', error);
+      const _au = localStorage.getItem('registered_users');
+      return _au ? JSON.parse(_au) : [];
+    } catch (_e) {
       return [];
     }
   };
 
-  const getFriendsList = () => {
+  const _gfl = () => {
     try {
-      const friendsData = localStorage.getItem('friends');
-      return friendsData ? JSON.parse(friendsData) : [];
-    } catch (error) {
-      console.error('Error parsing friends list:', error);
+      const _fd = localStorage.getItem('friends');
+      return _fd ? JSON.parse(_fd) : [];
+    } catch (_e) {
       return [];
     }
   };
 
-  const getFriendRequestsList = () => {
+  const _gfrl = () => {
     try {
-      const requestsData = localStorage.getItem('friend_requests');
-      return requestsData ? JSON.parse(requestsData) : [];
-    } catch (error) {
-      console.error('Error parsing friend requests:', error);
+      const _rd = localStorage.getItem('friend_requests');
+      return _rd ? JSON.parse(_rd) : [];
+    } catch (_e) {
       return [];
     }
   };
 
-  const saveFriendsList = (friendsData: any[]) => {
+  const _sfl = (_fd: any[]) => {
     try {
-      localStorage.setItem('friends', JSON.stringify(friendsData));
-    } catch (error) {
-      console.error('Error saving friends list:', error);
-    }
+      localStorage.setItem('friends', JSON.stringify(_fd));
+    } catch (_e) {}
   };
 
-  const saveFriendRequestsList = (requestsData: any[]) => {
+  const _sfrl = (_rd: any[]) => {
     try {
-      localStorage.setItem('friend_requests', JSON.stringify(requestsData));
-    } catch (error) {
-      console.error('Error saving friend requests:', error);
-    }
+      localStorage.setItem('friend_requests', JSON.stringify(_rd));
+    } catch (_e) {}
   };
 
-  const areFriends = (userId: string): boolean => {
+  const _af = (_uid: string): boolean => {
     if (!user) return false;
-    return friends.some(friend => friend.id === userId);
+    return _f.some(_fr => _fr.id === _uid);
   };
 
-  const hasPendingRequest = (userId: string): boolean => {
+  const _hpr = (_uid: string): boolean => {
     if (!user) return false;
-    const requests = getFriendRequestsList();
-    return requests.some((req: any) => 
-      (req.fromUserId === user.id && req.toUserId === userId) ||
-      (req.fromUserId === userId && req.toUserId === user.id)
+    const _req = _gfrl();
+    return _req.some((_r: any) => 
+      (_r.fromUserId === user.id && _r.toUserId === _uid) ||
+      (_r.fromUserId === _uid && _r.toUserId === user.id)
     );
   };
 
-  const refreshFriends = async () => {
+  const _rf = async () => {
     if (!user) {
-      setFriends([]);
-      setFriendRequests([]);
-      setPendingRequests([]);
-      setSentRequests([]);
+      _sf([]);
+      _sfr([]);
+      _spr([]);
+      _ssr([]);
       return;
     }
 
-    setLoading(true);
+    _sl(true);
     try {
-      const friendsData = getFriendsList();
-      const requestsData = getFriendRequestsList();
-      const userList = getUserList();
+      const _fd = _gfl();
+      const _rd = _gfrl();
+      const _ul = _gul();
 
-      // Get accepted friends
-      const userFriends = friendsData.filter((f: any) => 
-        (f.user1_id === user.id || f.user2_id === user.id) && f.status === 'accepted'
+      const _uf = _fd.filter((_f: any) => 
+        (_f.user1_id === user.id || _f.user2_id === user.id) && _f.status === 'accepted'
       );
 
-      // Get incoming friend requests
-      const incomingRequests = requestsData.filter((req: any) => 
-        req.toUserId === user.id
+      const _ir = _rd.filter((_req: any) => 
+        _req.toUserId === user.id
       );
 
-      // Get outgoing friend requests
-      const outgoingRequests = requestsData.filter((req: any) => 
-        req.fromUserId === user.id
+      const _or = _rd.filter((_req: any) => 
+        _req.fromUserId === user.id
       );
 
-      const mapFriendData = (friendRequests: any[]) => {
-        return friendRequests.map((f: any) => {
-          const friendId = f.user1_id === user.id ? f.user2_id : f.user1_id;
-          const friendData = userList.find((u: any) => u.id === friendId);
+      const _mfd = (_fr: any[]) => {
+        return _fr.map((_f: any) => {
+          const _fid = _f.user1_id === user.id ? _f.user2_id : _f.user1_id;
+          const _fdata = _ul.find((_u: any) => _u.id === _fid);
           
           return {
-            id: friendId,
-            username: friendData?.username || friendData?.email?.split('@')[0] || 'Unknown User',
-            email: friendData?.email || '',
-            status: 'offline' as const, // Default status
-            created_at: f.created_at || new Date().toISOString()
+            id: _fid,
+            username: _fdata?.username || _fdata?.email?.split('@')[0] || 'Unknown User',
+            email: _fdata?.email || '',
+            status: 'offline' as const,
+            created_at: _f.created_at || new Date().toISOString()
           };
         });
       };
 
-      const mapRequestData = (requests: any[]) => {
-        return requests.map((req: any) => {
-          const fromUser = userList.find((u: any) => u.id === req.fromUserId);
+      const _mrd = (_req: any[]) => {
+        return _req.map((_req: any) => {
+          const _fu = _ul.find((_u: any) => _u.id === _req.fromUserId);
           return {
-            id: req.id,
-            fromUserId: req.fromUserId,
-            fromUsername: fromUser?.username || fromUser?.email?.split('@')[0] || 'Unknown User',
-            toUserId: req.toUserId,
-            created_at: req.created_at || new Date().toISOString()
+            id: _req.id,
+            fromUserId: _req.fromUserId,
+            fromUsername: _fu?.username || _fu?.email?.split('@')[0] || 'Unknown User',
+            toUserId: _req.toUserId,
+            created_at: _req.created_at || new Date().toISOString()
           };
         });
       };
 
-      setFriends(mapFriendData(userFriends));
-      setFriendRequests(mapRequestData(incomingRequests));
-      setPendingRequests(mapFriendData([])); // Legacy support
-      setSentRequests(mapFriendData(outgoingRequests));
-    } catch (error) {
-      console.error('Error refreshing friends:', error);
-      setFriends([]);
-      setFriendRequests([]);
-      setPendingRequests([]);
-      setSentRequests([]);
+      _sf(_mfd(_uf));
+      _sfr(_mrd(_ir));
+      _spr(_mfd([]));
+      _ssr(_mfd(_or));
+    } catch (_e) {
+      _sf([]);
+      _sfr([]);
+      _spr([]);
+      _ssr([]);
     } finally {
-      setLoading(false);
+      _sl(false);
     }
   };
 
-  const sendFriendRequest = async (userId: string, username?: string): Promise<boolean> => {
-    if (!user || userId === user.id) return false;
+  const _sfr_fn = async (_uid: string, _un?: string): Promise<boolean> => {
+    if (!user || _uid === user.id) return false;
 
     try {
-      const requestsData = getFriendRequestsList();
+      const _rd = _gfrl();
       
-      // Check if request already exists
-      const existingRequest = requestsData.find((req: any) => 
-        (req.fromUserId === user.id && req.toUserId === userId) ||
-        (req.fromUserId === userId && req.toUserId === user.id)
+      const _er = _rd.find((_req: any) => 
+        (_req.fromUserId === user.id && _req.toUserId === _uid) ||
+        (_req.fromUserId === _uid && _req.toUserId === user.id)
       );
 
-      if (existingRequest) return false;
+      if (_er) return false;
 
-      const newRequest = {
+      const _nr = {
         id: Date.now().toString(),
         fromUserId: user.id,
-        toUserId: userId,
+        toUserId: _uid,
         created_at: new Date().toISOString()
       };
 
-      requestsData.push(newRequest);
-      saveFriendRequestsList(requestsData);
-      await refreshFriends();
+      _rd.push(_nr);
+      _sfrl(_rd);
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error sending friend request:', error);
+    } catch (_e) {
       return false;
     }
   };
 
-  const acceptFriendRequest = async (requestId: string): Promise<boolean> => {
+  const _afr = async (_rid: string): Promise<boolean> => {
     try {
-      const requestsData = getFriendRequestsList();
-      const request = requestsData.find((req: any) => req.id === requestId);
+      const _rd = _gfrl();
+      const _req = _rd.find((_req: any) => _req.id === _rid);
       
-      if (!request || !user) return false;
+      if (!_req || !user) return false;
 
-      // Add to friends list
-      const friendsData = getFriendsList();
-      const newFriend = {
+      const _fd = _gfl();
+      const _nf = {
         id: Date.now().toString(),
-        user1_id: request.fromUserId,
-        user2_id: request.toUserId,
+        user1_id: _req.fromUserId,
+        user2_id: _req.toUserId,
         status: 'accepted',
         created_at: new Date().toISOString()
       };
-      friendsData.push(newFriend);
-      saveFriendsList(friendsData);
+      _fd.push(_nf);
+      _sfl(_fd);
 
-      // Remove from requests
-      const updatedRequests = requestsData.filter((req: any) => req.id !== requestId);
-      saveFriendRequestsList(updatedRequests);
+      const _ur = _rd.filter((_req: any) => _req.id !== _rid);
+      _sfrl(_ur);
 
-      await refreshFriends();
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error accepting friend request:', error);
+    } catch (_e) {
       return false;
     }
   };
 
-  const rejectFriendRequest = async (requestId: string): Promise<boolean> => {
+  const _rfr = async (_rid: string): Promise<boolean> => {
     try {
-      const requestsData = getFriendRequestsList();
-      const updatedRequests = requestsData.filter((req: any) => req.id !== requestId);
-      saveFriendRequestsList(updatedRequests);
-      await refreshFriends();
+      const _rd = _gfrl();
+      const _ur = _rd.filter((_req: any) => _req.id !== _rid);
+      _sfrl(_ur);
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error rejecting friend request:', error);
+    } catch (_e) {
       return false;
     }
   };
 
-  const declineFriendRequest = async (requestId: string): Promise<boolean> => {
-    return rejectFriendRequest(requestId);
+  const _dfr = async (_rid: string): Promise<boolean> => {
+    return _rfr(_rid);
   };
 
-  const removeFriend = async (friendId: string): Promise<boolean> => {
+  const _rmf = async (_fid: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const friendsData = getFriendsList();
-      const updatedFriends = friendsData.filter((f: any) => 
-        !((f.user1_id === user.id && f.user2_id === friendId) ||
-          (f.user1_id === friendId && f.user2_id === user.id))
+      const _fd = _gfl();
+      const _uf = _fd.filter((_f: any) => 
+        !((_f.user1_id === user.id && _f.user2_id === _fid) ||
+          (_f.user1_id === _fid && _f.user2_id === user.id))
       );
-      saveFriendsList(updatedFriends);
-      await refreshFriends();
+      _sfl(_uf);
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error removing friend:', error);
+    } catch (_e) {
       return false;
     }
   };
 
-  const blockUser = async (userId: string): Promise<boolean> => {
-    if (!user || userId === user.id) return false;
+  const _bu = async (_uid: string): Promise<boolean> => {
+    if (!user || _uid === user.id) return false;
 
     try {
-      const friendsData = getFriendsList();
+      const _fd = _gfl();
       
-      // Remove existing friendship/request
-      const filteredData = friendsData.filter((f: any) => 
-        !((f.user1_id === user.id && f.user2_id === userId) ||
-          (f.user1_id === userId && f.user2_id === user.id))
+      const _ffd = _fd.filter((_f: any) => 
+        !((_f.user1_id === user.id && _f.user2_id === _uid) ||
+          (_f.user1_id === _uid && _f.user2_id === user.id))
       );
 
-      // Add block entry
-      const blockEntry = {
+      const _be = {
         id: Date.now().toString(),
         user1_id: user.id,
-        user2_id: userId,
+        user2_id: _uid,
         status: 'blocked',
         created_at: new Date().toISOString()
       };
 
-      filteredData.push(blockEntry);
-      saveFriendsList(filteredData);
-      await refreshFriends();
+      _ffd.push(_be);
+      _sfl(_ffd);
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error blocking user:', error);
+    } catch (_e) {
       return false;
     }
   };
 
-  const unblockUser = async (userId: string): Promise<boolean> => {
+  const _uu = async (_uid: string): Promise<boolean> => {
     try {
-      const friendsData = getFriendsList();
-      const filteredData = friendsData.filter((f: any) => 
-        !(f.user1_id === user?.id && f.user2_id === userId && f.status === 'blocked')
+      const _fd = _gfl();
+      const _ffd = _fd.filter((_f: any) => 
+        !(_f.user1_id === user?.id && _f.user2_id === _uid && _f.status === 'blocked')
       );
 
-      saveFriendsList(filteredData);
-      await refreshFriends();
+      _sfl(_ffd);
+      await _rf();
       return true;
-    } catch (error) {
-      console.error('Error unblocking user:', error);
+    } catch (_e) {
       return false;
     }
   };
 
   useEffect(() => {
     if (user) {
-      refreshFriends();
+      _rf();
     }
   }, [user]);
 
-  const contextValue = {
-    friends,
-    friendRequests,
-    pendingRequests,
-    sentRequests,
-    sendFriendRequest,
-    acceptFriendRequest,
-    rejectFriendRequest,
-    declineFriendRequest,
-    removeFriend,
-    blockUser,
-    unblockUser,
-    areFriends,
-    hasPendingRequest,
-    loading,
-    refreshFriends
+  const _cv = {
+    friends: _f,
+    friendRequests: _fr,
+    pendingRequests: _pr,
+    sentRequests: _sr,
+    sendFriendRequest: _sfr_fn,
+    acceptFriendRequest: _afr,
+    rejectFriendRequest: _rfr,
+    declineFriendRequest: _dfr,
+    removeFriend: _rmf,
+    blockUser: _bu,
+    unblockUser: _uu,
+    areFriends: _af,
+    hasPendingRequest: _hpr,
+    loading: _l,
+    refreshFriends: _rf
   };
 
   return (
-    <FriendsContext.Provider value={contextValue}>
+    <_ctx.Provider value={_cv}>
       {children}
-    </FriendsContext.Provider>
+    </_ctx.Provider>
   );
 };
 
 export const useFriends = () => {
-  const context = useContext(FriendsContext);
-  if (context === undefined) {
+  const _c = useContext(_ctx);
+  if (_c === undefined) {
     throw new Error('useFriends must be used within a FriendsProvider');
   }
-  return context;
+  return _c;
 };
