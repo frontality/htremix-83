@@ -19,7 +19,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Input sanitization function
 const sanitizeInput = (input: string): string => {
   return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
               .replace(/javascript:/gi, '')
@@ -27,18 +26,15 @@ const sanitizeInput = (input: string): string => {
               .trim();
 };
 
-// Email validation
 const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-// Password validation
 const isValidPassword = (password: string): boolean => {
   return password.length >= 6 && password.length <= 128;
 };
 
-// Username validation
 const isValidUsername = (username: string): boolean => {
   const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
   return usernameRegex.test(username);
@@ -53,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const savedUser = localStorage.getItem('current_user');
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        // Validate the saved user data
         if (parsedUser && parsedUser.id && parsedUser.email && isValidEmail(parsedUser.email)) {
           setUser(parsedUser);
           console.log('Restored user from localStorage:', parsedUser.email);
@@ -70,7 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, username?: string): Promise<{ error: any }> => {
     try {
-      // Sanitize and validate inputs
       const sanitizedEmail = sanitizeInput(email.toLowerCase());
       const sanitizedUsername = username ? sanitizeInput(username.toLowerCase()) : sanitizedEmail.split('@')[0];
 
@@ -88,23 +82,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('Starting signup process for:', sanitizedEmail);
       
-      // Get existing users
       const existingUsers = localStorage.getItem('registered_users');
       const users = existingUsers ? JSON.parse(existingUsers) : [];
       
-      // Check if user already exists (case-insensitive email check)
       const userExists = users.some((u: any) => u.email.toLowerCase() === sanitizedEmail);
       if (userExists) {
         return { error: 'User already exists with this email' };
       }
 
-      // Check if username already exists (case-insensitive username check)
       const usernameExists = users.some((u: any) => u.username && u.username.toLowerCase() === sanitizedUsername);
       if (usernameExists) {
         return { error: 'Username already taken' };
       }
 
-      // Create new user
       const newUser: User = {
         id: Date.now().toString(),
         email: sanitizedEmail,
@@ -112,12 +102,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: new Date().toISOString()
       };
 
-      // Save user to registered users (with hashed password simulation)
-      const userWithPassword = { ...newUser, password: btoa(password) }; // Simple encoding for demo
+      const userWithPassword = { ...newUser, password: btoa(password) };
       users.push(userWithPassword);
       localStorage.setItem('registered_users', JSON.stringify(users));
 
-      // Set as current user (without password)
       setUser(newUser);
       localStorage.setItem('current_user', JSON.stringify(newUser));
 
@@ -131,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string): Promise<{ error: any }> => {
     try {
-      // Sanitize and validate inputs
       const sanitizedEmail = sanitizeInput(email.toLowerCase());
 
       if (!isValidEmail(sanitizedEmail)) {
@@ -144,7 +131,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('Attempting login for:', sanitizedEmail);
       
-      // Get registered users
       const existingUsers = localStorage.getItem('registered_users');
       if (!existingUsers) {
         return { error: 'No account found with this email' };
@@ -152,7 +138,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const users = JSON.parse(existingUsers);
       
-      // Find user with matching email and password (case-insensitive email)
       const foundUser = users.find((u: any) => 
         u.email.toLowerCase() === sanitizedEmail && u.password === btoa(password)
       );
@@ -161,7 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Invalid email or password' };
       }
 
-      // Set as current user (without password in the state)
       const userWithoutPassword: User = {
         id: foundUser.id,
         email: foundUser.email,
@@ -186,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'No user logged in' };
       }
 
-      // Sanitize and validate updates
       const sanitizedUpdates: Partial<User> = {};
       
       if (updates.email) {
@@ -207,7 +190,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('Updating user profile');
 
-      // Get existing users
       const existingUsers = localStorage.getItem('registered_users');
       if (!existingUsers) {
         return { error: 'No users found' };
@@ -215,7 +197,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const users = JSON.parse(existingUsers);
       
-      // Check if email/username is being updated and already exists
       if (sanitizedUpdates.email && sanitizedUpdates.email !== user.email) {
         const emailExists = users.some((u: any) => u.email.toLowerCase() === sanitizedUpdates.email && u.id !== user.id);
         if (emailExists) {
@@ -230,17 +211,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // Find and update the user
       const userIndex = users.findIndex((u: any) => u.id === user.id);
       if (userIndex === -1) {
         return { error: 'User not found' };
       }
 
-      // Update user in registered users
       users[userIndex] = { ...users[userIndex], ...sanitizedUpdates };
       localStorage.setItem('registered_users', JSON.stringify(users));
 
-      // Update current user
       const updatedUser = { ...user, ...sanitizedUpdates };
       setUser(updatedUser);
       localStorage.setItem('current_user', JSON.stringify(updatedUser));

@@ -18,7 +18,6 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
 
-  // Input sanitization function
   const sanitizeInput = (input: string): string => {
     return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
                 .replace(/javascript:/gi, '')
@@ -26,13 +25,11 @@ const Messages = () => {
                 .trim();
   };
 
-  // Handle user parameter from URL
   useEffect(() => {
     const userId = searchParams.get('user');
     const conversationId = searchParams.get('conversation');
     
     if (userId && user) {
-      // Prevent messaging yourself
       if (userId === user.id) {
         console.log('Cannot message yourself');
         return;
@@ -67,7 +64,6 @@ const Messages = () => {
   const handleSendImage = async (imageData: string) => {
     if (!selectedChat || !imageData) return;
     
-    // Validate image data format
     if (!imageData.startsWith('data:image/')) return;
     
     const success = await sendMessage(selectedChat, `[IMAGE:${imageData}]`);
@@ -79,7 +75,6 @@ const Messages = () => {
   const handleSendVideo = async (videoData: string) => {
     if (!selectedChat || !videoData) return;
     
-    // Validate video data format
     if (!videoData.startsWith('data:video/')) return;
     
     const success = await sendMessage(selectedChat, `[VIDEO:${videoData}]`);
@@ -91,7 +86,6 @@ const Messages = () => {
   const handleSelectUser = async (userId: string) => {
     if (!userId || !user) return;
     
-    // Prevent messaging yourself
     if (userId === user.id) {
       console.log('Cannot message yourself');
       return;
@@ -142,7 +136,6 @@ const Messages = () => {
   return (
     <>
       <div className={`h-screen pt-12 ${currentTheme.bg} flex overflow-hidden`}>
-        {/* Messages List - Fixed width sidebar */}
         <div className={`${currentTheme.cardBg} border-r ${currentTheme.border} flex-shrink-0 w-80 shadow-xl h-full`}>
           <MessagesList
             conversations={conversations}
@@ -152,7 +145,6 @@ const Messages = () => {
           />
         </div>
 
-        {/* Chat Window - Takes remaining space */}
         <div className="flex-1 min-w-0 h-full flex flex-col">
           <ChatWindow
             selectedChatData={selectedChatData}
@@ -168,7 +160,6 @@ const Messages = () => {
         </div>
       </div>
 
-      {/* Profile Viewer Modal */}
       {viewingProfile && (
         <ProfileViewer
           userId={viewingProfile}
