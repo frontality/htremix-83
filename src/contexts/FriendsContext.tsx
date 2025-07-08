@@ -6,19 +6,32 @@ interface Friend {
   id: string;
   username: string;
   email: string;
-  status: 'pending' | 'accepted' | 'blocked';
+  status: 'online' | 'offline';
+  created_at: string;
+}
+
+interface FriendRequest {
+  id: string;
+  fromUserId: string;
+  fromUsername: string;
+  toUserId: string;
   created_at: string;
 }
 
 interface FriendsContextType {
   friends: Friend[];
+  friendRequests: FriendRequest[];
   pendingRequests: Friend[];
   sentRequests: Friend[];
-  sendFriendRequest: (userId: string) => Promise<boolean>;
+  sendFriendRequest: (userId: string, username?: string) => Promise<boolean>;
   acceptFriendRequest: (requestId: string) => Promise<boolean>;
   rejectFriendRequest: (requestId: string) => Promise<boolean>;
+  declineFriendRequest: (requestId: string) => Promise<boolean>;
+  removeFriend: (friendId: string) => Promise<boolean>;
   blockUser: (userId: string) => Promise<boolean>;
   unblockUser: (userId: string) => Promise<boolean>;
+  areFriends: (userId: string) => boolean;
+  hasPendingRequest: (userId: string) => boolean;
   loading: boolean;
   refreshFriends: () => Promise<void>;
 }
@@ -28,6 +41,7 @@ const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
 export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [sentRequests, setSentRequests] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +66,16 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const getFriendRequestsList = () => {
+    try {
+      const requestsData = localStorage.getItem('friend_requests');
+      return requestsData ? JSON.parse(requestsData) : [];
+    } catch (error) {
+      console.error('Error parsing friend requests:', error);
+      return [];
+    }
+  };
+
   const saveFriendsList = (friendsData: any[]) => {
     try {
       localStorage.setItem('friends', JSON.stringify(friendsData));
@@ -60,9 +84,32 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const saveFriendRequestsList = (requestsData: any[]) => {
+    try {
+      localStorage.setItem('friend_requests', JSON.stringify(requestsData));
+    } catch (error) {
+      console.error('Error saving friend requests:', error);
+    }
+  };
+
+  const areFriends = (userId: string): boolean => {
+    if (!user) return false;
+    return friends.some(friend => friend.id === userId);
+  };
+
+  const hasPendingRequest = (userId: string): boolean => {
+    if (!user) return false;
+    const requests = getFriendRequestsList();
+    return requests.some((req: any) => 
+      (req.fromUserId === user.id && req.toUserId === userId) ||
+      (req.fromUserId === userId && req.toUserId === user.id)
+    );
+  };
+
   const refreshFriends = async () => {
     if (!user) {
       setFriends([]);
+      setFriendRequests([]);
       setPendingRequests([]);
       setSentRequests([]);
       return;
@@ -71,18 +118,22 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     try {
       const friendsData = getFriendsList();
+      const requestsData = getFriendRequestsList();
       const userList = getUserList();
 
+      // Get accepted friends
       const userFriends = friendsData.filter((f: any) => 
         (f.user1_id === user.id || f.user2_id === user.id) && f.status === 'accepted'
       );
 
-      const userPendingRequests = friendsData.filter((f: any) => 
-        f.user2_id === user.id && f.status === 'pending'
+      // Get incoming friend requests
+      const incomingRequests = requestsData.filter((req: any) => 
+        req.toUserId === user.id
       );
 
-      const userSentRequests = friendsData.filter((f: any) => 
-        f.user1_id === user.id && f.status === 'pending'
+      // Get outgoing friend requests
+      const outgoingRequests = requestsData.filter((req: any) => 
+        req.fromUserId === user.id
       );
 
       const mapFriendData = (friendRequests: any[]) => {
@@ -94,18 +145,33 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
             id: friendId,
             username: friendData?.username || friendData?.email?.split('@')[0] || 'Unknown User',
             email: friendData?.email || '',
-            status: f.status,
+            status: 'offline' as const, // Default status
             created_at: f.created_at || new Date().toISOString()
           };
         });
       };
 
+      const mapRequestData = (requests: any[]) => {
+        return requests.map((req: any) => {
+          const fromUser = userList.find((u: any) => u.id === req.fromUserId);
+          return {
+            id: req.id,
+            fromUserId: req.fromUserId,
+            fromUsername: fromUser?.username || fromUser?.email?.split('@')[0] || 'Unknown User',
+            toUserId: req.toUserId,
+            created_at: req.created_at || new Date().toISOString()
+          };
+        });
+      };
+
       setFriends(mapFriendData(userFriends));
-      setPendingRequests(mapFriendData(userPendingRequests));
-      setSentRequests(mapFriendData(userSentRequests));
+      setFriendRequests(mapRequestData(incomingRequests));
+      setPendingRequests(mapFriendData([])); // Legacy support
+      setSentRequests(mapFriendData(outgoingRequests));
     } catch (error) {
       console.error('Error refreshing friends:', error);
       setFriends([]);
+      setFriendRequests([]);
       setPendingRequests([]);
       setSentRequests([]);
     } finally {
@@ -113,30 +179,29 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const sendFriendRequest = async (userId: string): Promise<boolean> => {
+  const sendFriendRequest = async (userId: string, username?: string): Promise<boolean> => {
     if (!user || userId === user.id) return false;
 
     try {
-      const friendsData = getFriendsList();
+      const requestsData = getFriendRequestsList();
       
       // Check if request already exists
-      const existingRequest = friendsData.find((f: any) => 
-        (f.user1_id === user.id && f.user2_id === userId) ||
-        (f.user1_id === userId && f.user2_id === user.id)
+      const existingRequest = requestsData.find((req: any) => 
+        (req.fromUserId === user.id && req.toUserId === userId) ||
+        (req.fromUserId === userId && req.toUserId === user.id)
       );
 
       if (existingRequest) return false;
 
       const newRequest = {
         id: Date.now().toString(),
-        user1_id: user.id,
-        user2_id: userId,
-        status: 'pending',
+        fromUserId: user.id,
+        toUserId: userId,
         created_at: new Date().toISOString()
       };
 
-      friendsData.push(newRequest);
-      saveFriendsList(friendsData);
+      requestsData.push(newRequest);
+      saveFriendRequestsList(requestsData);
       await refreshFriends();
       return true;
     } catch (error) {
@@ -147,15 +212,27 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const acceptFriendRequest = async (requestId: string): Promise<boolean> => {
     try {
+      const requestsData = getFriendRequestsList();
+      const request = requestsData.find((req: any) => req.id === requestId);
+      
+      if (!request || !user) return false;
+
+      // Add to friends list
       const friendsData = getFriendsList();
-      const requestIndex = friendsData.findIndex((f: any) => 
-        f.user1_id === requestId && f.user2_id === user?.id && f.status === 'pending'
-      );
-
-      if (requestIndex === -1) return false;
-
-      friendsData[requestIndex].status = 'accepted';
+      const newFriend = {
+        id: Date.now().toString(),
+        user1_id: request.fromUserId,
+        user2_id: request.toUserId,
+        status: 'accepted',
+        created_at: new Date().toISOString()
+      };
+      friendsData.push(newFriend);
       saveFriendsList(friendsData);
+
+      // Remove from requests
+      const updatedRequests = requestsData.filter((req: any) => req.id !== requestId);
+      saveFriendRequestsList(updatedRequests);
+
       await refreshFriends();
       return true;
     } catch (error) {
@@ -166,16 +243,35 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const rejectFriendRequest = async (requestId: string): Promise<boolean> => {
     try {
-      const friendsData = getFriendsList();
-      const filteredData = friendsData.filter((f: any) => 
-        !(f.user1_id === requestId && f.user2_id === user?.id && f.status === 'pending')
-      );
-
-      saveFriendsList(filteredData);
+      const requestsData = getFriendRequestsList();
+      const updatedRequests = requestsData.filter((req: any) => req.id !== requestId);
+      saveFriendRequestsList(updatedRequests);
       await refreshFriends();
       return true;
     } catch (error) {
       console.error('Error rejecting friend request:', error);
+      return false;
+    }
+  };
+
+  const declineFriendRequest = async (requestId: string): Promise<boolean> => {
+    return rejectFriendRequest(requestId);
+  };
+
+  const removeFriend = async (friendId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const friendsData = getFriendsList();
+      const updatedFriends = friendsData.filter((f: any) => 
+        !((f.user1_id === user.id && f.user2_id === friendId) ||
+          (f.user1_id === friendId && f.user2_id === user.id))
+      );
+      saveFriendsList(updatedFriends);
+      await refreshFriends();
+      return true;
+    } catch (error) {
+      console.error('Error removing friend:', error);
       return false;
     }
   };
@@ -235,13 +331,18 @@ export const FriendsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const contextValue = {
     friends,
+    friendRequests,
     pendingRequests,
     sentRequests,
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
+    declineFriendRequest,
+    removeFriend,
     blockUser,
     unblockUser,
+    areFriends,
+    hasPendingRequest,
     loading,
     refreshFriends
   };

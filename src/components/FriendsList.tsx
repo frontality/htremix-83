@@ -25,7 +25,7 @@ const FriendsList = () => {
       const targetUser = userList.find((u: any) => u.id === userId);
       if (targetUser) {
         const username = targetUser.username || targetUser.email.split('@')[0];
-        sendFriendRequest(userId, username);
+        sendFriendRequest(userId);
         toast({
           title: "Friend Request Sent! 👋",
           description: `Friend request sent to @${username}`
