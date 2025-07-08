@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, DollarSign, Share2, Heart, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
+import { ArrowLeft, MessageCircle, DollarSign, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,25 @@ interface MarketplaceItem {
   views: number;
 }
 
+// Input sanitization function
+const sanitizeInput = (input: string): string => {
+  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/javascript:/gi, '')
+              .replace(/on\w+=/gi, '')
+              .trim();
+};
+
+// Validation functions
+const validateOfferAmount = (amount: string): boolean => {
+  const numAmount = parseFloat(amount);
+  return !isNaN(numAmount) && numAmount > 0 && numAmount <= 999999;
+};
+
+const validateMessage = (message: string): boolean => {
+  const sanitized = sanitizeInput(message);
+  return sanitized.length >= 5 && sanitized.length <= 1000;
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,14 +62,23 @@ const ProductDetail = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
 
   useEffect(() => {
-    // Load product from localStorage marketplace items
-    const savedItems = localStorage.getItem('marketplace_items');
-    if (savedItems) {
-      const items = JSON.parse(savedItems);
-      const foundProduct = items.find((item: MarketplaceItem) => item.id === id);
-      setProduct(foundProduct || null);
+    if (!id) {
+      navigate("/marketplace");
+      return;
     }
-  }, [id]);
+
+    try {
+      const savedItems = localStorage.getItem('marketplace_items');
+      if (savedItems) {
+        const items = JSON.parse(savedItems);
+        const foundProduct = items.find((item: MarketplaceItem) => item.id === id);
+        setProduct(foundProduct || null);
+      }
+    } catch (error) {
+      console.error("Error loading product:", error);
+      setProduct(null);
+    }
+  }, [id, navigate]);
 
   const handleSendMessage = () => {
     if (!user) {
@@ -62,16 +90,18 @@ const ProductDetail = () => {
       return;
     }
 
-    if (!message.trim()) {
+    const sanitizedMessage = sanitizeInput(message);
+    
+    if (!validateMessage(sanitizedMessage)) {
       toast({
-        title: "Message Required",
-        description: "Please enter a message to send",
+        title: "Invalid Message",
+        description: "Please enter a message between 5-1000 characters",
         variant: "destructive",
       });
       return;
     }
 
-    console.log("Sending message:", message);
+    console.log("Sending message:", sanitizedMessage);
     
     toast({
       title: "Message Sent",
@@ -92,20 +122,20 @@ const ProductDetail = () => {
       return;
     }
 
-    if (!offerAmount || parseFloat(offerAmount) <= 0) {
+    if (!validateOfferAmount(offerAmount)) {
       toast({
         title: "Invalid Offer",
-        description: "Please enter a valid offer amount",
+        description: "Please enter a valid offer amount between $1 and $999,999",
         variant: "destructive",
       });
       return;
     }
 
-    console.log("Making offer:", offerAmount);
+    console.log("Making offer:", parseFloat(offerAmount));
     
     toast({
       title: "Offer Sent",
-      description: `Your offer of $${offerAmount} has been sent to the seller`,
+      description: `Your offer of $${parseFloat(offerAmount).toFixed(2)} has been sent to the seller`,
     });
     
     setOfferAmount("");
@@ -131,18 +161,25 @@ const ProductDetail = () => {
       return;
     }
 
-    // Simulate purchase process
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product information is not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log("Processing purchase with:", selectedPaymentMethod);
     
     toast({
       title: "Purchase Initiated",
-      description: `Processing payment of $${product?.price.toFixed(2)} via ${selectedPaymentMethod}`,
+      description: `Processing payment of $${product.price.toFixed(2)} via ${selectedPaymentMethod}`,
     });
     
     setShowPaymentDialog(false);
     setSelectedPaymentMethod("");
     
-    // Redirect to processing page after a delay
     setTimeout(() => {
       navigate("/processing-payment");
     }, 1000);
@@ -239,7 +276,7 @@ const ProductDetail = () => {
               </p>
             </div>
 
-            {/* Seller Info - Removed fake review */}
+            {/* Seller Info */}
             <Card className={`${currentTheme.cardBg} border ${currentTheme.border}`}>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -332,6 +369,9 @@ const ProductDetail = () => {
                         value={offerAmount}
                         onChange={(e) => setOfferAmount(e.target.value)}
                         className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                        min="1"
+                        max="999999"
+                        step="0.01"
                       />
                       <Button onClick={handleMakeOffer} className={`w-full ${currentTheme.primary} text-white`}>
                         Send Offer
@@ -356,11 +396,16 @@ const ProductDetail = () => {
                     </DialogHeader>
                     <div className="space-y-4">
                       <Textarea
-                        placeholder="Type your message here..."
+                        placeholder="Type your message here... (5-1000 characters)"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                        maxLength={1000}
+                        minLength={5}
                       />
+                      <div className={`text-sm ${currentTheme.muted} text-right`}>
+                        {message.length}/1000
+                      </div>
                       <Button onClick={handleSendMessage} className={`w-full ${currentTheme.primary} text-white`}>
                         Send Message
                       </Button>

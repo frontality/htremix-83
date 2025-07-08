@@ -18,13 +18,20 @@ const Messages = () => {
   const [messageInput, setMessageInput] = useState("");
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
 
+  // Input sanitization function
+  const sanitizeInput = (input: string): string => {
+    return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/javascript:/gi, '')
+                .replace(/on\w+=/gi, '')
+                .trim();
+  };
+
   // Handle user parameter from URL
   useEffect(() => {
     const userId = searchParams.get('user');
     const conversationId = searchParams.get('conversation');
     
     if (userId && user) {
-      // Find existing conversation or create new one
       handleSelectUser(userId);
     } else if (conversationId) {
       setSelectedChat(conversationId);
@@ -33,41 +40,55 @@ const Messages = () => {
   }, [searchParams, conversations, user]);
 
   const handleSelectChat = async (conversationId: string) => {
+    if (!conversationId || conversationId.trim() === '') return;
+    
     setSelectedChat(conversationId);
     await fetchMessages(conversationId);
   };
 
   const handleSendMessage = async () => {
-    if (messageInput.trim() && selectedChat) {
-      const success = await sendMessage(selectedChat, messageInput);
-      if (success) {
-        setMessageInput("");
-      }
+    const sanitizedMessage = sanitizeInput(messageInput);
+    
+    if (!sanitizedMessage || sanitizedMessage.length === 0) return;
+    if (!selectedChat) return;
+    if (sanitizedMessage.length > 1000) return;
+
+    const success = await sendMessage(selectedChat, sanitizedMessage);
+    if (success) {
+      setMessageInput("");
     }
   };
 
   const handleSendImage = async (imageData: string) => {
-    if (selectedChat) {
-      const success = await sendMessage(selectedChat, `[IMAGE:${imageData}]`);
-      if (success) {
-        console.log('Image sent successfully');
-      }
+    if (!selectedChat || !imageData) return;
+    
+    // Validate image data format
+    if (!imageData.startsWith('data:image/')) return;
+    
+    const success = await sendMessage(selectedChat, `[IMAGE:${imageData}]`);
+    if (success) {
+      console.log('Image sent successfully');
     }
   };
 
   const handleSendVideo = async (videoData: string) => {
-    if (selectedChat) {
-      const success = await sendMessage(selectedChat, `[VIDEO:${videoData}]`);
-      if (success) {
-        console.log('Video sent successfully');
-      }
+    if (!selectedChat || !videoData) return;
+    
+    // Validate video data format
+    if (!videoData.startsWith('data:video/')) return;
+    
+    const success = await sendMessage(selectedChat, `[VIDEO:${videoData}]`);
+    if (success) {
+      console.log('Video sent successfully');
     }
   };
 
   const handleSelectUser = async (userId: string) => {
+    if (!userId || !user || userId === user.id) return;
+    
     const existingConversation = conversations.find(conv => 
-      (conv.participant1_id === user?.id && conv.participant2_id === userId) ||
-      (conv.participant2_id === user?.id && conv.participant1_id === userId)
+      (conv.participant1_id === user.id && conv.participant2_id === userId) ||
+      (conv.participant2_id === user.id && conv.participant1_id === userId)
     );
 
     if (existingConversation) {
@@ -81,7 +102,7 @@ const Messages = () => {
   };
 
   const getOtherParticipant = (conversation: any) => {
-    if (!user) return null;
+    if (!user || !conversation) return null;
     return conversation.participant1_id === user.id 
       ? conversation.participant2 
       : conversation.participant1;

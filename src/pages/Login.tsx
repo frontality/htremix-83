@@ -30,22 +30,41 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    const { error } = await signIn(email, password);
-    
-    if (error) {
+    // Basic client-side validation
+    if (!email.trim() || !password.trim()) {
       toast({
-        title: "Login Error",
-        description: error,
+        title: "Validation Error",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
-    } else {
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error } = await signIn(email.trim(), password);
+      
+      if (error) {
+        toast({
+          title: "Login Error",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back! 🎉",
+          description: "You have successfully logged in.",
+        });
+        navigate('/');
+      }
+    } catch (error) {
       toast({
-        title: "Welcome back! 🎉",
-        description: "You have successfully logged in.",
+        title: "Login Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
-      navigate('/');
     }
     
     setLoading(false);
@@ -78,6 +97,8 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
                     required
+                    maxLength={254}
+                    autoComplete="email"
                   />
                 </div>
                 
@@ -92,6 +113,8 @@ const Login = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       className={`${currentTheme.secondary} ${currentTheme.text} border-0 pr-10`}
                       required
+                      maxLength={128}
+                      autoComplete="current-password"
                     />
                     <button
                       type="button"
