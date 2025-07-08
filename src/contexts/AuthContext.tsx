@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Sanitize and validate inputs
       const sanitizedEmail = sanitizeInput(email.toLowerCase());
-      const sanitizedUsername = username ? sanitizeInput(username) : sanitizedEmail.split('@')[0];
+      const sanitizedUsername = username ? sanitizeInput(username.toLowerCase()) : sanitizedEmail.split('@')[0];
 
       if (!isValidEmail(sanitizedEmail)) {
         return { error: 'Please enter a valid email address' };
@@ -92,14 +92,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existingUsers = localStorage.getItem('registered_users');
       const users = existingUsers ? JSON.parse(existingUsers) : [];
       
-      // Check if user already exists
-      const userExists = users.some((u: any) => u.email === sanitizedEmail);
+      // Check if user already exists (case-insensitive email check)
+      const userExists = users.some((u: any) => u.email.toLowerCase() === sanitizedEmail);
       if (userExists) {
         return { error: 'User already exists with this email' };
       }
 
-      // Check if username already exists
-      const usernameExists = users.some((u: any) => u.username === sanitizedUsername);
+      // Check if username already exists (case-insensitive username check)
+      const usernameExists = users.some((u: any) => u.username && u.username.toLowerCase() === sanitizedUsername);
       if (usernameExists) {
         return { error: 'Username already taken' };
       }
@@ -152,9 +152,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const users = JSON.parse(existingUsers);
       
-      // Find user with matching email and password
+      // Find user with matching email and password (case-insensitive email)
       const foundUser = users.find((u: any) => 
-        u.email === sanitizedEmail && u.password === btoa(password)
+        u.email.toLowerCase() === sanitizedEmail && u.password === btoa(password)
       );
       
       if (!foundUser) {
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (updates.username) {
-        const sanitizedUsername = sanitizeInput(updates.username);
+        const sanitizedUsername = sanitizeInput(updates.username.toLowerCase());
         if (!isValidUsername(sanitizedUsername)) {
           return { error: 'Username must be 3-30 characters and contain only letters, numbers, and underscores' };
         }
@@ -217,14 +217,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check if email/username is being updated and already exists
       if (sanitizedUpdates.email && sanitizedUpdates.email !== user.email) {
-        const emailExists = users.some((u: any) => u.email === sanitizedUpdates.email && u.id !== user.id);
+        const emailExists = users.some((u: any) => u.email.toLowerCase() === sanitizedUpdates.email && u.id !== user.id);
         if (emailExists) {
           return { error: 'Email already taken' };
         }
       }
 
       if (sanitizedUpdates.username && sanitizedUpdates.username !== user.username) {
-        const usernameExists = users.some((u: any) => u.username === sanitizedUpdates.username && u.id !== user.id);
+        const usernameExists = users.some((u: any) => u.username && u.username.toLowerCase() === sanitizedUpdates.username && u.id !== user.id);
         if (usernameExists) {
           return { error: 'Username already taken' };
         }

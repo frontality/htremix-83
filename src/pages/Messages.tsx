@@ -32,6 +32,11 @@ const Messages = () => {
     const conversationId = searchParams.get('conversation');
     
     if (userId && user) {
+      // Prevent messaging yourself
+      if (userId === user.id) {
+        console.log('Cannot message yourself');
+        return;
+      }
       handleSelectUser(userId);
     } else if (conversationId) {
       setSelectedChat(conversationId);
@@ -84,7 +89,13 @@ const Messages = () => {
   };
 
   const handleSelectUser = async (userId: string) => {
-    if (!userId || !user || userId === user.id) return;
+    if (!userId || !user) return;
+    
+    // Prevent messaging yourself
+    if (userId === user.id) {
+      console.log('Cannot message yourself');
+      return;
+    }
     
     const existingConversation = conversations.find(conv => 
       (conv.participant1_id === user.id && conv.participant2_id === userId) ||

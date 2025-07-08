@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ const Signup = () => {
       const existingUsers = localStorage.getItem('registered_users');
       if (existingUsers) {
         const users = JSON.parse(existingUsers);
+        // Case-insensitive username check
         const usernameExists = users.some((u: any) => u.username && u.username.toLowerCase() === username.toLowerCase());
         setUsernameAvailable(!usernameExists);
         console.log('Username availability result:', !usernameExists);
@@ -63,7 +65,7 @@ const Signup = () => {
   };
 
   const handleUsernameChange = (value: string) => {
-    // Only allow alphanumeric characters and underscores
+    // Only allow alphanumeric characters and underscores, convert to lowercase
     const sanitized = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
     setFormData(prev => ({ ...prev, username: sanitized }));
     

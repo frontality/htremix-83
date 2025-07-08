@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -178,6 +179,17 @@ export const useMessages = () => {
   const createConversation = useCallback(async (participantId: string) => {
     if (!user) {
       console.log('No user for creating conversation');
+      return null;
+    }
+
+    // Prevent creating conversation with yourself
+    if (participantId === user.id) {
+      console.log('Cannot create conversation with yourself');
+      toast({
+        title: "Error",
+        description: "You cannot message yourself.",
+        variant: "destructive",
+      });
       return null;
     }
 
