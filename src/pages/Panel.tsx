@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1557,8 +1558,8 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
-                  {/* Precise black overlay to only cover the left side branding */}
-                  <div className="absolute bottom-0 left-0 w-1/2 h-6 bg-black"></div>
+                  {/* Precise black overlay to only cover the left side branding with more height */}
+                  <div className="absolute bottom-0 left-0 w-1/2 h-12 bg-black"></div>
                 </div>
                 {!isVmFullscreen && (
                   <div className="mt-4 text-sm text-gray-500">
