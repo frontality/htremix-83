@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1519,7 +1520,7 @@ const Panel = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="w-full h-[600px] border border-gray-300 rounded-lg overflow-hidden">
+                <div className="w-full h-[600px] border border-gray-300 rounded-lg overflow-hidden relative">
                   <iframe 
                     src="https://cli.h2.nexus" 
                     width="100%" 
@@ -1527,6 +1528,7 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-black"></div>
                 </div>
                 <div className="mt-4 text-sm text-gray-500">
                   <p>This is a full Linux environment with access to common tools and utilities.</p>
