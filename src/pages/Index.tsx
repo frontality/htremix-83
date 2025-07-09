@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -55,11 +54,11 @@ const Index = () => {
         <div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? animationClasses.fadeIn : 'opacity-0'}`}>
           <div className="mb-8">
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 tracking-tight">
-              <span className={`bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent drop-shadow-2xl`}>
+              <span className={`bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent drop-shadow-2xl shadow-2xl`} style={{textShadow: '0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)'}}>
                 SKID
               </span>
-              <span className={`mx-4 ${currentTheme.text}`}>×</span>
-              <span className={`bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent drop-shadow-2xl`}>
+              <span className={`mx-4 ${currentTheme.text} drop-shadow-2xl`} style={{textShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'}}>×</span>
+              <span className={`bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent drop-shadow-2xl shadow-2xl`} style={{textShadow: '0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)'}}>
                 HAVEN
               </span>
             </h1>

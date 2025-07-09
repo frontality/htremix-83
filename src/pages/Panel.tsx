@@ -947,7 +947,7 @@ const Panel = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <Zap className={`h-8 w-8 ${currentTheme.accent}`} />
-              <h1 className={`text-3xl font-bold ${currentTheme.text} bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent`}>
+              <h1 className={`text-3xl font-bold ${currentTheme.text} bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent drop-shadow-2xl`}>
                 Attack Panel V5.0
               </h1>
               <Badge className={getStatusColor()}>
@@ -1557,8 +1557,8 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
-                  {/* Small black overlay to only cover the bottom branding */}
-                  <div className="absolute bottom-0 left-0 right-0 h-6 bg-black"></div>
+                  {/* Precise black overlay to only cover the left side branding */}
+                  <div className="absolute bottom-0 left-0 w-1/2 h-6 bg-black"></div>
                 </div>
                 {!isVmFullscreen && (
                   <div className="mt-4 text-sm text-gray-500">
