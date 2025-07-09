@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor } from "lucide-react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,9 @@ const Panel = () => {
   const [isTerminalRunning, setIsTerminalRunning] = useState(false);
   const [toolTarget, setToolTarget] = useState("");
   const [selectedTool, setSelectedTool] = useState("ping");
+
+  // Virtual Machine State
+  const [isVmFullscreen, setIsVmFullscreen] = useState(false);
 
   // Available attack methods - comprehensive list
   const attackMethods = [
@@ -933,6 +936,10 @@ const Panel = () => {
     }
   };
 
+  const toggleVmFullscreen = () => {
+    setIsVmFullscreen(!isVmFullscreen);
+  };
+
   return (
     <div className={`min-h-screen pt-12 ${currentTheme.bg}`}>
       <div className="container mx-auto p-6 max-w-7xl">
@@ -1509,18 +1516,40 @@ const Panel = () => {
           </TabsContent>
 
           <TabsContent value="vm" className="space-y-6">
-            <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+            <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl ${isVmFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}>
               <CardHeader>
-                <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
-                  <Monitor className="h-5 w-5" />
-                  Online Virtual Machine
-                </CardTitle>
-                <CardDescription className={currentTheme.muted}>
-                  Full-featured Linux terminal environment running in your browser
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                      <Monitor className="h-5 w-5" />
+                      Online Virtual Machine
+                    </CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Full-featured Linux terminal environment running in your browser
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={toggleVmFullscreen}
+                    variant="outline"
+                    size="sm"
+                    className={`${currentTheme.secondary} ${currentTheme.text}`}
+                  >
+                    {isVmFullscreen ? (
+                      <>
+                        <Minimize className="h-4 w-4 mr-2" />
+                        Exit Fullscreen
+                      </>
+                    ) : (
+                      <>
+                        <Maximize className="h-4 w-4 mr-2" />
+                        Fullscreen
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="w-full h-[600px] border border-gray-300 rounded-lg overflow-hidden relative">
+                <div className={`w-full ${isVmFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[600px]'} border border-gray-300 rounded-lg overflow-hidden relative`}>
                   <iframe 
                     src="https://cli.h2.nexus" 
                     width="100%" 
@@ -1528,12 +1557,15 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-black"></div>
+                  {/* Smaller black overlay to only cover the bottom branding */}
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-black"></div>
                 </div>
-                <div className="mt-4 text-sm text-gray-500">
-                  <p>This is a full Linux environment with access to common tools and utilities.</p>
-                  <p>Perfect for testing, development, and learning purposes.</p>
-                </div>
+                {!isVmFullscreen && (
+                  <div className="mt-4 text-sm text-gray-500">
+                    <p>This is a full Linux environment with access to common tools and utilities.</p>
+                    <p>Perfect for testing, development, and learning purposes.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
