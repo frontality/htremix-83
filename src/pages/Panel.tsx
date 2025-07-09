@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command } from "lucide-react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -980,6 +980,10 @@ const Panel = () => {
               <Network className="h-4 w-4" />
               Network Tools
             </TabsTrigger>
+            <TabsTrigger value="vm" className="rounded-md flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              Virtual Machine
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="attack" className="space-y-6">
@@ -1501,6 +1505,35 @@ const Panel = () => {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="vm" className="space-y-6">
+            <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+              <CardHeader>
+                <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                  <Monitor className="h-5 w-5" />
+                  Online Virtual Machine
+                </CardTitle>
+                <CardDescription className={currentTheme.muted}>
+                  Full-featured Linux terminal environment running in your browser
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="w-full h-[600px] border border-gray-300 rounded-lg overflow-hidden">
+                  <iframe 
+                    src="https://cli.h2.nexus" 
+                    width="100%" 
+                    height="100%"
+                    className="border-0"
+                    title="Virtual Machine Terminal"
+                  />
+                </div>
+                <div className="mt-4 text-sm text-gray-500">
+                  <p>This is a full Linux environment with access to common tools and utilities.</p>
+                  <p>Perfect for testing, development, and learning purposes.</p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
