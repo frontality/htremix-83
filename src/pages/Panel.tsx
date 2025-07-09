@@ -1525,7 +1525,7 @@ const Panel = () => {
                       Online Virtual Machine
                     </CardTitle>
                     <CardDescription className={currentTheme.muted}>
-                      Full-featured Linux terminal environment running in your browser
+                      Full-featured Linux and Windows terminal environments running in your browser
                     </CardDescription>
                   </div>
                   <Button
@@ -1557,12 +1557,12 @@ const Panel = () => {
                     className="border-0"
                     title="Virtual Machine Terminal"
                   />
-                  {/* Smaller black overlay to only cover the bottom branding */}
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-black"></div>
+                  {/* Small black overlay to only cover the bottom branding */}
+                  <div className="absolute bottom-0 left-0 right-0 h-6 bg-black"></div>
                 </div>
                 {!isVmFullscreen && (
                   <div className="mt-4 text-sm text-gray-500">
-                    <p>This is a full Linux environment with access to common tools and utilities.</p>
+                    <p>This is a full Linux and Windows environment with access to common tools and utilities.</p>
                     <p>Perfect for testing, development, and learning purposes.</p>
                   </div>
                 )}
