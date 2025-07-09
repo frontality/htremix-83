@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target } from "lucide-react";
+import { Terminal, Play, Square, Trash2, Download, Settings, Shield, Database, Wifi, WifiOff, CheckCircle, XCircle, Activity, HardDrive, Cpu, Zap, Globe, Lock, AlertTriangle, Users, Timer, Target, Server, Network, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +50,13 @@ const Panel = () => {
     network: 0
   });
 
+  // Network Tools State
+  const [terminalOutput, setTerminalOutput] = useState("$ Welcome to Network Tools Terminal\n$ Type 'help' for available commands\n");
+  const [currentCommand, setCurrentCommand] = useState("");
+  const [isTerminalRunning, setIsTerminalRunning] = useState(false);
+  const [toolTarget, setToolTarget] = useState("");
+  const [selectedTool, setSelectedTool] = useState("ping");
+
   // Available attack methods - comprehensive list
   const attackMethods = [
     "HTTP-GET-FLOOD",
@@ -89,6 +96,16 @@ const Panel = () => {
     "Australia"
   ];
 
+  const networkTools = [
+    { value: "ping", label: "Ping", description: "Send ICMP echo requests" },
+    { value: "traceroute", label: "Traceroute", description: "Trace network route to destination" },
+    { value: "nslookup", label: "DNS Lookup", description: "Query DNS records" },
+    { value: "whois", label: "WHOIS", description: "Domain registration information" },
+    { value: "portscan", label: "Port Scan", description: "Scan for open ports" },
+    { value: "httping", label: "HTTP Ping", description: "Test HTTP response times" },
+    { value: "mtr", label: "MTR", description: "Network diagnostic tool" }
+  ];
+
   useEffect(() => {
     // Simulate real-time system monitoring
     const interval = setInterval(() => {
@@ -106,6 +123,205 @@ const Panel = () => {
   const addOutput = (text: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setOutput(prev => prev + `[${timestamp}] ${text}\n`);
+  };
+
+  const addTerminalOutput = (text: string) => {
+    setTerminalOutput(prev => prev + text + "\n");
+  };
+
+  // Network Tools Functions
+  const executeNetworkTool = async (tool: string, target: string) => {
+    if (!target) {
+      addTerminalOutput("$ Error: Please specify a target");
+      return;
+    }
+
+    setIsTerminalRunning(true);
+    addTerminalOutput(`$ ${tool} ${target}`);
+
+    try {
+      switch (tool) {
+        case "ping":
+          await executePing(target);
+          break;
+        case "traceroute":
+          await executeTraceroute(target);
+          break;
+        case "nslookup":
+          await executeDnsLookup(target);
+          break;
+        case "whois":
+          await executeWhois(target);
+          break;
+        case "portscan":
+          await executePortScan(target);
+          break;
+        case "httping":
+          await executeHttpPing(target);
+          break;
+        case "mtr":
+          await executeMtr(target);
+          break;
+        default:
+          addTerminalOutput("$ Unknown command");
+      }
+    } catch (error) {
+      addTerminalOutput(`$ Error: ${error}`);
+    }
+
+    setIsTerminalRunning(false);
+  };
+
+  const executePing = async (target: string) => {
+    addTerminalOutput(`PING ${target} (resolving...):`);
+    
+    for (let i = 1; i <= 4; i++) {
+      if (!isTerminalRunning) break;
+      
+      const delay = Math.random() * 50 + 10;
+      const time = delay.toFixed(1);
+      const ttl = Math.floor(Math.random() * 10) + 54;
+      
+      addTerminalOutput(`64 bytes from ${target}: icmp_seq=${i} ttl=${ttl} time=${time} ms`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    addTerminalOutput(`\n--- ${target} ping statistics ---`);
+    addTerminalOutput("4 packets transmitted, 4 received, 0% packet loss");
+    addTerminalOutput("round-trip min/avg/max/stddev = 10.2/25.1/45.7/12.3 ms");
+  };
+
+  const executeTraceroute = async (target: string) => {
+    addTerminalOutput(`traceroute to ${target} (resolving...), 30 hops max, 60 byte packets`);
+    
+    const hops = [
+      { hop: 1, ip: "192.168.1.1", name: "gateway", time: "0.5ms" },
+      { hop: 2, ip: "10.0.0.1", name: "isp-router", time: "5.2ms" },
+      { hop: 3, ip: "203.0.113.1", name: "core-router", time: "15.8ms" },
+      { hop: 4, ip: "198.51.100.1", name: "edge-router", time: "25.3ms" },
+      { hop: 5, ip: target, name: target, time: "35.1ms" }
+    ];
+
+    for (const hop of hops) {
+      if (!isTerminalRunning) break;
+      addTerminalOutput(`${hop.hop}  ${hop.name} (${hop.ip})  ${hop.time}`);
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+  };
+
+  const executeDnsLookup = async (target: string) => {
+    addTerminalOutput(`Server:    8.8.8.8`);
+    addTerminalOutput(`Address:   8.8.8.8#53\n`);
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    addTerminalOutput(`Non-authoritative answer:`);
+    addTerminalOutput(`Name:      ${target}`);
+    addTerminalOutput(`Address:   ${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+    
+    if (Math.random() > 0.5) {
+      addTerminalOutput(`Address:   ${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+    }
+  };
+
+  const executeWhois = async (target: string) => {
+    addTerminalOutput(`Whois Server Version 2.0\n`);
+    addTerminalOutput(`Domain Information for ${target}:`);
+    addTerminalOutput(`Registrar: Example Registrar Inc.`);
+    addTerminalOutput(`Registration Date: 2020-01-15`);
+    addTerminalOutput(`Expiration Date: 2025-01-15`);
+    addTerminalOutput(`Name Servers:`);
+    addTerminalOutput(`  ns1.example.com`);
+    addTerminalOutput(`  ns2.example.com`);
+    addTerminalOutput(`Status: clientTransferProhibited`);
+  };
+
+  const executePortScan = async (target: string) => {
+    addTerminalOutput(`Starting port scan on ${target}...`);
+    addTerminalOutput(`Scanning top 1000 ports...\n`);
+    
+    const commonPorts = [22, 53, 80, 443, 8080, 3306, 5432];
+    const openPorts = commonPorts.filter(() => Math.random() > 0.7);
+    
+    for (const port of openPorts) {
+      addTerminalOutput(`${port}/tcp   open    ${getPortService(port)}`);
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
+    addTerminalOutput(`\nScan completed. ${openPorts.length} open ports found.`);
+  };
+
+  const executeHttpPing = async (target: string) => {
+    addTerminalOutput(`HTTP PING ${target}:`);
+    
+    for (let i = 1; i <= 5; i++) {
+      if (!isTerminalRunning) break;
+      
+      const time = (Math.random() * 200 + 50).toFixed(0);
+      const status = Math.random() > 0.1 ? 200 : 404;
+      
+      addTerminalOutput(`connected to ${target} (${time}ms): HTTP/${status === 200 ? '200 OK' : '404 Not Found'} ${time}ms`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  };
+
+  const executeMtr = async (target: string) => {
+    addTerminalOutput(`My traceroute  [v0.95]`);
+    addTerminalOutput(`${target} -> ${target}                    2024-01-15T10:30:00+0000`);
+    addTerminalOutput(`Keys:  Help   Display mode   Restart statistics   Order of fields   quit`);
+    addTerminalOutput(`                                       Packets               Pings`);
+    addTerminalOutput(` Host                                Loss%   Snt   Last   Avg  Best  Wrst StDev`);
+    addTerminalOutput(` 1. gateway                           0.0%    10    0.5   0.8   0.4   2.1   0.5`);
+    addTerminalOutput(` 2. isp-router                        0.0%    10    5.2   6.1   4.8   8.9   1.2`);
+    addTerminalOutput(` 3. core-router                       0.0%    10   15.8  16.2  14.1  19.5   1.8`);
+    addTerminalOutput(` 4. ${target}                        0.0%    10   35.1  34.8  32.2  38.9   2.1`);
+  };
+
+  const getPortService = (port: number) => {
+    const services: { [key: number]: string } = {
+      22: "ssh",
+      53: "domain",
+      80: "http",
+      443: "https",
+      8080: "http-proxy",
+      3306: "mysql",
+      5432: "postgresql"
+    };
+    return services[port] || "unknown";
+  };
+
+  const handleTerminalCommand = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const cmd = currentCommand.trim();
+      addTerminalOutput(`$ ${cmd}`);
+      
+      if (cmd === 'help') {
+        addTerminalOutput("Available commands:");
+        addTerminalOutput("  ping <host>       - Send ping packets");
+        addTerminalOutput("  traceroute <host> - Trace route to host");
+        addTerminalOutput("  nslookup <host>   - DNS lookup");
+        addTerminalOutput("  whois <domain>    - Domain information");
+        addTerminalOutput("  portscan <host>   - Scan for open ports");
+        addTerminalOutput("  httping <url>     - HTTP response test");
+        addTerminalOutput("  mtr <host>        - Network diagnostic");
+        addTerminalOutput("  clear             - Clear terminal");
+        addTerminalOutput("  help              - Show this help");
+      } else if (cmd === 'clear') {
+        setTerminalOutput("$ Terminal cleared\n");
+      } else if (cmd.includes(' ')) {
+        const [command, target] = cmd.split(' ');
+        executeNetworkTool(command, target);
+      } else if (cmd) {
+        addTerminalOutput(`$ Command not found: ${cmd}`);
+        addTerminalOutput("$ Type 'help' for available commands");
+      }
+      
+      setCurrentCommand("");
+    }
+  };
+
+  const executeSelectedTool = () => {
+    executeNetworkTool(selectedTool, toolTarget);
   };
 
   // Enhanced HTTP Flood Attack with proper timing
@@ -672,6 +888,28 @@ const Panel = () => {
     });
   };
 
+  const clearTerminal = () => {
+    setTerminalOutput("$ Terminal cleared\n");
+  };
+
+  const downloadTerminalLog = () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const blob = new Blob([terminalOutput], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `network-tools-log-${timestamp}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Downloaded",
+      description: "Terminal log saved to file",
+    });
+  };
+
   const getStatusColor = () => {
     switch (connectionStatus) {
       case "online":
@@ -737,6 +975,10 @@ const Panel = () => {
             <TabsTrigger value="recon" className="rounded-md flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Reconnaissance
+            </TabsTrigger>
+            <TabsTrigger value="nettools" className="rounded-md flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              Network Tools
             </TabsTrigger>
           </TabsList>
 
@@ -1097,6 +1339,168 @@ const Panel = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="nettools" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl`}>
+                  <CardHeader>
+                    <CardTitle className={`${currentTheme.text} flex items-center justify-between`}>
+                      Network Tools
+                      <Server className="h-5 w-5" />
+                    </CardTitle>
+                    <CardDescription className={currentTheme.muted}>
+                      Professional network diagnostic tools
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="toolTarget" className={currentTheme.text}>Target Host/Domain</Label>
+                      <Input
+                        id="toolTarget"
+                        value={toolTarget}
+                        onChange={(e) => setToolTarget(e.target.value)}
+                        placeholder="google.com or 8.8.8.8"
+                        className={`${currentTheme.secondary} ${currentTheme.text}`}
+                        disabled={isTerminalRunning}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className={currentTheme.text}>Tool Selection</Label>
+                      <Select value={selectedTool} onValueChange={setSelectedTool} disabled={isTerminalRunning}>
+                        <SelectTrigger className={`${currentTheme.secondary} ${currentTheme.text}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {networkTools.map((tool) => (
+                            <SelectItem key={tool.value} value={tool.value}>
+                              <div>
+                                <div className="font-medium">{tool.label}</div>
+                                <div className="text-xs text-gray-500">{tool.description}</div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={executeSelectedTool}
+                      disabled={!toolTarget || isTerminalRunning}
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Execute Tool
+                    </Button>
+
+                    <div className="pt-4 border-t border-gray-700">
+                      <h3 className={`text-sm font-medium ${currentTheme.text} mb-2`}>Quick Commands</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          onClick={() => executeNetworkTool("ping", "8.8.8.8")}
+                          disabled={isTerminalRunning}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text} text-xs`}
+                        >
+                          Ping DNS
+                        </Button>
+                        <Button
+                          onClick={() => executeNetworkTool("traceroute", "google.com")}
+                          disabled={isTerminalRunning}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text} text-xs`}
+                        >
+                          Trace Route
+                        </Button>
+                        <Button
+                          onClick={() => executeNetworkTool("nslookup", "google.com")}
+                          disabled={isTerminalRunning}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text} text-xs`}
+                        >
+                          DNS Lookup
+                        </Button>
+                        <Button
+                          onClick={() => executeNetworkTool("portscan", "scanme.nmap.org")}
+                          disabled={isTerminalRunning}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text} text-xs`}
+                        >
+                          Port Scan
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <Card className={`${currentTheme.cardBg} ${currentTheme.border} shadow-xl h-full`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className={`${currentTheme.text} flex items-center gap-2`}>
+                        <Terminal className="h-5 w-5" />
+                        Virtual Terminal
+                      </CardTitle>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={downloadTerminalLog}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text}`}
+                          disabled={!terminalOutput}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Save Log
+                        </Button>
+                        <Button
+                          onClick={clearTerminal}
+                          variant="outline"
+                          size="sm"
+                          className={`${currentTheme.secondary} ${currentTheme.text}`}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className={`bg-black rounded-lg p-4 font-mono text-sm text-green-400 min-h-96 max-h-96 overflow-y-auto`}>
+                      <pre className="whitespace-pre-wrap">{terminalOutput}</pre>
+                      {isTerminalRunning && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="animate-spin h-4 w-4 border-2 border-green-400 border-t-transparent rounded-full"></div>
+                          <span>Running...</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 mt-2">
+                        <span className="text-green-400">$</span>
+                        <Input
+                          value={currentCommand}
+                          onChange={(e) => setCurrentCommand(e.target.value)}
+                          onKeyDown={handleTerminalCommand}
+                          className="bg-transparent border-none text-green-400 font-mono text-sm p-0 focus:ring-0 flex-1"
+                          placeholder="Type command here..."
+                          disabled={isTerminalRunning}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">
+                      <p>Type 'help' for available commands or use the tool selector above.</p>
+                      <p>Examples: ping google.com, traceroute 8.8.8.8, nslookup github.com</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
