@@ -32,7 +32,7 @@ const VMOverlay: React.FC<VMOverlayProps> = ({ ipAddress, isRunning }) => {
             <p className="text-lg">{ipAddress}</p>
           </div>
           <div>
-            <Badge variant={isRunning ? "success" : "destructive"}>
+            <Badge variant={isRunning ? "default" : "destructive"}>
               {isRunning ? "Running" : "Stopped"}
             </Badge>
           </div>
