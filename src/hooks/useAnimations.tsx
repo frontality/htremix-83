@@ -71,19 +71,22 @@ export const useAnimations = () => {
     return `${index * baseDelay}ms`;
   };
 
-  // Reduced hover animation classes
+  // Enhanced hover animation classes
   const hoverClasses = {
-    scale: 'hover:scale-105 transition-transform duration-200',
-    lift: 'hover:-translate-y-1 transition-transform duration-200',
-    glow: 'hover:shadow-lg transition-shadow duration-200',
+    scale: 'hover:scale-105 transition-transform duration-300',
+    lift: 'hover:-translate-y-2 transition-transform duration-300',
+    glow: 'hover:shadow-lg hover:shadow-current/20 transition-all duration-300',
+    rotate: 'hover:rotate-1 transition-transform duration-300',
+    tilt: 'hover:rotate-3 hover:scale-105 transition-transform duration-300',
   };
 
-  // Animation classes with pulseGlow added
+  // Animation classes with new additions
   const animationClasses = {
     fadeIn: 'animate-fade-in',
     scaleIn: 'animate-scale-in',
     float: 'animate-float',
     pulseGlow: 'animate-pulse-glow',
+    bounceSubtle: 'animate-bounce-subtle',
   };
 
   return {
@@ -102,8 +105,11 @@ export const combineAnimations = (...classes: string[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
-// Simplified animation presets
+// Enhanced animation presets
 export const animationPresets = {
-  cardHover: 'hover:scale-105 transition-all duration-200',
-  buttonHover: 'hover:scale-105 transition-all duration-200',
+  cardHover: 'hover:scale-105 hover:-translate-y-1 transition-all duration-300',
+  buttonHover: 'hover:scale-105 hover:shadow-lg transition-all duration-200',
+  iconPulse: 'animate-pulse-glow',
+  floatingElement: 'animate-float',
+  staggerFade: (index: number) => `animate-fade-in` + (index > 0 ? ` [animation-delay:${index * 150}ms]` : ''),
 };

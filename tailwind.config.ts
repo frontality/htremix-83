@@ -103,20 +103,61 @@ export default {
 						height: '0'
 					}
 				},
-				'pulse-slow': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.8' }
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(20px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'scale-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.9)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						opacity: '1',
+						boxShadow: '0 0 5px currentColor'
+					},
+					'50%': {
+						opacity: '0.8',
+						boxShadow: '0 0 20px currentColor, 0 0 30px currentColor'
+					}
 				},
 				'float': {
-					'0%, 100%': { transform: 'translateY(0px)' },
-					'50%': { transform: 'translateY(-10px)' }
+					'0%, 100%': { 
+						transform: 'translateY(0px)'
+					},
+					'50%': { 
+						transform: 'translateY(-10px)'
+					}
+				},
+				'bounce-subtle': {
+					'0%, 100%': { 
+						transform: 'translateY(0)'
+					},
+					'50%': { 
+						transform: 'translateY(-5px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s infinite',
-				'float': 'float 3s ease-in-out infinite'
+				'fade-in': 'fade-in 0.6s ease-out',
+				'scale-in': 'scale-in 0.4s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'float': 'float 3s ease-in-out infinite',
+				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite'
 			},
 			backgroundImage: {
 				'gift-card-pattern': "url('/gift-card-pattern.svg')"
