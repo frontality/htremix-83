@@ -7,125 +7,172 @@ import {
   ArrowRight,
   CheckCircle,
   MessageCircle,
-  Star
+  Star,
+  Shield,
+  Zap
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAnimations } from "@/hooks/useAnimations";
-import ParallaxHero from "@/components/ParallaxHero";
-import LiveActivityTicker from "@/components/LiveActivityTicker";
-import InteractiveFeatureGrid from "@/components/InteractiveFeatureGrid";
-import VisualSeparator from "@/components/VisualSeparator";
-import DiscordCommunityShowcase from "@/components/DiscordCommunityShowcase";
+import EnhancedHero from "@/components/EnhancedHero";
+import ActivityFeed from "@/components/ActivityFeed";
+import FeatureShowcase from "@/components/FeatureShowcase";
+import GeometricSeparator from "@/components/GeometricSeparator";
+import CommunityHub from "@/components/CommunityHub";
 
 const Index = () => {
   const { currentTheme } = useTheme();
   const { hoverClasses } = useAnimations();
 
-  const stats = [
-    { number: "50K+", label: "Active Traders", icon: TrendingUp, color: "text-green-400" },
-    { number: "1M+", label: "Successful Trades", icon: CheckCircle, color: "text-blue-400" },
-    { number: "99.9%", label: "Uptime", icon: CheckCircle, color: "text-purple-400" },
-    { number: "24/7", label: "Elite Support", icon: MessageCircle, color: "text-orange-400" }
+  const metrics = [
+    { 
+      value: "50K+", 
+      label: "Active Users", 
+      icon: TrendingUp, 
+      color: "text-emerald-400",
+      description: "Verified traders worldwide"
+    },
+    { 
+      value: "1M+", 
+      label: "Transactions", 
+      icon: CheckCircle, 
+      color: "text-blue-400",
+      description: "Completed successfully"
+    },
+    { 
+      value: "99.9%", 
+      label: "Security Rating", 
+      icon: Shield, 
+      color: "text-purple-400",
+      description: "Military-grade protection"
+    },
+    { 
+      value: "24/7", 
+      label: "Support", 
+      icon: MessageCircle, 
+      color: "text-orange-400",
+      description: "Always here for you"
+    }
   ];
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} relative overflow-hidden`}>
-      {/* Hero Section with Parallax */}
-      <ParallaxHero />
+      {/* Enhanced Hero Section */}
+      <EnhancedHero />
 
-      {/* Live Activity Ticker */}
-      <div className="container mx-auto px-4 -mt-8 relative z-20">
-        <LiveActivityTicker />
+      {/* Activity Feed */}
+      <div className="container mx-auto px-4 -mt-16 relative z-20">
+        <ActivityFeed />
       </div>
 
-      <VisualSeparator type="wave" />
+      <GeometricSeparator variant="diagonal" />
 
-      {/* Stats Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h3 className={`text-3xl font-bold ${currentTheme.text} mb-4 animate-fade-in`}>
-            The Numbers Don't Lie 📊
-          </h3>
-          <p className={`text-lg ${currentTheme.muted} animate-fade-in`} style={{ animationDelay: '0.3s' }}>
-            Join the fastest-growing underground trading community
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <Card 
-              key={index} 
-              className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} transition-all duration-300 hover:shadow-xl group animate-fade-in`}
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <stat.icon className={`h-8 w-8 ${stat.color} mx-auto mb-4 group-hover:animate-bounce`} />
-              <div className={`text-3xl font-bold ${currentTheme.text} mb-2 group-hover:text-glow transition-all duration-300`}>
-                {stat.number}
-              </div>
-              <p className={`text-sm ${currentTheme.muted} uppercase tracking-wider group-hover:${currentTheme.text} transition-colors duration-300`}>
-                {stat.label}
-              </p>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <VisualSeparator type="circuit" />
-
-      {/* Interactive Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h3 className={`text-4xl font-bold ${currentTheme.text} mb-4 animate-fade-in`}>
-            Why We're the Underground Kings 👑
-          </h3>
-          <p className={`text-lg ${currentTheme.muted} max-w-2xl mx-auto animate-fade-in`} style={{ animationDelay: '0.3s' }}>
-            Built different, trade different. Here's what makes us legendary.
-          </p>
-        </div>
-        
-        <InteractiveFeatureGrid />
-      </div>
-
-      <VisualSeparator type="glitch" />
-
-      {/* Discord Community Section */}
-      <div className="container mx-auto px-4 py-16">
-        <DiscordCommunityShowcase />
-      </div>
-
-      <VisualSeparator type="wave" />
-
-      {/* Final CTA Section */}
-      <div className="container mx-auto px-4 py-16">
-        <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-16 text-center relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5"></div>
-          <div className="max-w-4xl mx-auto relative z-10">
-            <Star className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-6 animate-pulse-glow`} />
-            <h3 className={`text-4xl font-bold ${currentTheme.text} mb-6 animate-fade-in`}>
-              Ready to Join the Elite? 🚀
-            </h3>
-            <p className={`${currentTheme.muted} mb-10 text-xl leading-relaxed animate-fade-in`} style={{ animationDelay: '0.5s' }}>
-              Your journey to trading greatness starts with a single click. 
-              Join thousands of legendary traders who've already unlocked their potential.
+      {/* Metrics Section */}
+      <section className="py-24 relative">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className={`text-4xl font-bold ${currentTheme.text} mb-6`}>
+              Trusted by the Elite
+            </h2>
+            <p className={`text-xl ${currentTheme.muted} max-w-2xl mx-auto`}>
+              Join thousands of verified traders in the most secure digital marketplace
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in" style={{ animationDelay: '1s' }}>
-              <Link to="/signup">
-                <Button className={`bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90 text-white px-10 py-4 text-xl font-semibold rounded-xl hover:scale-110 shadow-2xl transition-all duration-300 group relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  Become a Legend
-                  <ArrowRight className="ml-3 h-6 w-6 group-hover:animate-bounce" />
-                </Button>
-              </Link>
-              <Link to="/marketplace">
-                <Button variant="outline" className={`${currentTheme.text} border-2 ${currentTheme.border} hover:${currentTheme.cardBg} px-10 py-4 text-xl font-semibold rounded-xl hover:scale-110 transition-all duration-300 group`}>
-                  Browse the Underground
-                </Button>
-              </Link>
-            </div>
           </div>
-        </Card>
-      </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {metrics.map((metric, index) => (
+              <Card 
+                key={index} 
+                className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 text-center ${hoverClasses.scale} transition-all duration-500 hover:shadow-2xl group relative overflow-hidden`}
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="mb-6">
+                    <metric.icon className={`h-12 w-12 ${metric.color} mx-auto group-hover:scale-110 transition-transform duration-300`} />
+                  </div>
+                  <div className={`text-3xl font-bold ${currentTheme.text} mb-2`}>
+                    {metric.value}
+                  </div>
+                  <div className={`text-lg font-semibold ${currentTheme.text} mb-2`}>
+                    {metric.label}
+                  </div>
+                  <p className={`text-sm ${currentTheme.muted}`}>
+                    {metric.description}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <GeometricSeparator variant="wave" />
+
+      {/* Feature Showcase */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className={`text-4xl font-bold ${currentTheme.text} mb-6`}>
+              Advanced Trading Platform
+            </h2>
+            <p className={`text-xl ${currentTheme.muted} max-w-3xl mx-auto`}>
+              Experience next-generation digital commerce with cutting-edge security and lightning-fast transactions
+            </p>
+          </div>
+          
+          <FeatureShowcase />
+        </div>
+      </section>
+
+      <GeometricSeparator variant="circuit" />
+
+      {/* Community Hub */}
+      <section className="py-24">
+        <CommunityHub />
+      </section>
+
+      <GeometricSeparator variant="mesh" />
+
+      {/* Final CTA */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-16 text-center relative overflow-hidden`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-purple-500/10 to-pink-500/10"></div>
+            <div className="absolute inset-0">
+              <div className="absolute top-10 left-10 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+              <div className="absolute top-20 right-16 w-1 h-1 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute bottom-16 left-1/4 w-1.5 h-1.5 bg-pink-400 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+            </div>
+            
+            <div className="max-w-4xl mx-auto relative z-10">
+              <Star className={`h-16 w-16 ${currentTheme.accent} mx-auto mb-8`} />
+              <h2 className={`text-5xl font-bold ${currentTheme.text} mb-8`}>
+                Ready to Elevate Your Trading?
+              </h2>
+              <p className={`${currentTheme.muted} mb-12 text-xl leading-relaxed max-w-2xl mx-auto`}>
+                Join the most sophisticated trading community where innovation meets security. 
+                Your journey to digital commerce excellence starts here.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Link to="/signup">
+                  <Button className={`bg-gradient-to-r ${currentTheme.gradient} hover:opacity-90 text-white px-12 py-4 text-xl font-semibold rounded-2xl hover:scale-105 shadow-2xl transition-all duration-300 group relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    Start Trading
+                    <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform duration-200" />
+                  </Button>
+                </Link>
+                <Link to="/marketplace">
+                  <Button variant="outline" className={`${currentTheme.text} border-2 ${currentTheme.border} hover:${currentTheme.cardBg} px-12 py-4 text-xl font-semibold rounded-2xl hover:scale-105 transition-all duration-300`}>
+                    Explore Marketplace
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
     </div>
   );
 };
