@@ -53,6 +53,8 @@ const ActivityFeed = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const IconComponent = activities[currentIndex].icon;
+
   return (
     <Card className={`${currentTheme.cardBg} border ${currentTheme.border} backdrop-blur-sm shadow-2xl`}>
       <div className="p-6">
@@ -82,7 +84,7 @@ const ActivityFeed = () => {
         <div className="mt-4 border-t border-gray-800 pt-4">
           <div className="transition-all duration-500 ease-in-out" key={currentIndex}>
             <div className="flex items-center space-x-4">
-              <activities[currentIndex].icon className={`h-5 w-5 ${activities[currentIndex].color}`} />
+              <IconComponent className={`h-5 w-5 ${activities[currentIndex].color}`} />
               <div className="flex-1">
                 <span className={`${currentTheme.text} font-medium`}>
                   {activities[currentIndex].user !== "System" && (
