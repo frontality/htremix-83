@@ -1,22 +1,25 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
-  Shield, 
-  Zap, 
-  Users, 
   ShoppingBag,
-  Gift,
-  Gamepad2,
-  Music,
-  Code,
   TrendingUp,
   ArrowRight,
-  Star,
-  Lock,
-  Globe
+  Gamepad2,
+  Zap,
+  Coffee,
+  Pizza,
+  Cat,
+  Rocket,
+  Sparkles,
+  Trophy,
+  PartyPopper,
+  Laugh,
+  Crown,
+  Diamond
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -32,19 +35,36 @@ const Index = () => {
     setTimeout(() => {}, 100);
   }, []);
 
-  const categories = [
-    { icon: Gift, name: "Digital Products", description: "Software, licenses & more", color: "text-blue-400", bg: "bg-blue-500/10" },
-    { icon: Gamepad2, name: "Gaming", description: "Accounts, items & cheats", color: "text-green-400", bg: "bg-green-500/10" },
-    { icon: Music, name: "Entertainment", description: "Media & streaming", color: "text-purple-400", bg: "bg-purple-500/10" },
-    { icon: Code, name: "Software", description: "Tools & applications", color: "text-orange-400", bg: "bg-orange-500/10" }
+  const funFacts = [
+    { icon: Cat, text: "Our servers are powered by cat purrs", color: "text-orange-400" },
+    { icon: Pizza, text: "99.9% of trades happen during pizza breaks", color: "text-red-400" },
+    { icon: Coffee, text: "Coffee consumption = Server performance", color: "text-amber-400" },
+    { icon: Rocket, text: "We literally launched to the moon once", color: "text-blue-400" }
   ];
 
-  const features = [
-    { icon: Shield, title: "Secure Trading", description: "Protected transactions with escrow system" },
-    { icon: Zap, title: "Instant Delivery", description: "Fast automated delivery for digital goods" },
-    { icon: Users, title: "Trusted Community", description: "Verified sellers and buyer protection" },
-    { icon: Globe, title: "Global Access", description: "Trade worldwide with multiple payment methods" }
+  const funStats = [
+    { icon: Trophy, number: "42", label: "Memes Created Daily" },
+    { icon: PartyPopper, number: "∞", label: "Fun Factor" },
+    { icon: Laugh, number: "9001", label: "Jokes Told" },
+    { icon: Crown, number: "1", label: "Supreme Overlord Cats" }
   ];
+
+  const randomMessages = [
+    "Definitely not a front for intergalactic traders 👽",
+    "Warning: May cause excessive happiness",
+    "Side effects include: Better mood, more money",
+    "Powered by pure chaos energy ⚡",
+    "Your mom approves of this marketplace"
+  ];
+
+  const [currentMessage, setCurrentMessage] = useState(randomMessages[0]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessage(randomMessages[Math.floor(Math.random() * randomMessages.length)]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} relative`}>
@@ -68,9 +88,16 @@ const Index = () => {
           <h2 className={`text-2xl md:text-4xl ${currentTheme.text} mb-6 font-light max-w-4xl mx-auto leading-relaxed`}>
             The Premier Digital Marketplace
           </h2>
-          <p className={`text-lg md:text-xl ${currentTheme.muted} mb-12 max-w-3xl mx-auto leading-relaxed`}>
+          <p className={`text-lg md:text-xl ${currentTheme.muted} mb-6 max-w-3xl mx-auto leading-relaxed`}>
             Buy, sell, and trade digital goods with confidence. Join thousands of traders in the most trusted marketplace for digital assets.
           </p>
+          
+          {/* Fun rotating message */}
+          <div className={`text-lg ${currentTheme.accent} mb-12 h-8 flex items-center justify-center transition-all duration-500`}>
+            <Sparkles className="mr-2 h-5 w-5" />
+            {currentMessage}
+            <Sparkles className="ml-2 h-5 w-5" />
+          </div>
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
@@ -100,46 +127,72 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Categories Grid */}
+        {/* Fun Facts Section */}
         <div className="mb-20">
           <h3 className={`text-4xl font-bold ${currentTheme.text} text-center mb-12`}>
-            Popular Categories
+            Totally Legit Fun Facts™
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {categories.map((category, index) => (
+            {funFacts.map((fact, index) => (
               <Card 
                 key={index} 
-                className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 text-center ${hoverClasses.scale} cursor-pointer group transition-all duration-300`}
-                style={{animationDelay: `${index * 100}ms`}}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} cursor-pointer group transition-all duration-300`}
               >
-                <div className={`${category.bg} rounded-2xl p-4 mb-6 inline-block`}>
-                  <category.icon className={`h-12 w-12 ${category.color} group-hover:scale-110 transition-transform duration-300`} />
-                </div>
-                <h4 className={`text-xl font-bold ${currentTheme.text} mb-2`}>{category.name}</h4>
-                <p className={`text-sm ${currentTheme.muted}`}>{category.description}</p>
+                <fact.icon className={`h-12 w-12 ${fact.color} mx-auto mb-4 group-hover:animate-bounce`} />
+                <p className={`text-sm ${currentTheme.text} font-medium`}>{fact.text}</p>
               </Card>
             ))}
           </div>
         </div>
 
-        {/* Features Section */}
+        {/* Fun Stats Section */}
         <div className="mb-20">
           <h3 className={`text-4xl font-bold ${currentTheme.text} text-center mb-12`}>
-            Why Choose SKID×HAVEN
+            Absolutely Real Statistics
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
+            {funStats.map((stat, index) => (
               <Card 
                 key={index} 
-                className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 text-center ${hoverClasses.scale} transition-all duration-300`}
-                style={{animationDelay: `${index * 150}ms`}}
+                className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 text-center ${hoverClasses.scale} transition-all duration-300`}
               >
-                <feature.icon className={`h-12 w-12 ${currentTheme.accent} mx-auto mb-4`} />
-                <h4 className={`text-lg font-bold ${currentTheme.text} mb-2`}>{feature.title}</h4>
-                <p className={`text-sm ${currentTheme.muted}`}>{feature.description}</p>
+                <stat.icon className={`h-10 w-10 ${currentTheme.accent} mx-auto mb-4`} />
+                <div className={`text-4xl font-black ${currentTheme.text} mb-2`}>{stat.number}</div>
+                <p className={`text-sm ${currentTheme.muted} uppercase tracking-wider`}>{stat.label}</p>
               </Card>
             ))}
           </div>
+        </div>
+
+        {/* Chaotic Gaming Zone */}
+        <div className="mb-20">
+          <Card className={`${currentTheme.cardBg} border ${currentTheme.border} p-12 text-center relative overflow-hidden`}>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10"></div>
+            <div className="relative z-10">
+              <div className="flex justify-center items-center mb-6">
+                <Gamepad2 className={`h-16 w-16 ${currentTheme.accent} mr-4 animate-pulse`} />
+                <Diamond className={`h-12 w-12 ${currentTheme.text} animate-spin`} style={{animationDuration: '3s'}} />
+                <Zap className={`h-16 w-16 ${currentTheme.accent} ml-4 animate-bounce`} />
+              </div>
+              <h3 className={`text-5xl font-bold ${currentTheme.text} mb-4`}>
+                Epic Gaming Zone Activated
+              </h3>
+              <p className={`${currentTheme.muted} mb-8 text-xl max-w-2xl mx-auto`}>
+                Where legends are born, noobs get rekt, and your wallet gets lighter (but your inventory gets heavier)
+              </p>
+              <div className="flex justify-center gap-4">
+                <span className={`px-4 py-2 ${currentTheme.secondary} rounded-full text-sm font-semibold`}>
+                  🔥 MLG Pro Mode
+                </span>
+                <span className={`px-4 py-2 ${currentTheme.secondary} rounded-full text-sm font-semibold`}>
+                  ⚡ 360 No Scope
+                </span>
+                <span className={`px-4 py-2 ${currentTheme.secondary} rounded-full text-sm font-semibold`}>
+                  🏆 Achievement Unlocked
+                </span>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Final CTA Section */}
