@@ -40,7 +40,7 @@ const FeaturesGrid = () => {
     },
     {
       icon: Star,
-      title: "5-Star Rated",
+      title: "Premium Quality",
       description: "Highest customer satisfaction",
       color: "text-orange-400"
     },
@@ -59,35 +59,35 @@ const FeaturesGrid = () => {
   ];
 
   return (
-    <section className="py-24 relative">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className={`text-5xl font-bold ${currentTheme.text} mb-6`}>
+    <section className="py-16 relative">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className={`text-4xl font-bold ${currentTheme.text} mb-4`}>
             Why Choose SKID × HAVEN?
           </h2>
-          <p className={`text-xl ${currentTheme.muted} max-w-3xl mx-auto`}>
+          <p className={`text-lg ${currentTheme.muted} max-w-2xl mx-auto`}>
             Experience the next generation of digital trading with features designed for professionals
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
             <Card 
               key={index}
-              className={`${currentTheme.cardBg} border ${currentTheme.border} p-8 transition-all duration-500 hover:scale-110 hover:shadow-2xl group cursor-pointer relative overflow-hidden`}
+              className={`${currentTheme.cardBg} border ${currentTheme.border} p-6 transition-all duration-500 hover:scale-110 hover:shadow-xl group cursor-pointer relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
               <div className="relative z-10">
-                <div className="mb-6">
-                  <feature.icon className={`h-12 w-12 ${feature.color} group-hover:scale-125 transition-transform duration-300`} />
+                <div className="mb-4">
+                  <feature.icon className={`h-10 w-10 ${feature.color} group-hover:scale-125 transition-transform duration-300`} />
                 </div>
                 
-                <h3 className={`text-xl font-bold ${currentTheme.text} mb-4`}>
+                <h3 className={`text-lg font-bold ${currentTheme.text} mb-3`}>
                   {feature.title}
                 </h3>
                 
-                <p className={`${currentTheme.muted} leading-relaxed`}>
+                <p className={`${currentTheme.muted} leading-relaxed text-sm`}>
                   {feature.description}
                 </p>
               </div>
