@@ -4,8 +4,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import HeroSection from "@/components/HeroSection";
 import StatsSection from "@/components/StatsSection";
 import FeaturesGrid from "@/components/FeaturesGrid";
-import TestimonialSection from "@/components/TestimonialSection";
-import PricingSection from "@/components/PricingSection";
 import CTASection from "@/components/CTASection";
 
 const Index = () => {
@@ -41,12 +39,6 @@ const Index = () => {
 
       {/* Features Grid */}
       <FeaturesGrid />
-
-      {/* Testimonial Section */}
-      <TestimonialSection />
-
-      {/* Pricing Section */}
-      <PricingSection />
 
       {/* Final CTA */}
       <CTASection />
