@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -298,7 +297,7 @@ const CryptoExchangeWidget = () => {
                 placeholder="0.00"
                 value={toAmount}
                 readOnly
-                className={`flex-1 ${currentTheme.input} bg-gray-50`}
+                className={`flex-1 ${currentTheme.input} opacity-75`}
               />
               <Select value={toCurrency} onValueChange={setToCurrency}>
                 <SelectTrigger className={`w-32 ${currentTheme.input}`}>

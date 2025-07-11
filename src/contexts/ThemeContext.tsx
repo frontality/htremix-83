@@ -13,6 +13,7 @@ export interface Theme {
   border: string;
   muted: string;
   gradient: string;
+  input: string;
 }
 
 const themes: Record<string, Theme> = {
@@ -27,7 +28,8 @@ const themes: Record<string, Theme> = {
     secondary: 'bg-orange-800/30',
     border: 'border-red-800/30',
     muted: 'text-red-300',
-    gradient: 'from-red-500 to-orange-500'
+    gradient: 'from-red-500 to-orange-500',
+    input: 'bg-red-900/30 border-red-700/50 text-red-100 placeholder:text-red-400'
   },
   ocean: {
     name: 'Ocean',
@@ -40,7 +42,8 @@ const themes: Record<string, Theme> = {
     secondary: 'bg-cyan-800/30',
     border: 'border-blue-800/30',
     muted: 'text-blue-300',
-    gradient: 'from-blue-500 to-cyan-500'
+    gradient: 'from-blue-500 to-cyan-500',
+    input: 'bg-blue-900/30 border-blue-700/50 text-blue-100 placeholder:text-blue-400'
   },
   forest: {
     name: 'Forest',
@@ -53,7 +56,8 @@ const themes: Record<string, Theme> = {
     secondary: 'bg-emerald-800/30',
     border: 'border-green-800/30',
     muted: 'text-green-300',
-    gradient: 'from-green-500 to-emerald-500'
+    gradient: 'from-green-500 to-emerald-500',
+    input: 'bg-green-900/30 border-green-700/50 text-green-100 placeholder:text-green-400'
   },
   galaxy: {
     name: 'Galaxy',
@@ -66,7 +70,8 @@ const themes: Record<string, Theme> = {
     secondary: 'bg-pink-800/30',
     border: 'border-purple-800/30',
     muted: 'text-purple-300',
-    gradient: 'from-purple-500 to-pink-500'
+    gradient: 'from-purple-500 to-pink-500',
+    input: 'bg-purple-900/30 border-purple-700/50 text-purple-100 placeholder:text-purple-400'
   },
   dark: {
     name: 'Dark',
@@ -79,7 +84,8 @@ const themes: Record<string, Theme> = {
     secondary: 'bg-gray-800/30',
     border: 'border-gray-700/30',
     muted: 'text-gray-400',
-    gradient: 'from-gray-500 to-gray-700'
+    gradient: 'from-gray-500 to-gray-700',
+    input: 'bg-gray-900/50 border-gray-600/50 text-white placeholder:text-gray-500'
   }
 };
 

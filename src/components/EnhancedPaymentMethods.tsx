@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { CreditCard, Bitcoin, DollarSign, Plus, CheckCircle, Clock, X, Wallet, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
