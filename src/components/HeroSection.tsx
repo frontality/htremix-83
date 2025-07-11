@@ -3,15 +3,63 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowRight, Zap, Star, Sparkles, MessageSquare } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const HeroSection = () => {
   const { currentTheme } = useTheme();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [typedText, setTypedText] = useState("");
   
   const heroText = "Elite Digital Marketplace";
+  
+  // Search functionality - maps keywords to routes
+  const searchRoutes = {
+    'marketplace': '/marketplace',
+    'market': '/marketplace',
+    'shop': '/marketplace',
+    'buy': '/marketplace',
+    'sell': '/sell',
+    'selling': '/sell',
+    'items': '/sell',
+    'profile': '/profile',
+    'account': '/profile',
+    'settings': '/settings',
+    'config': '/settings',
+    'messages': '/messages',
+    'chat': '/messages',
+    'forum': '/forum',
+    'discussion': '/forum',
+    'crypto': '/crypto-exchange',
+    'exchange': '/crypto-exchange',
+    'bitcoin': '/crypto-exchange',
+    'payment': '/payment',
+    'pay': '/payment',
+    'panel': '/panel',
+    'admin': '/panel',
+    'login': '/login',
+    'signup': '/signup',
+    'register': '/signup'
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Find matching route
+    for (const [keyword, route] of Object.entries(searchRoutes)) {
+      if (query.includes(keyword)) {
+        navigate(route);
+        return;
+      }
+    }
+    
+    // Default to marketplace if no specific match
+    navigate('/marketplace');
+  };
   
   useEffect(() => {
     let i = 0;
@@ -29,20 +77,40 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 pt-16">
       <div className="container mx-auto text-center max-w-6xl">
-        {/* Logo Animation */}
+        {/* Logo Animation with Individual Character Glow */}
         <div className="mb-8 animate-fade-in">
           <div className="relative inline-block">
             <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6">
               <span className="relative">
-                <span className={`bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent animate-pulse-glow`}>
-                  SKID
-                </span>
+                {/* SKID with individual character glow */}
+                {'SKID'.split('').map((char, index) => (
+                  <span
+                    key={index}
+                    className={`inline-block bg-gradient-to-r ${currentTheme.gradient} bg-clip-text text-transparent`}
+                    style={{
+                      filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.8))',
+                      animationDelay: `${index * 0.1}s`
+                    }}
+                  >
+                    {char}
+                  </span>
+                ))}
               </span>
               <span className={`mx-4 ${currentTheme.text} opacity-50`}>×</span>
               <span className="relative">
-                <span className={`bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent animate-pulse-glow`}>
-                  HAVEN
-                </span>
+                {/* HAVEN with individual character glow */}
+                {'HAVEN'.split('').map((char, index) => (
+                  <span
+                    key={index}
+                    className={`inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent`}
+                    style={{
+                      filter: 'drop-shadow(0 0 8px rgba(192, 132, 252, 0.8))',
+                      animationDelay: `${(index + 4) * 0.1}s`
+                    }}
+                  >
+                    {char}
+                  </span>
+                ))}
               </span>
             </h1>
             
@@ -89,7 +157,7 @@ const HeroSection = () => {
         {/* Discord Community Link */}
         <div className="mb-8 animate-fade-in" style={{ animationDelay: '2.5s' }}>
           <a 
-            href="https://discord.gg/your-server" 
+            href="https://discord.gg/bY6TRDP4hV" 
             target="_blank" 
             rel="noopener noreferrer"
             className={`inline-flex items-center gap-2 ${currentTheme.text} hover:${currentTheme.accent} transition-colors duration-300 group`}
@@ -100,24 +168,20 @@ const HeroSection = () => {
           </a>
         </div>
 
-        {/* Premium Search */}
+        {/* Functional Search */}
         <div className="relative max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '3s' }}>
-          <div className="relative group">
+          <form onSubmit={handleSearch} className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-pink-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative">
               <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${currentTheme.muted} group-hover:text-cyan-400 transition-colors z-10`} />
               <Input
-                placeholder="Search premium accounts, rare items, exclusive content..."
+                placeholder="Search pages: marketplace, sell, profile, messages..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-12 pr-20 py-4 text-lg ${currentTheme.cardBg} ${currentTheme.text} border-2 ${currentTheme.border} rounded-xl shadow-xl focus:ring-4 focus:ring-cyan-500/30 transition-all duration-300 backdrop-blur-lg`}
+                className={`pl-12 pr-4 py-4 text-lg ${currentTheme.cardBg} ${currentTheme.text} border-2 ${currentTheme.border} rounded-xl shadow-xl focus:ring-4 focus:ring-cyan-500/30 transition-all duration-300 backdrop-blur-lg`}
               />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                <Sparkles className="h-4 w-4 text-yellow-400 animate-pulse" />
-                <span className={`text-sm ${currentTheme.muted} font-medium`}>AI Powered</span>
-              </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </section>
