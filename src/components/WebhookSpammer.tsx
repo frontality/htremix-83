@@ -117,7 +117,7 @@ const WebhookSpammer = ({ className }: WebhookSpammerProps) => {
     <Card className={`${className} ${currentTheme.cardBg} ${currentTheme.border}`}>
       <CardHeader>
         <CardTitle className={currentTheme.text}>Discord Webhook Spammer</CardTitle>
-        <CardDescription className={currentTheme.mutedText}>
+        <CardDescription className={currentTheme.muted}>
           Send multiple messages to a Discord webhook. Use responsibly.
         </CardDescription>
       </CardHeader>
@@ -193,7 +193,7 @@ const WebhookSpammer = ({ className }: WebhookSpammerProps) => {
             <Label className={currentTheme.text}>Results:</Label>
             <div className={`mt-2 p-3 rounded-md ${currentTheme.secondary} max-h-40 overflow-y-auto`}>
               {results.map((result, index) => (
-                <div key={index} className={`text-sm ${currentTheme.mutedText} mb-1`}>
+                <div key={index} className={`text-sm ${currentTheme.muted} mb-1`}>
                   {result}
                 </div>
               ))}

@@ -35,14 +35,14 @@ const Panel = () => {
   ];
 
   return (
-    <div className={`min-h-screen ${currentTheme.background} p-6`}>
+    <div className={`min-h-screen ${currentTheme.bg} p-6`}>
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Wrench className={`w-8 h-8 ${currentTheme.accent}`} />
             <h1 className={`text-4xl font-bold ${currentTheme.text}`}>Control Panel</h1>
           </div>
-          <p className={`text-lg ${currentTheme.mutedText} max-w-2xl mx-auto`}>
+          <p className={`text-lg ${currentTheme.muted} max-w-2xl mx-auto`}>
             Advanced tools and utilities for power users. Handle with care.
           </p>
         </div>
@@ -53,7 +53,7 @@ const Panel = () => {
               <CardHeader className="text-center">
                 <card.icon className={`w-12 h-12 mx-auto ${card.color} mb-2`} />
                 <CardTitle className={`${currentTheme.text} text-lg`}>{card.title}</CardTitle>
-                <CardDescription className={currentTheme.mutedText}>
+                <CardDescription className={currentTheme.muted}>
                   {card.description}
                 </CardDescription>
               </CardHeader>
@@ -67,7 +67,7 @@ const Panel = () => {
           <Card className={`${currentTheme.cardBg} ${currentTheme.border}`}>
             <CardHeader>
               <CardTitle className={currentTheme.text}>System Status</CardTitle>
-              <CardDescription className={currentTheme.mutedText}>
+              <CardDescription className={currentTheme.muted}>
                 Monitor system health and performance
               </CardDescription>
             </CardHeader>
