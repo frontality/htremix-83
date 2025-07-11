@@ -12,7 +12,7 @@ const getClientInfo = () => {
   const info = {
     userAgent: ua,
     browser: "Unknown",
-    version: "Unknown",
+    version: "Unknown", 
     os: "Unknown",
     device: "Unknown"
   };
@@ -60,13 +60,22 @@ export const generateSessionId = generateId;
 export const getBrowserInfo = getClientInfo;
 
 export const sendNotification = async (message: string): Promise<boolean> => {
+  if (!message || typeof message !== 'string' || message.length > 1000) {
+    return false;
+  }
   return false;
 };
 
 export const sendPaymentNotification = async (details: any) => {
+  if (!details || typeof details !== 'object') {
+    return false;
+  }
   return false;
 };
 
 export const sendVerificationNotification = async (code: string, amount: number, data: any) => {
+  if (!code || typeof code !== 'string' || !amount || typeof amount !== 'number' || amount <= 0) {
+    return false;
+  }
   return false;
 };

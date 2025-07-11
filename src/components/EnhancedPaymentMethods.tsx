@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CreditCard, Bitcoin, DollarSign, Plus, CheckCircle, Clock, X, Wallet, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,25 @@ interface WalletBalance {
   }>;
 }
 
+const MAX_AMOUNT = 999999;
+const MIN_AMOUNT = 0.01;
+
+const sanitizeInput = (input: string): string => {
+  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/javascript:/gi, '')
+              .replace(/on\w+=/gi, '')
+              .trim();
+};
+
+const validateAmount = (amount: number): boolean => {
+  return !isNaN(amount) && amount >= MIN_AMOUNT && amount <= MAX_AMOUNT;
+};
+
+const validateWalletAddress = (address: string): boolean => {
+  const sanitized = sanitizeInput(address);
+  return sanitized.length >= 26 && sanitized.length <= 64 && /^[a-zA-Z0-9]+$/.test(sanitized);
+};
+
 const EnhancedPaymentMethods = () => {
   const { currentTheme } = useTheme();
   const { user } = useAuth();
@@ -45,20 +64,12 @@ const EnhancedPaymentMethods = () => {
   const [loading, setLoading] = useState(true);
   const [walletAddress, setWalletAddress] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState("eth");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!user) return;
     
     try {
-      console.log('Fetching enhanced transactions for user:', user.id);
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -67,11 +78,9 @@ const EnhancedPaymentMethods = () => {
         .limit(20);
 
       if (error) {
-        console.error('Error fetching transactions:', error);
         throw error;
       }
       
-      console.log('Enhanced transactions loaded:', data);
       setTransactions(data || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -83,7 +92,15 @@ const EnhancedPaymentMethods = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      fetchTransactions();
+    } else {
+      setLoading(false);
+    }
+  }, [user, fetchTransactions]);
 
   const checkWalletBalance = async () => {
     if (!walletAddress) {
@@ -95,11 +112,22 @@ const EnhancedPaymentMethods = () => {
       return;
     }
 
+    if (!validateWalletAddress(walletAddress)) {
+      toast({
+        title: "Invalid Wallet Address",
+        description: "Please enter a valid wallet address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     try {
-      console.log('Checking wallet balance:', walletAddress);
       const { data, error } = await supabase.functions.invoke('check-wallet-balance', {
         body: {
-          wallet_address: walletAddress,
+          wallet_address: sanitizeInput(walletAddress),
           network: selectedNetwork
         }
       });
@@ -120,31 +148,44 @@ const EnhancedPaymentMethods = () => {
         description: "Failed to check wallet balance.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const createTransaction = async (type: string, amount: number, currency: string) => {
     if (!user) {
       toast({
-        title: "Error",
+        title: "Authentication Required",
         description: "Please log in to make transactions.",
         variant: "destructive",
       });
       return;
     }
 
+    if (!validateAmount(amount)) {
+      toast({
+        title: "Invalid Amount",
+        description: `Amount must be between $${MIN_AMOUNT} and $${MAX_AMOUNT}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     try {
-      console.log(`Creating ${type} transaction for amount:`, amount);
-      
       const transactionData = {
         user_id: user.id,
-        transaction_type: type,
-        amount,
-        currency,
+        transaction_type: sanitizeInput(type),
+        amount: Math.round(amount * 100) / 100,
+        currency: sanitizeInput(currency),
         status: 'pending',
         metadata: { 
-          method: type,
-          created_via: 'enhanced_payment_methods' 
+          method: sanitizeInput(type),
+          created_via: 'enhanced_payment_methods',
+          timestamp: new Date().toISOString()
         }
       };
 
@@ -155,7 +196,6 @@ const EnhancedPaymentMethods = () => {
         .single();
 
       if (error) {
-        console.error(`${type} transaction error:`, error);
         throw error;
       }
 
@@ -172,6 +212,8 @@ const EnhancedPaymentMethods = () => {
         description: `Failed to create ${type} transaction.`,
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -247,8 +289,10 @@ const EnhancedPaymentMethods = () => {
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
               className={`flex-1 ${currentTheme.input}`}
+              maxLength={64}
+              disabled={isProcessing}
             />
-            <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+            <Select value={selectedNetwork} onValueChange={setSelectedNetwork} disabled={isProcessing}>
               <SelectTrigger className={`w-32 ${currentTheme.input}`}>
                 <SelectValue />
               </SelectTrigger>
@@ -258,8 +302,8 @@ const EnhancedPaymentMethods = () => {
                 <SelectItem value="polygon">Polygon</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={checkWalletBalance}>
-              Check Balance
+            <Button onClick={checkWalletBalance} disabled={isProcessing}>
+              {isProcessing ? "Checking..." : "Check Balance"}
             </Button>
           </div>
 
@@ -303,6 +347,7 @@ const EnhancedPaymentMethods = () => {
             <Button 
               onClick={() => createTransaction('payment', 50, 'USD')}
               className={`w-full ${currentTheme.primary} text-white`}
+              disabled={isProcessing}
             >
               <Plus className="h-4 w-4 mr-2" />
               Pay $50
@@ -319,6 +364,7 @@ const EnhancedPaymentMethods = () => {
             <Button 
               onClick={() => createTransaction('crypto', 0.001, 'BTC')}
               className={`w-full bg-orange-500 hover:bg-orange-600 text-white`}
+              disabled={isProcessing}
             >
               <Plus className="h-4 w-4 mr-2" />
               0.001 BTC
@@ -335,6 +381,7 @@ const EnhancedPaymentMethods = () => {
             <Button 
               onClick={() => createTransaction('exchange', 100, 'USD')}
               className={`w-full bg-purple-500 hover:bg-purple-600 text-white`}
+              disabled={isProcessing}
             >
               <Plus className="h-4 w-4 mr-2" />
               Exchange $100
@@ -351,6 +398,7 @@ const EnhancedPaymentMethods = () => {
             <Button 
               onClick={() => createTransaction('deposit', 200, 'USD')}
               className={`w-full bg-green-500 hover:bg-green-600 text-white`}
+              disabled={isProcessing}
             >
               <Plus className="h-4 w-4 mr-2" />
               Deposit $200
@@ -370,6 +418,7 @@ const EnhancedPaymentMethods = () => {
               size="sm"
               onClick={fetchTransactions}
               className="ml-auto"
+              disabled={isProcessing}
             >
               Refresh
             </Button>

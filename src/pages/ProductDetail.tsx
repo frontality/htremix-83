@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, DollarSign, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,23 +27,27 @@ interface MarketplaceItem {
   views: number;
 }
 
-// Input sanitization function
+const MAX_OFFER_AMOUNT = 999999;
+const MIN_OFFER_AMOUNT = 1;
+const MAX_MESSAGE_LENGTH = 1000;
+const MIN_MESSAGE_LENGTH = 5;
+
 const sanitizeInput = (input: string): string => {
   return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
               .replace(/javascript:/gi, '')
               .replace(/on\w+=/gi, '')
+              .replace(/[<>]/g, '')
               .trim();
 };
 
-// Validation functions
 const validateOfferAmount = (amount: string): boolean => {
   const numAmount = parseFloat(amount);
-  return !isNaN(numAmount) && numAmount > 0 && numAmount <= 999999;
+  return !isNaN(numAmount) && numAmount >= MIN_OFFER_AMOUNT && numAmount <= MAX_OFFER_AMOUNT;
 };
 
 const validateMessage = (message: string): boolean => {
   const sanitized = sanitizeInput(message);
-  return sanitized.length >= 5 && sanitized.length <= 1000;
+  return sanitized.length >= MIN_MESSAGE_LENGTH && sanitized.length <= MAX_MESSAGE_LENGTH;
 };
 
 const ProductDetail = () => {
@@ -60,8 +64,9 @@ const ProductDetail = () => {
   const [showOfferDialog, setShowOfferDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
+  const loadProduct = useCallback(() => {
     if (!id) {
       navigate("/marketplace");
       return;
@@ -80,10 +85,14 @@ const ProductDetail = () => {
     }
   }, [id, navigate]);
 
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
+
   const handleSendMessage = () => {
     if (!user) {
       toast({
-        title: "Login Required",
+        title: "Authentication Required",
         description: "Please login to message sellers",
         variant: "destructive",
       });
@@ -95,13 +104,14 @@ const ProductDetail = () => {
     if (!validateMessage(sanitizedMessage)) {
       toast({
         title: "Invalid Message",
-        description: "Please enter a message between 5-1000 characters",
+        description: `Please enter a message between ${MIN_MESSAGE_LENGTH}-${MAX_MESSAGE_LENGTH} characters`,
         variant: "destructive",
       });
       return;
     }
 
-    console.log("Sending message:", sanitizedMessage);
+    if (isProcessing) return;
+    setIsProcessing(true);
     
     toast({
       title: "Message Sent",
@@ -110,12 +120,13 @@ const ProductDetail = () => {
     
     setMessage("");
     setShowMessageDialog(false);
+    setIsProcessing(false);
   };
 
   const handleMakeOffer = () => {
     if (!user) {
       toast({
-        title: "Login Required",
+        title: "Authentication Required",
         description: "Please login to make offers",
         variant: "destructive",
       });
@@ -125,13 +136,14 @@ const ProductDetail = () => {
     if (!validateOfferAmount(offerAmount)) {
       toast({
         title: "Invalid Offer",
-        description: "Please enter a valid offer amount between $1 and $999,999",
+        description: `Please enter a valid offer amount between $${MIN_OFFER_AMOUNT} and $${MAX_OFFER_AMOUNT}`,
         variant: "destructive",
       });
       return;
     }
 
-    console.log("Making offer:", parseFloat(offerAmount));
+    if (isProcessing) return;
+    setIsProcessing(true);
     
     toast({
       title: "Offer Sent",
@@ -140,12 +152,13 @@ const ProductDetail = () => {
     
     setOfferAmount("");
     setShowOfferDialog(false);
+    setIsProcessing(false);
   };
 
   const handlePurchase = () => {
     if (!user) {
       toast({
-        title: "Login Required",
+        title: "Authentication Required",
         description: "Please login to purchase items",
         variant: "destructive",
       });
@@ -170,7 +183,8 @@ const ProductDetail = () => {
       return;
     }
 
-    console.log("Processing purchase with:", selectedPaymentMethod);
+    if (isProcessing) return;
+    setIsProcessing(true);
     
     toast({
       title: "Purchase Initiated",
@@ -182,6 +196,7 @@ const ProductDetail = () => {
     
     setTimeout(() => {
       navigate("/processing-payment");
+      setIsProcessing(false);
     }, 1000);
   };
 
@@ -302,6 +317,7 @@ const ProductDetail = () => {
                 <DialogTrigger asChild>
                   <Button
                     className={`w-full ${currentTheme.primary} text-white h-12 text-lg font-semibold`}
+                    disabled={isProcessing}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
                     Buy Now - ${product.price.toFixed(2)}
@@ -339,9 +355,9 @@ const ProductDetail = () => {
                     <Button 
                       onClick={handlePurchase} 
                       className={`w-full ${currentTheme.primary} text-white`}
-                      disabled={!selectedPaymentMethod}
+                      disabled={!selectedPaymentMethod || isProcessing}
                     >
-                      Complete Purchase
+                      {isProcessing ? "Processing..." : "Complete Purchase"}
                     </Button>
                   </div>
                 </DialogContent>
@@ -350,7 +366,11 @@ const ProductDetail = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                    <Button 
+                      variant="outline" 
+                      className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                      disabled={isProcessing}
+                    >
                       <DollarSign className="h-4 w-4 mr-2" />
                       Make Offer
                     </Button>
@@ -369,12 +389,17 @@ const ProductDetail = () => {
                         value={offerAmount}
                         onChange={(e) => setOfferAmount(e.target.value)}
                         className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
-                        min="1"
-                        max="999999"
+                        min={MIN_OFFER_AMOUNT}
+                        max={MAX_OFFER_AMOUNT}
                         step="0.01"
+                        disabled={isProcessing}
                       />
-                      <Button onClick={handleMakeOffer} className={`w-full ${currentTheme.primary} text-white`}>
-                        Send Offer
+                      <Button 
+                        onClick={handleMakeOffer} 
+                        className={`w-full ${currentTheme.primary} text-white`}
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? "Sending..." : "Send Offer"}
                       </Button>
                     </div>
                   </DialogContent>
@@ -382,7 +407,11 @@ const ProductDetail = () => {
 
                 <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className={`${currentTheme.secondary} ${currentTheme.text} border-0`}>
+                    <Button 
+                      variant="outline" 
+                      className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
+                      disabled={isProcessing}
+                    >
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Message
                     </Button>
@@ -396,18 +425,23 @@ const ProductDetail = () => {
                     </DialogHeader>
                     <div className="space-y-4">
                       <Textarea
-                        placeholder="Type your message here... (5-1000 characters)"
+                        placeholder={`Type your message here... (${MIN_MESSAGE_LENGTH}-${MAX_MESSAGE_LENGTH} characters)`}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         className={`${currentTheme.secondary} ${currentTheme.text} border-0`}
-                        maxLength={1000}
-                        minLength={5}
+                        maxLength={MAX_MESSAGE_LENGTH}
+                        minLength={MIN_MESSAGE_LENGTH}
+                        disabled={isProcessing}
                       />
                       <div className={`text-sm ${currentTheme.muted} text-right`}>
-                        {message.length}/1000
+                        {message.length}/{MAX_MESSAGE_LENGTH}
                       </div>
-                      <Button onClick={handleSendMessage} className={`w-full ${currentTheme.primary} text-white`}>
-                        Send Message
+                      <Button 
+                        onClick={handleSendMessage} 
+                        className={`w-full ${currentTheme.primary} text-white`}
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? "Sending..." : "Send Message"}
                       </Button>
                     </div>
                   </DialogContent>
