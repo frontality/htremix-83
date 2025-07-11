@@ -12,7 +12,7 @@ const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [typedText, setTypedText] = useState("");
   
-  const heroText = "Elite Digital Marketplace";
+  const heroText = "Gods of Underground";
   
   // Search functionality - maps keywords to routes
   const searchRoutes = {
@@ -130,8 +130,8 @@ const HeroSection = () => {
             <span className="animate-pulse text-cyan-400">|</span>
           </h2>
           <p className={`text-lg md:text-xl ${currentTheme.muted} mb-6 max-w-4xl mx-auto leading-relaxed`}>
-            Where premium digital assets meet uncompromising security. 
-            Trade with confidence in the most sophisticated marketplace.
+            Your all-in-one hub for digital trading, secure transactions, and community connections. 
+            From crypto exchanges to premium accounts - we've got everything you need.
           </p>
         </div>
 
