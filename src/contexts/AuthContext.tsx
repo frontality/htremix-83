@@ -51,13 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedUser = JSON.parse(savedUser);
         if (parsedUser && parsedUser.id && parsedUser.email && isValidEmail(parsedUser.email)) {
           setUser(parsedUser);
-          console.log('Restored user from localStorage:', parsedUser.email);
         } else {
           localStorage.removeItem('current_user');
         }
       }
     } catch (error) {
-      console.error('Error parsing saved user:', error);
       localStorage.removeItem('current_user');
     }
     setLoading(false);
@@ -80,8 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Username must be 3-30 characters and contain only letters, numbers, and underscores' };
       }
 
-      console.log('Starting signup process for:', sanitizedEmail);
-      
       const existingUsers = localStorage.getItem('registered_users');
       const users = existingUsers ? JSON.parse(existingUsers) : [];
       
@@ -109,10 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newUser);
       localStorage.setItem('current_user', JSON.stringify(newUser));
 
-      console.log('User signed up successfully');
       return { error: null };
     } catch (error) {
-      console.error('Signup error:', error);
       return { error: 'Signup failed. Please try again.' };
     }
   };
@@ -129,8 +123,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Invalid credentials' };
       }
 
-      console.log('Attempting login for:', sanitizedEmail);
-      
       const existingUsers = localStorage.getItem('registered_users');
       if (!existingUsers) {
         return { error: 'No account found with this email' };
@@ -156,10 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userWithoutPassword);
       localStorage.setItem('current_user', JSON.stringify(userWithoutPassword));
 
-      console.log('User logged in successfully');
       return { error: null };
     } catch (error) {
-      console.error('Login error:', error);
       return { error: 'Login failed. Please try again.' };
     }
   };
@@ -187,8 +177,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         sanitizedUpdates.username = sanitizedUsername;
       }
-
-      console.log('Updating user profile');
 
       const existingUsers = localStorage.getItem('registered_users');
       if (!existingUsers) {
@@ -223,10 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       localStorage.setItem('current_user', JSON.stringify(updatedUser));
 
-      console.log('User profile updated successfully');
       return { error: null };
     } catch (error) {
-      console.error('Profile update error:', error);
       return { error: 'Profile update failed. Please try again.' };
     }
   };
@@ -234,7 +220,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = () => {
     setUser(null);
     localStorage.removeItem('current_user');
-    console.log('User logged out');
   };
 
   return (

@@ -33,12 +33,8 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
 
   const fetchProfile = async () => {
     try {
-      console.log('Fetching profile for user:', userId);
-      
-      // Get user data from localStorage instead of Supabase
       const allUsers = localStorage.getItem('registered_users');
       if (!allUsers) {
-        console.log('No registered users found');
         setProfile(null);
         setLoading(false);
         return;
@@ -48,24 +44,20 @@ const ProfileViewer = ({ userId, onClose, onStartChat }: ProfileViewerProps) => 
       const foundUser = userList.find((u: any) => u.id === userId);
 
       if (!foundUser) {
-        console.log('User not found:', userId);
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      // Create public profile (no email for privacy)
       const publicProfile: PublicProfile = {
         id: foundUser.id,
         username: foundUser.username || foundUser.email.split('@')[0],
-        email: foundUser.email, // Keep for internal use but don't display
+        email: foundUser.email,
         created_at: foundUser.created_at || new Date().toISOString()
       };
 
       setProfile(publicProfile);
-      console.log('Profile loaded:', publicProfile);
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
       toast({
         title: "Error",
         description: "Failed to load profile",

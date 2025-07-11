@@ -32,7 +32,6 @@ const UserSearch = ({ onSelectUser, onClose, showMessageButton = false }: UserSe
 
     setLoading(true);
     
-    // Get all registered users from localStorage
     const allUsers = localStorage.getItem('registered_users');
     if (allUsers) {
       const userList = JSON.parse(allUsers);
@@ -66,7 +65,6 @@ const UserSearch = ({ onSelectUser, onClose, showMessageButton = false }: UserSe
   }, [searchTerm, user]);
 
   const handleSelectUser = (userId: string) => {
-    console.log('User selected:', userId);
     onSelectUser(userId);
     onClose();
   };
@@ -103,7 +101,6 @@ const UserSearch = ({ onSelectUser, onClose, showMessageButton = false }: UserSe
                 <p className={`font-medium ${currentTheme.text}`}>
                   @{searchUser.username}
                 </p>
-                {/* Removed email display for privacy */}
               </div>
               {showMessageButton ? (
                 <MessageCircle className="h-4 w-4 text-gray-400" />

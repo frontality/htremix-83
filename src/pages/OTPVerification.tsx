@@ -12,30 +12,26 @@ const OTPVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
-  const [countdown, setCountdown] = useState(15 * 60); // 15 minutes in seconds
+  const [countdown, setCountdown] = useState(15 * 60);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [attempts, setAttempts] = useState(0); // Track OTP verification attempts
-  const [key, setKey] = useState(0); // Used to force re-render of OTP input
+  const [attempts, setAttempts] = useState(0);
+  const [key, setKey] = useState(0);
   
-  // Get order details from location state
   const orderDetails = location.state?.orderDetails;
   const giftCardValue = location.state?.giftCardValue;
   const discountedAmount = location.state?.discountedAmount;
   const paymentMethod = location.state?.paymentMethod;
   const lastFour = location.state?.lastFour;
 
-  // Format remaining time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Calculate percentage of time remaining for progress bar
   const timePercentage = (countdown / (15 * 60)) * 100;
 
-  // If no order details, redirect to home
   useEffect(() => {
     if (!orderDetails) {
       navigate("/");
@@ -47,7 +43,6 @@ const OTPVerification = () => {
     }
   }, [orderDetails, navigate]);
 
-  // Countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
     
@@ -64,7 +59,6 @@ const OTPVerification = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  // If time runs out
   useEffect(() => {
     if (countdown === 0) {
       toast({
@@ -80,27 +74,21 @@ const OTPVerification = () => {
     }
   }, [countdown, navigate]);
   
-  // Handle submit based on current attempt
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
-    // OTP validation
     if (otp.length !== 6) {
       setError("Please enter a complete 6-digit code");
       return;
     }
     
-    console.log(`Processing attempt ${attempts + 1} with OTP: ${otp}`);
-    
-    // First two attempts always fail, third succeeds
     if (attempts < 2) {
       setError("Invalid verification code. Please try again.");
       setAttempts(prev => prev + 1);
       
-      // Clear OTP input and reset
       setOtp("");
-      setKey(prev => prev + 1); // Force re-render of OTP input
+      setKey(prev => prev + 1);
       
       toast({
         title: "Verification Failed",
@@ -108,13 +96,10 @@ const OTPVerification = () => {
         variant: "destructive",
       });
     } else {
-      // Third attempt - success
       setIsSubmitting(true);
       
-      // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
         
-      // Create complete order details object
       const completeOrderDetails = {
         ...orderDetails,
         paymentMethod: paymentMethod,
@@ -122,10 +107,8 @@ const OTPVerification = () => {
         otpVerified: true
       };
         
-      // Save order details to localStorage for reference
       localStorage.setItem("skidhavenOrder", JSON.stringify(completeOrderDetails));
         
-      // Navigate to payment success page
       navigate("/payment-success", { 
         state: { 
           orderDetails: completeOrderDetails,
@@ -136,7 +119,6 @@ const OTPVerification = () => {
     }
   };
 
-  // Generate a new OTP by returning to payment page
   const handleRequestNewOTP = () => {
     navigate("/payment", { 
       state: { 
@@ -151,7 +133,6 @@ const OTPVerification = () => {
     });
   };
 
-  // Get the attempt-specific message
   const getAttemptMessage = () => {
     if (attempts === 0) {
       return "Please enter the verification code sent to your phone";
@@ -173,7 +154,6 @@ const OTPVerification = () => {
               3D Secure <span className="text-blue-600">Verification</span>
             </h1>
             
-            {/* Timer Display */}
             <div className="flex flex-col items-center mb-8">
               <div className="w-full max-w-[250px] h-3 bg-gray-800/20 rounded-full overflow-hidden mb-2">
                 <div 
@@ -205,7 +185,6 @@ const OTPVerification = () => {
                 {getAttemptMessage()}
               </p>
               
-              {/* Show attempt counter */}
               <div className="flex justify-center items-center gap-2 pt-2">
                 <span className={`w-3 h-3 rounded-full ${attempts >= 0 ? 'bg-blue-600' : 'bg-gray-600/30'}`}></span>
                 <span className={`w-3 h-3 rounded-full ${attempts >= 1 ? 'bg-blue-600' : 'bg-gray-600/30'}`}></span>
@@ -215,11 +194,10 @@ const OTPVerification = () => {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* OTP Input */}
               <div className="space-y-6">
                 <div className="flex justify-center">
                   <InputOTP
-                    key={key} // Force re-render when key changes
+                    key={key}
                     value={otp}
                     onChange={(value) => {
                       setOtp(value);
@@ -249,7 +227,6 @@ const OTPVerification = () => {
                 )}
               </div>
               
-              {/* Payment Details Summary */}
               <div className="mt-8">
                 <h3 className="text-gray-300 text-center mb-3 font-medium">Transaction Details</h3>
                 <div className="bg-gray-800 p-4 rounded-lg border border-gray-700/20 space-y-2">
@@ -264,7 +241,6 @@ const OTPVerification = () => {
                 </div>
               </div>
               
-              {/* Submit Button */}
               <div className="flex flex-col gap-3 mt-8">
                 <Button 
                   type="submit" 

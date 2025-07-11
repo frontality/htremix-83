@@ -6,35 +6,19 @@ import SkidHavenHeader from "@/components/SkidHavenHeader";
 import SkidHavenFooter from "@/components/SkidHavenFooter";
 import { toast } from "@/hooks/use-toast";
 import { 
-  ArrowRight, CreditCard, Gift, PartyPopper, Printer, Mail, Clock
+  ArrowRight, CreditCard, PartyPopper, Printer, Mail
 } from "lucide-react";
 
 const PaymentSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [giftCardCode, setGiftCardCode] = useState("XXXX-XXXX-XXXX-XXXX");
-  const [giftCardPin, setGiftCardPin] = useState("XXXX");
   const [isLoading, setIsLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<any>(null);
-
-  // Generate random gift card details
-  const generateGiftCard = () => {
-    const randomCode = () => {
-      return Math.random().toString(36).substring(2, 10).toUpperCase();
-    };
-    
-    const code = `${randomCode().substring(0, 4)}-${randomCode().substring(0, 4)}-${randomCode().substring(0, 4)}-${randomCode().substring(0, 4)}`;
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
-    
-    setGiftCardCode(code);
-    setGiftCardPin(pin);
-  };
 
   useEffect(() => {
     const details = location.state?.orderDetails;
     
     if (!details) {
-      // Try to get from localStorage as fallback
       const savedOrder = localStorage.getItem("skidhavenOrder");
       if (savedOrder) {
         setOrderDetails(JSON.parse(savedOrder));
@@ -46,9 +30,7 @@ const PaymentSuccess = () => {
       setOrderDetails(details);
     }
     
-    // Simulate loading time to generate gift card
     const timer = setTimeout(() => {
-      generateGiftCard();
       setIsLoading(false);
       
       toast({
@@ -93,7 +75,6 @@ const PaymentSuccess = () => {
       
       <div className="container py-8 md:py-16">
         <div className="max-w-3xl mx-auto">
-          {/* Success Message */}
           <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-6 text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="h-16 w-16 bg-green-600/20 rounded-full flex items-center justify-center">
@@ -106,7 +87,6 @@ const PaymentSuccess = () => {
             </p>
           </div>
           
-          {/* Order Summary */}
           <div className="bg-gray-900/10 rounded-xl p-6 border border-gray-700/20 shadow-lg mb-8">
             <h2 className="text-2xl font-bold text-white mb-4">Order Summary</h2>
             
@@ -164,7 +144,6 @@ const PaymentSuccess = () => {
             </Button>
           </div>
           
-          {/* Return Home Button */}
           <div className="flex justify-center">
             <Button 
               onClick={() => navigate('/')}
