@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +27,8 @@ import TopHeader from "./components/TopHeader";
 import Settings from "./pages/Settings";
 import Forum from "./pages/Forum";
 import ForumPost from "./pages/ForumPost";
+import CryptoExchangeWidget from "./components/CryptoExchangeWidget";
+import EnhancedPaymentMethods from "./components/EnhancedPaymentMethods";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,8 @@ const App = () => (
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                     <Route path="/crypto-exchange" element={<CryptoExchange />} />
+                    <Route path="/crypto-widget" element={<CryptoExchangeWidget />} />
+                    <Route path="/enhanced-payments" element={<EnhancedPaymentMethods />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/panel" element={<Panel />} />
